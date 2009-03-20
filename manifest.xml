@@ -1,0 +1,42 @@
+<manifest version="1.0">
+  <!-- This is a manifest file for the virtual Infinite Improbability Drive
+       item storage. It describes item hierarchy and points to actual data
+       files. All paths are relative to the root game directory. -->
+  <container id="Textures" path="data/textures">
+    <item name="spaceship" type="BasicTexture">
+      <load_file path="spaceshiptexture.bmp" loader="iid.importers.PILTextureImporter" />
+    </item>
+  </container>
+  
+  <container id="Models" path="data/models">
+    <item name="spaceship" type="BasicModel">
+      <scale_factor x="0.05" y="0.05" z="0.05" />
+      <load_file path="spaceship.3ds" loader="iid.importers.ThreeDSModelImporter" />
+    </item>
+  </container>
+  
+  <container id="Audio" path="data/audio">
+    <!-- ... -->
+  </container>
+  
+  <container id="Scripts" path="scripts">
+    <!-- ... -->
+  </container>
+  
+  <!-- Containers without a specified path are virtual containers that only
+       link different objects together. It this case, in-game entities (these
+       are scripted models). -->
+  <container id="Entities">
+    <!-- <item name="stupid_enemy" type="BasicEntity">
+      <model path="/Models/cube" />
+      <script path="/Scripts/stupid_enemy" />
+    </item> -->
+  </container>
+  
+  <!-- Maps contain models, initial entity placements and global scripts. -->
+  <container id="Maps" path="data/maps">
+    <!-- <item name="first" type="BasicMap">
+      <load_file path="first.xml" loader="iid.importers.MapImporter" />
+    </item> -->
+  </container>
+</manifest>

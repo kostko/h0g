@@ -1,0 +1,39 @@
+<map version="1.0">
+  <!-- Basic map configuration -->
+  <properties>
+    <!-- Map world physics -->
+    <physics>
+      <gravity>-9.81</gravity>
+    </physics>
+    
+    <!-- Map script. This script is responsible for setting up the scene (by loading up
+         objects), installing event handlers etc. -->
+    <controller>/Scripts/map_controller</controller>
+    
+    <!-- Additional entity classes. These only need to be defined if the scene tag below
+         is used (since controller script may load other scripts). -->
+    <import>
+      <script path="/Scripts/stupid_spaceship" class="Spaceship" />
+    </import>
+  </properties>
+  
+  <!-- Describes the scene as is prepared while loading this map. The map controller
+       script can install hooks for scene pre-load and post-load to make any modifications
+       necessary. Note that scene can be an empty element when map controller will
+       generate the whole scene by itself. -->
+  <scene>
+    <!-- Here we instantiate new entities. Each entity has a model, texture and a class defined.
+         When no class is defined the default iid.scene.Entity is used, otherwise classes must
+         be predefined in the properties section of this map. -->
+    <entity model="/Models/spaceship" texture="/Textures/spaceship" id="test">
+      <pos>
+        <x>0</x>
+        <x>0</y>
+        <z>0</z>
+      </pos>
+    </entity>
+    
+    <!-- Entities may also be fully scripted (position and all) -->
+    <entity class="Spaceship" id="bar" />
+  </scene>
+</map>
