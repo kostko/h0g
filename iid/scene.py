@@ -284,7 +284,9 @@ class Light(SceneObject):
   
   TODO: one million missing possible settings of a light.
   """
-  __lightNumber = GL_LIGHT0-1
+  __lightNumber = None
+  __globalLights = GL_LIGHT0-1
+  
   ambient = (0.2, 0.2, 0.2, 0.0)
   diffuse = (0.8, 0.8, 0.8, 0.0)
   specular = (1.0, 1.0, 1.0, 0.0)
@@ -294,7 +296,8 @@ class Light(SceneObject):
   
   def __init__(self, scene, objectId):
     super(Light, self).__init__(scene, objectId)
-    self.__lightNumber += 1
+    Light.__globalLights += 1   # Increment the number of all lights
+    self.__lightNumber = Light.__globalLights;
     
   def prepare(self):
     """
@@ -329,7 +332,43 @@ class Light(SceneObject):
     Changes object's coordinates.
     """
     self.coordinates = [x, y, z, a]
+  
+  def setAmbient(self, x, y, z, a):
+    """
+    Change ambient parameters.
+    """
+    self.ambient = [x, y, z, a]
     
+  def setDiffuse(self, x, y, z, a):
+    """
+    Change diffuse parameters.
+    """
+    self.diffuse = [x, y, z, a]
+    
+  def setSpecular(self, x, y, z, a):
+    """
+    Change specular parameters.
+    """
+    self.specular = [x, y, z, a]
+    
+  def setConstantAttenuation(self, constant):
+    """
+    Set the constant attenuation value.
+    """
+    self.constantAttenuation = constant
+    
+  def setLinearAttenuation(self, linear):
+    """
+    Set the linear attenuation value.
+    """
+    self.linearAttenuation = linear
+    
+  def setQuadraticAttenuation(self, quadratic):
+    """
+    Set the quadratic attenuation value.
+    """
+    self.quadraticAttenuation = quadratic
+
  
 class Scene(object):
   """
