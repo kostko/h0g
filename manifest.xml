@@ -6,14 +6,8 @@
     <item name="spaceship" type="BasicTexture">
       <load_file path="spaceshiptexture.bmp" loader="iid.importers.PILTextureImporter" />
     </item>
-    <item name="bfg" type="BasicTexture">
-      <load_file path="bfg.jpg" loader="iid.importers.PILTextureImporter" />
-    </item>
     <item name="rocketlauncher" type="BasicTexture">
       <load_file path="rocketlauncher.jpg" loader="iid.importers.PILTextureImporter" />
-    </item>
-    <item name="r2-d2-body" type="BasicTexture">
-      <load_file path="r2-d2/r2d2_bod.jpg" loader="iid.importers.PILTextureImporter" />
     </item>
   </container>
   
