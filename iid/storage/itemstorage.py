@@ -11,7 +11,7 @@ import inspect
 
 # IID imports
 from iid.storage.base import Item, Container
-from iid.storage.items import BasicModel, BasicTexture, BasicScript, BasicEntity, BasicMap
+from iid.storage.items import BasicModel, BasicTexture, BasicScript, BasicEntity, BasicMap, CompositeModel
 from iid.storage.opcodes import ArgumentOpcodes
 
 # Logger for this module

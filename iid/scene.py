@@ -276,7 +276,61 @@ class Camera(SceneObject):
       -self.coordinates[1],
       -self.coordinates[2]
     )
+    
 
+class Light(SceneObject):
+  """
+  A light source that can be added to a scene.
+  
+  TODO: one million missing possible settings of a light.
+  """
+  __lightNumber = GL_LIGHT0-1
+  ambient = (0.2, 0.2, 0.2, 0.0)
+  diffuse = (0.8, 0.8, 0.8, 0.0)
+  specular = (1.0, 1.0, 1.0, 0.0)
+  constantAttenuation = 1.0
+  linearAttenuation = 0.0
+  quadraticAttenuation = 0.0
+  
+  def __init__(self, scene, objectId):
+    super(Light, self).__init__(scene, objectId)
+    self.__lightNumber += 1
+    
+  def prepare(self):
+    """
+    Prepare the lights.
+    """
+    self.setVisible(True)
+    
+  def render(self):
+    """
+    'Render' the light.
+    """
+    glLight(self.__lightNumber, GL_POSITION, self.coordinates)
+    glLight(self.__lightNumber, GL_AMBIENT, self.ambient)
+    glLight(self.__lightNumber, GL_DIFFUSE, self.diffuse)
+    glLight(self.__lightNumber, GL_SPECULAR, self.diffuse)
+    glLightf(self.__lightNumber, GL_CONSTANT_ATTENUATION , self.constantAttenuation)
+    glLightf(self.__lightNumber, GL_LINEAR_ATTENUATION , self.linearAttenuation)
+    glLightf(self.__lightNumber, GL_QUADRATIC_ATTENUATION , self.quadraticAttenuation)
+    
+  def setVisible(self, visible):
+    """
+    Set the light's visibility.
+    """
+    self.visible = visible
+    if not visible:
+      glDisable(self.__lightNumber)
+    else:
+      glEnable(self.__lightNumber)  
+    
+  def setCoordinates(self, x, y, z, a):
+    """
+    Changes object's coordinates.
+    """
+    self.coordinates = [x, y, z, a]
+    
+ 
 class Scene(object):
   """
   The scene is an object container that renders those objects to
@@ -288,6 +342,7 @@ class Scene(object):
   height = 0
   objects = None
   camera = None
+  lights = None
   
   # Entity brain container
   behaviours = None
@@ -304,6 +359,7 @@ class Scene(object):
     """
     self.objects = {}
     self.behaviours = {}
+    self.lights = {}
     
     # Create ODE physical world
     self.physicalWorld = ode.World()
@@ -311,7 +367,7 @@ class Scene(object):
     self.physicalWorld.setGravity((0, -9.81, 0))
     self.physicalWorld.setERP(0.8)
     self.physicalWorld.setCFM(1E-5)
-    
+
     self.space = ode.Space()
     self.contactGroup = ode.JointGroup()
   
@@ -323,6 +379,10 @@ class Scene(object):
       self.camera = obj
       return
     
+    if isinstance(obj, Light):
+      self.lights[obj.objectId] = obj
+      return
+    
     self.objects[obj.objectId] = obj
   
   def unregisterObject(self, obj):
@@ -331,6 +391,13 @@ class Scene(object):
     """
     if isinstance(obj, Camera):
       self.camera = None
+      return
+    
+    if isinstance(obj, Light):
+      try:
+        del self.lights[obj.objectId]
+      except KeyError:
+        raise SceneObjectNotFound
       return
     
     try:
@@ -357,6 +424,11 @@ class Scene(object):
     """
     Prepare all objects.
     """
+    # Prepare lights
+    glEnable(GL_LIGHTING)
+    for light in self.lights.values():
+      light.prepare()
+    
     glEnable(GL_TEXTURE_2D)
     glShadeModel(GL_SMOOTH)
     glClearColor(0, 0, 0, 0)
@@ -396,6 +468,10 @@ class Scene(object):
     # Render the camera first
     if self.camera:
       self.camera.render()
+      
+    # Render the lights
+    for light in self.lights.values():
+      light.render()
     
     # Now render all other (visible) objects
     for obj in self.objects.values():

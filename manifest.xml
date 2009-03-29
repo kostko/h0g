@@ -6,12 +6,29 @@
     <item name="spaceship" type="BasicTexture">
       <load_file path="spaceshiptexture.bmp" loader="iid.importers.PILTextureImporter" />
     </item>
+    <item name="bfg" type="BasicTexture">
+      <load_file path="bfg.jpg" loader="iid.importers.PILTextureImporter" />
+    </item>
+    <item name="rocketlauncher" type="BasicTexture">
+      <load_file path="rocketlauncher.jpg" loader="iid.importers.PILTextureImporter" />
+    </item>
+    <item name="r2-d2-body" type="BasicTexture">
+      <load_file path="r2-d2/r2d2_bod.jpg" loader="iid.importers.PILTextureImporter" />
+    </item>
   </container>
   
   <container id="Models" path="data/models">
     <item name="spaceship" type="BasicModel">
       <scale_factor x="0.05" y="0.05" z="0.05" />
       <load_file path="spaceship.3ds" loader="iid.importers.ThreeDSModelImporter" />
+    </item>
+    <item name="rocketlauncher" type="BasicModel">
+      <scale_factor x="0.15" y="0.15" z="0.15" />
+      <load_file path="rocketlauncher.3ds" loader="iid.importers.ThreeDSModelImporter" />
+    </item>
+    <item name="r2-d2" type="CompositeModel">
+      <scale_factor x="0.05" y="0.05" z="0.05" />
+      <load_file path="r2-d2.3ds" subtype="BasicModel" loader="iid.importers.ThreeDSModelImporter" />
     </item>
   </container>
   

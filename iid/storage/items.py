@@ -8,7 +8,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 # IID imports
-from iid.storage.base import Item
+from iid.storage.base import Item, Container
 
 class BasicModel(Item):
   """
@@ -19,6 +19,7 @@ class BasicModel(Item):
   polygons = None
   textureMap = None
   hints = None
+  polygonMaterial = None    # Maps a material to a certain polygon
   
   # Model dimensions (for bounding box)
   dimensions = None
@@ -42,6 +43,11 @@ class BasicModel(Item):
     if self.__modelId:
       return self.__modelId
     
+    # Prepare materials (this generates the call lists)
+    if self.polygonMaterial != None:
+      for p in self.polygonMaterial:
+        p.prepare()
+    
     self.__modelId = glGenLists(1)
     glNewList(self.__modelId, GL_COMPILE)
     
@@ -63,7 +69,12 @@ class BasicModel(Item):
     
     glBegin(GL_TRIANGLES)
     
-    for p in self.polygons:
+    for i, p in zip(xrange(len(self.polygons)), self.polygons):
+      
+      # Prepare materials
+      if self.polygonMaterial[i]:
+        glCallList(self.polygonMaterial[i].prepare())
+      
       glTexCoord2fv(self.textureMap[p[0]])
       glVertex3fv(self.vertices[p[0]])
       check_dimensions(self.vertices[p[0]])
@@ -136,6 +147,38 @@ class BasicTexture(Item):
     """
     glDeleteTextures([self.__textureId])
 
+class BasicMaterial(Item):
+  """
+  Represents one material definition.
+  """
+  # Defaults
+  ambient = (0.2,0.2,0.2)
+  diffuse = (0.8,0.8,0.8)
+  specular = (1.0,1.0,1.0)
+  shininess = 0.0
+  
+  # OpenGL texture identifier
+  __materialId = None
+  
+  def prepare(self):
+    """
+    Generates a list for this type of material.
+    
+    @return: OpenGL texture identifier
+    """
+    if self.__materialId:
+      return self.__materialId
+    
+    self.__materialId = glGenLists(1)
+    glNewList(self.__materialId, GL_COMPILE)
+    glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
+    glMaterialfv(GL_FRONT, GL_SPECULAR, self.specular)
+    glMaterialfv(GL_FRONT, GL_SHININESS, self.shininess)
+    glEndList()
+    
+    return self.__materialId
+
 class BasicScript(Item):
   pass
 
@@ -143,4 +186,11 @@ class BasicEntity(Item):
   pass
 
 class BasicMap(Item):
+  pass
+
+class CompositeModel(Container):
+  """
+  'Virtual model' for storing models consisting 
+  of multiple objects. 
+  """
   pass

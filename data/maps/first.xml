@@ -28,7 +28,7 @@
     <entity model="/Models/spaceship" texture="/Textures/spaceship" id="test">
       <pos>
         <x>0</x>
-        <x>0</y>
+        <y>0</y>
         <z>0</z>
       </pos>
     </entity>

@@ -9,7 +9,7 @@ import logging
 # IID imports
 from iid.exceptions import *
 from iid.importers import Importer
-from iid.storage.items import BasicModel, BasicTexture
+from iid.storage.items import BasicModel, BasicTexture, CompositeModel
 
 # Logger for this module
 logger = logging.getLogger(__name__)
@@ -66,7 +66,13 @@ def load_file(item, args):
     raise InvalidOpcodeArguments
   
   importer = cls(item.resolveFullPath(args['path']))
-  importer.load(item)
+  
+  # Determine sub-object type (if composite)
+  if args.has_key("subtype"):
+    subtype = globals()[args['subtype']]
+    importer.load(item, subtype)
+  else:
+    importer.load(item) 
 
 def scale_factor(item, args):
   """
@@ -76,16 +82,25 @@ def scale_factor(item, args):
     logger.error("Invalid opcode arguments for scale factor (x, y and z are required)!")
     raise InvalidOpcodeArguments
   
-  if not isinstance(item, BasicModel):
+  if not (isinstance(item, BasicModel) or isinstance(item, CompositeModel)):
     logger.error("Scaling factors can only be applied to models!")
     raise InvalidOpcodeArguments
-  
+
   try:
-    item.hints['scaling'] = (
-      float(args['x']),
-      float(args['y']),
-      float(args['z'])
-    )
+    if isinstance(item, BasicModel):
+      item.hints['scaling'] = (
+        float(args['x']),
+        float(args['y']),
+        float(args['z'])
+      )
+    elif isinstance(item, CompositeModel):
+      # Set scaling to all children
+      for child in item.children:
+        child.hints['scaling'] = (
+          float(args['x']),
+          float(args['y']),
+          float(args['z'])
+        )
   except ValueError:
     logger.error("Invalid opcode arguments for scale factor (x, y and z must be floats)!")
     raise InvalidOpcodeArguments
