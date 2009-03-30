@@ -46,8 +46,8 @@
   
   <!-- Maps contain models, initial entity placements and global scripts. -->
   <container id="Maps" path="data/maps">
-    <!-- <item name="first" type="BasicMap">
+    <item name="first" type="BasicMap">
       <load_file path="first.xml" loader="iid.importers.MapImporter" />
-    </item> -->
+    </item>
   </container>
 </manifest>

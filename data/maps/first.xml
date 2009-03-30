@@ -14,6 +14,7 @@
          is used (since controller script may load other scripts). -->
     <import>
       <script path="/Scripts/stupid_spaceship" class="Spaceship" />
+      <script path="/Scripts/standard_entity_library" class="Switch,Door" />
     </import>
   </properties>
   
@@ -25,15 +26,42 @@
     <!-- Here we instantiate new entities. Each entity has a model, texture and a class defined.
          When no class is defined the default iid.scene.Entity is used, otherwise classes must
          be predefined in the properties section of this map. -->
-    <entity model="/Models/spaceship" texture="/Textures/spaceship" id="test">
+    <!-- <entity model="/Models/spaceship" texture="/Textures/spaceship" class="iid.scene.PhysicalEntity" id="test">
       <pos>
         <x>0</x>
         <y>0</y>
         <z>0</z>
       </pos>
-    </entity>
+    </entity> -->
     
-    <!-- Entities may also be fully scripted (position and all) -->
-    <entity class="Spaceship" id="bar" />
+    <entity model="/Models/r2-d2" class="iid.scene.PhysicalEntity" id="artuditu">
+      <pos>
+        <x>0</x>
+        <y>0</y>
+        <z>0</z>
+      </pos>
+      
+      <rot>
+        <x>0</x>
+        <y>-90</y>
+        <z>0</z>
+      </rot>
+      
+      <!-- Just for show ;-) -->
+      <subentity match="R2 BODY">
+        <class>iid.scene.Entity</class>
+      </subentity>
+    </entity>
   </scene>
+  
+  <!-- Signal/slot connections -->
+  <signals>
+    <!-- Each connection specifies two entities by their scene hierarchy position composed of
+         entity identifiers. It also specifies the signal name and the slot name (slots should
+         be registred via decorators in entity behavior classes). -->
+    <connect sender="/level/switch_x1" receiver="/level/door_x2">
+      <signal>Switch.Changed</signal>
+      <slot>Door.OpenOrClose</slot>
+    </connect>
+  </signals>
 </map>

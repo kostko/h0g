@@ -5,12 +5,11 @@
 # Copyright (C) 2009 by Anze Vavpetic <anze.vavpetic@gmail.com>
 #
 from OpenGL.GL import *
-from iid.exceptions import *
-from iid.storage.items import BasicTexture, BasicModel, BasicMaterial, CompositeModel
 import logging
 import numpy
 import os
 import struct
+import xml.etree.cElementTree as XMLTree
 
 # This seems to be somewhat system dependent (?):
 try:
@@ -19,6 +18,9 @@ except:
   import Image
 
 # IID imports
+from iid.exceptions import *
+from iid.storage.items import BasicTexture, BasicModel, BasicMaterial, CompositeModel, BasicMap
+from iid.scene import Entity
 
 # Logger for this module
 logger = logging.getLogger(__name__)
@@ -111,7 +113,7 @@ class ThreeDSModelImporter(Importer):
   """
   3DS model importer.
   """
-  def load(self, item, subtype=BasicModel):
+  def load(self, item, subtype = BasicModel):
     """
     Imports the 3DS model into specified item. Based on format description
     that can be found on:
@@ -127,7 +129,7 @@ class ThreeDSModelImporter(Importer):
     totalVertices = 0
     totalPolygons = 0
     
-    if not (isinstance(item, BasicModel) or isinstance(item, CompositeModel)):
+    if not isinstance(item, (BasicModel, CompositeModel)):
       logger.error("Can only load 3D models into CompositeModel or BasicModel type items!")
       raise ItemTypeMismatch
     if isinstance(item, BasicModel):
@@ -296,4 +298,131 @@ class MapImporter(Importer):
   """
   Map XML descriptor importer.
   """
-  pass
+  def load(self, item):
+    """
+    Imports the map into specified item.
+
+    @param item: A valid BasicMap instance
+    """
+    if not isinstance(item, BasicMap):
+      logger.error("Can only load maps into BasicMap type items!")
+      raise ItemTypeMismatch
+    
+    xml = XMLTree.parse(self.filename)
+    m = xml.getroot()
+    if m.tag != "map":
+      logger.error("Invalid map XML file!")
+      raise ItemFileNotFound
+    
+    # Parse map properties
+    item.properties = {
+      'gravity' : float(m.findtext("./properties/physics/gravity"))
+    }
+    
+    # TODO Get map controller script
+    # TODO Get imports
+    # XXX need scripting support first
+    scripts = {}
+    
+    # Parse scene descriptor
+    item.scene = []
+    anonymousId = 0
+    for entity in m.findall("./scene/entity"):
+      # Create main entity descriptor
+      e = BasicMap.EntityDescriptor()
+      if 'id' in entity.attrib:
+        e.objectId = entity.attrib['id']
+      else:
+        e.objectId = "anonymous_%d" % anonymousId
+        anonymousId += 1
+      
+      if 'model' in entity.attrib:
+        e.model = item.storage[entity.attrib['model']]
+        if not isinstance(e.model, (BasicModel, CompositeModel)):
+          logger.error("Invalid entity model specified (not a BasicModel/CompositeModel subclass!")
+          raise ItemTypeMismatch
+      
+      if 'texture' in entity.attrib:
+        e.texture = item.storage[entity.attrib['texture']]
+        if not isinstance(e.texture, BasicTexture):
+          logger.error("Invalid entity texture specified (not a BasicTexture subclass!")
+          raise ItemTypeMismatch
+      
+      e.entityClass = self.__loadEntityClass(entity.attrib.get('class', 'iid.scene.Entity'), scripts)
+      
+      pos = entity.find("./pos")
+      if pos is not None:
+        try:
+          e.properties['pos'] = (
+            float(pos.findtext("./x")),
+            float(pos.findtext("./y")),
+            float(pos.findtext("./z"))
+          )
+        except (ValueError, TypeError):
+          logging.error("Invalid entity coordinates specified!")
+          raise ItemTypeMismatch
+      
+      rot = entity.find("./rot")
+      if rot is not None:
+        try:
+          e.properties['rot'] = (
+            float(rot.findtext("./x")),
+            float(rot.findtext("./y")),
+            float(rot.findtext("./z"))
+          )
+        except (ValueError, TypeError):
+          logging.error("Invalid entity rotation specified!")
+          raise ItemTypeMismatch
+      
+      # Add subentity descriptors (if any)
+      if isinstance(e.model, CompositeModel):
+        for subentity in entity.findall("./subentity"):
+          se = BasicMap.EntityDescriptor()
+          se.parent = e
+          
+          texture = subentity.findtext("./texture")
+          if texture:
+            se.texture = item.storage[texture]
+            if not isinstance(e.texture, BasicTexture):
+              logger.error("Invalid sub-entity texture specified (not a BasicTexture subclass!")
+              raise ItemTypeMismatch
+          
+          entityClass = subentity.findtext("./class")
+          if entityClass:
+            se.entityClass = self.__loadEntityClass(entityClass, scripts)
+          
+          se.match = subentity.attrib.get('match', '*')
+          e.children.append(se)
+      
+      item.scene.append(e)
+    
+    # Parse signal/slot connections
+    # TODO implement with scripts
+  
+  def __loadEntityClass(self, classPath, scripts):
+    """
+    Loads an entity class.
+    
+    @param classPath: A valid entity class path
+    @param scripts: A list of loaded scripts
+    """
+    if '.' in classPath:
+      # Module path
+      try:
+        module = classPath[0:classPath.rfind('.')]
+        className = classPath[classPath.rfind('.') + 1:]
+        m = __import__(module, globals(), locals(), [className], -1)
+        cls = m.__dict__[className]
+      except KeyError:
+        logger.error("Entity class '%s' not found!" % classPath)
+        raise ItemImporterNotFound
+    else:
+      # Just a class name, should be already available
+      # TODO implement with scripts
+      cls = None
+    
+    if not issubclass(cls, Entity):
+      logger.error("Specified entity class is not a subclass of Entity!")
+      raise ItemTypeMismatch
+    
+    return cls

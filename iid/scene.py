@@ -27,6 +27,10 @@ class SceneObject(object):
   objectId = ""
   scene = None
   
+  # Object hierarchy
+  parent = None
+  children = None
+  
   # Object attributes
   visible = False
   static = True
@@ -36,37 +40,63 @@ class SceneObject(object):
   rotation = None
   scaling = None
   
-  def __init__(self, scene, objectId):
+  def __init__(self, scene, objectId, parent = None):
     """
     Class constructor.
     
     @param scene: A valid Scene instance
     @param objectId: Unique object identifier
+    @param parent: Parent object if this is a subobject
     """
     self.scene = scene
     self.objectId = objectId
+    self.parent = parent
+    self.children = {}
     
-    self.coordinates = [0, 0, 0]
-    self.rotation = [0, 0, 0]
-    self.scaling = [1, 1, 1]
+    self.coordinates = numpy.zeros(3)
+    self.rotation = numpy.zeros(3)
+    self.scaling = numpy.ones(3)
+    
+    # Insert us into hierarchy
+    if self.parent:
+      self.parent.children[objectId] = self
+  
+  def isChild(self):
+    """
+    Returns true if this object is not a top-level object, but
+    a subobject for some other object.
+    """
+    return self.parent is not None
+  
+  def mapCoordsToParent(self, coords):
+    """
+    Maps coordinates in object coordinate system to world coordinate
+    system.
+    
+    @param coords: A valid numpy array of coordinates
+    """
+    if not self.isChild():
+      return coords
+    
+    return self.parent.mapCoordsToParent(self.parent.coordinates + coords)
   
   def setCoordinates(self, x, y, z):
     """
     Changes object's coordinates.
     """
-    self.coordinates = [x, y, z]
+    self.coordinates[0:3] = [x, y, z]
   
   def setRotation(self, x, y, z):
     """
     Changes object's rotation.
     """
-    self.rotation = [x, y, z]
+    self.rotation[0:3] = [x, y, z]
   
   def setScaling(self, x, y, z):
     """
     Set object's scaling.
     """
-    self.scaling = [x, y, z]
+    self.scaling[0:3] = [x, y, z]
   
   def rotateX(self, phi):
     """
@@ -102,13 +132,16 @@ class SceneObject(object):
     """
     Should prepare the object for rendering.
     """
-    pass
+    for obj in self.children.values():
+      obj.prepare()
   
   def render(self):
     """
     Should render the given object.
     """
-    pass
+    for obj in self.children.values():
+      if obj.visible:
+        obj.render()
 
 class Entity(SceneObject):
   """
@@ -124,7 +157,7 @@ class Entity(SceneObject):
   textureId = None
   listId = None
   
-  def __init__(self, scene, objectId, model, texture):
+  def __init__(self, scene, objectId, model, texture, parent = None):
     """
     Class constructor.
     
@@ -132,8 +165,9 @@ class Entity(SceneObject):
     @param objectId: Unique object identifier
     @param model: A valid model
     @param texture: A valid texture
+    @param parent: Parent object if this is a subobject
     """
-    super(Entity, self).__init__(scene, objectId)
+    super(Entity, self).__init__(scene, objectId, parent)
     self.model = model
     self.texture = texture
   
@@ -141,6 +175,10 @@ class Entity(SceneObject):
     """
     Prepares the model's vertices/textures so they can be rendered.
     """
+    # First prepare all subentities
+    super(Entity, self).prepare()
+    
+    # Prepare this entity texture and model
     self.textureId = self.texture.prepare() if self.texture else None
     self.listId = self.model.prepare()
   
@@ -150,9 +188,6 @@ class Entity(SceneObject):
     scene coordinates and then pushing model's vertices via
     calls to OpenGL.
     """
-    if not self.listId:
-      return
-    
     glPushMatrix()
     
     # Transformations
@@ -161,12 +196,16 @@ class Entity(SceneObject):
     glRotatef(self.rotation[2], 0, 0, 1)
     glScalef(*self.scaling)
     
+    # Render all subentities
+    super(Entity, self).render()
+    
     # Add texture when requested
     if self.textureId is not None:
       glBindTexture(GL_TEXTURE_2D, self.textureId)
     
     # Execute precompiled OpenGL commands
-    glCallList(self.listId)
+    if self.listId:
+      glCallList(self.listId)
     
     glPopMatrix()
 
@@ -177,7 +216,7 @@ class PhysicalEntity(Entity):
   """
   body = None
   
-  def __init__(self, scene, objectId, model, texture):
+  def __init__(self, scene, objectId, model, texture, parent = None):
     """
     Class constructor.
     
@@ -185,8 +224,9 @@ class PhysicalEntity(Entity):
     @param objectId: Unique object identifier
     @param model: A valid model
     @param texture: A valid texture
+    @param parent: Parent object if this is a subobject
     """
-    super(PhysicalEntity, self).__init__(scene, objectId, model, texture)
+    super(PhysicalEntity, self).__init__(scene, objectId, model, texture, parent)
     self.prepare()
     self.body = self.preparePhysicalModel()
   
@@ -195,7 +235,25 @@ class PhysicalEntity(Entity):
     Changes object's coordinates.
     """
     super(PhysicalEntity, self).setCoordinates(x, y, z)
-    self.body.setPosition((x, y, z))
+    self.body.setPosition(self.mapCoordsToParent(self.coordinates))
+  
+  def setRotation(self, x, y, z):
+    """
+    Changes object's rotation.
+    """
+    super(PhysicalEntity, self).setRotation(x, y, z)
+    
+    # Calculate the rotation matrix
+    cx, cy, cz = numpy.cos([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    sx, sy, sz = numpy.sin([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    
+    R = (
+      cx*cz - sx*cy*sz, -sx*cz - cx*cy*sz, sy*sz,
+      cx*sz + sx*cy*cz, -sx*sz + cx*cy*cz, -sy*cz,
+      sx*sy,            cx*sy,             cy
+    )
+    
+    self.body.setRotation(R)
   
   def setVisible(self, visible):
     """
@@ -213,9 +271,6 @@ class PhysicalEntity(Entity):
     scene coordinates and then pushing model's vertices via
     calls to OpenGL.
     """
-    if not self.listId:
-      return
-    
     x, y, z = self.body.getPosition()
     R = self.body.getRotation()
     M = [
@@ -228,19 +283,24 @@ class PhysicalEntity(Entity):
     glPushMatrix()
     glMultMatrixd(M)
     
+    # Render subentities
+    super(Entity, self).render()
+    
     # Add texture when requested
     if self.textureId is not None:
       glBindTexture(GL_TEXTURE_2D, self.textureId)
     
     # Execute precompiled OpenGL commands
-    glCallList(self.listId)
+    if self.listId:
+      glCallList(self.listId)
     
     glPopMatrix()
   
   def preparePhysicalModel(self):
     """
     Should prepare the physical model. Default just represents all
-    models as boxes.
+    models as boxes. When using subentities this method should connect
+    all subentities together via joints when needed.
     
     @return: A valid ode.Body instance
     """
@@ -271,6 +331,7 @@ class Camera(SceneObject):
     """
     glRotatef(self.rotation[0], 1, 0, 0)
     glRotatef(360.0 - self.rotation[1], 0, 1, 0)
+    glRotatef(self.rotation[2], 0, 0, 1)
     glTranslatef(
       -self.coordinates[0],
       -self.coordinates[1],
@@ -402,7 +463,6 @@ class Scene(object):
     
     # Create ODE physical world
     self.physicalWorld = ode.World()
-    # TODO: These constants should be per-map configurable
     self.physicalWorld.setGravity((0, -9.81, 0))
     self.physicalWorld.setERP(0.8)
     self.physicalWorld.setCFM(1E-5)
@@ -455,7 +515,7 @@ class Scene(object):
   
   def getObjectByName(self, name):
     """
-    Returns an object identified by its name.
+    Returns a top-level object identified by its name.
     """
     return self.objects.get[name]
   
@@ -463,6 +523,8 @@ class Scene(object):
     """
     Prepare all objects.
     """
+    logger.info("Preparing scene objects, stand by...")
+    
     # Prepare lights
     glEnable(GL_LIGHTING)
     for light in self.lights.values():
@@ -496,6 +558,8 @@ class Scene(object):
         logger.error("Unhandled exception while preparing an object!")
         logger.error(traceback.format_exc())
         sys.exit(1)
+    
+    logger.info("Scene preparation completed! Let's render some stuff.")
   
   def render(self):
     """

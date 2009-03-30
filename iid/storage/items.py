@@ -6,9 +6,15 @@
 #
 from OpenGL.GL import *
 from OpenGL.GLU import *
+import logging
+import re
 
 # IID imports
 from iid.storage.base import Item, Container
+from iid.scene import Entity
+
+# Logger for this module
+logger = logging.getLogger(__name__)
 
 class BasicModel(Item):
   """
@@ -23,6 +29,8 @@ class BasicModel(Item):
   
   # Model dimensions (for bounding box)
   dimensions = None
+  mind = None
+  maxd = None
   
   # OpenGL model identifier
   __modelId = None
@@ -91,6 +99,7 @@ class BasicModel(Item):
     glEndList()
     
     # Set model dimensions
+    self.mind, self.maxd = mind, maxd
     self.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
     if 'scaling' in self.hints:
       for i in xrange(3):
@@ -186,11 +195,129 @@ class BasicEntity(Item):
   pass
 
 class BasicMap(Item):
-  pass
+  """
+  A map contains scene properties (physical constants, ...), script references,
+  a scene description and signal connections.
+  """
+  properties = None
+  controller = None
+  scene = None
+  
+  class EntityDescriptor(object):
+    """
+    Entity descriptor.
+    """
+    objectId = None
+    model = None
+    texture = None
+    entityClass = None
+    match = None
+    properties = None
+    
+    # Entity hierarchy
+    parent = None
+    children = None
+    
+    def __init__(self):
+      """
+      Class constructor.
+      """
+      self.properties = {}
+      self.children = []
+  
+  def load(self, scene):
+    """
+    Loads map components into the scene.
+    """
+    logger.info("Loading map '%s' into current scene..." % self.itemId)
+    
+    # Setup scene properties
+    scene.physicalWorld.setGravity((0, self.properties['gravity'], 0))
+    
+    # Create entities
+    for entity in self.scene:
+      logger.info("Spawning entity class '%s' (objectId = '%s')." % (entity.entityClass.__name__, entity.objectId))
+      self.__createEntity(scene, entity)
+    
+    logger.info("Map loaded!")
+  
+  def __createEntity(self, scene, entity):
+    """
+    Spawn entity and its subentities.
+    
+    @param scene: Scene instance
+    @param entity: An entity descriptor
+    """
+    e = entity.entityClass(scene, entity.objectId, entity.model, entity.texture)
+    e.setVisible(True)
+    
+    if 'pos' in entity.properties:
+      e.setCoordinates(*entity.properties['pos'])
+    
+    if 'rot' in entity.properties:
+      e.setRotation(*entity.properties['rot'])
+    
+    # Add subentities when model has them
+    if 'children' in entity.model.__dict__:
+      rpl = (
+        ('.', r'\.'),
+        ('?', '.'),
+        ('*', '.*?')
+      )
+      regexps = []
+      for subentity in entity.children:
+        for s, r in rpl:
+          subentity.match = subentity.match.replace(s, r)
+        
+        regexps.append((re.compile(subentity.match), subentity))
+      
+      for objectId, model in e.model.children.iteritems():
+        for regexp, subentity in regexps:
+          if regexp.match(objectId):
+            se = subentity.entityClass(scene, objectId, model, subentity.texture, e)
+            break
+        else:
+          # No regular expression has matched, default to Entity with no textures
+          se = Entity(scene, objectId, model, None, e)
+        
+        se.setVisible(True)
+    
+    scene.registerObject(e)
 
 class CompositeModel(Container):
   """
   'Virtual model' for storing models consisting 
   of multiple objects. 
   """
-  pass
+  # Model dimensions (for bounding box)
+  dimensions = None
+  mind = None
+  maxd = None
+  
+  def prepare(self):
+    """
+    This object cannot be prepared so it returns None. It only calculates
+    bounding box dimensions of this composite model.
+    """
+    mind = [None, None, None]
+    maxd = [None, None, None]
+    
+    def check_dimensions(d):
+      for i in xrange(3):
+        if mind[i] is None or d[i] < mind[i]:
+          mind[i] = d[i]
+        
+        if maxd[i] is None or d[i] > maxd[i]:
+          maxd[i] = d[i]
+    
+    for model in self.children.values():
+      model.prepare()
+      
+      check_dimensions(model.mind)
+      check_dimensions(model.maxd)
+    
+    # Set model dimensions
+    self.mind, self.maxd = mind, maxd
+    self.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
+    
+    return None
