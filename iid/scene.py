@@ -38,6 +38,7 @@ class SceneObject(object):
   # Transformations (when not using a physical body)
   coordinates = None
   rotation = None
+  rotationMatrix = None
   scaling = None
   
   def __init__(self, scene, objectId, parent = None):
@@ -56,6 +57,7 @@ class SceneObject(object):
     self.coordinates = numpy.zeros(3)
     self.rotation = numpy.zeros(3)
     self.scaling = numpy.ones(3)
+    self.__prepareRotationMatrix()
     
     # Insert us into hierarchy
     if self.parent:
@@ -91,6 +93,7 @@ class SceneObject(object):
     Changes object's rotation.
     """
     self.rotation[0:3] = [x, y, z]
+    self.__prepareRotationMatrix()
   
   def setScaling(self, x, y, z):
     """
@@ -105,6 +108,7 @@ class SceneObject(object):
     @param phi: Rotation angle
     """
     self.rotation[0] = phi
+    self.__prepareRotationMatrix()
   
   def rotateY(self, phi):
     """
@@ -113,6 +117,7 @@ class SceneObject(object):
     @param phi: Rotation angle
     """
     self.rotation[1] = phi
+    self.__prepareRotationMatrix()
   
   def rotateZ(self, phi):
     """
@@ -121,6 +126,7 @@ class SceneObject(object):
     @param phi: Rotation angle
     """
     self.rotation[2] = phi
+    self.__prepareRotationMatrix()
   
   def setVisible(self, visible):
     """
@@ -142,6 +148,22 @@ class SceneObject(object):
     for obj in self.children.values():
       if obj.visible:
         obj.render()
+  
+  def __prepareRotationMatrix(self):
+    """
+    Prepares the object's rotation matrix.
+    """
+    x, y, z = self.rotation
+    
+    # Calculate the rotation matrix
+    cx, cy, cz = numpy.cos([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    sx, sy, sz = numpy.sin([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    
+    self.rotationMatrix = (
+      cx*cz - sx*cy*sz, -sx*cz - cx*cy*sz, sy*sz,
+      cx*sz + sx*cy*cz, -sx*sz + cx*cy*cz, -sy*cz,
+      sx*sy,            cx*sy,             cy
+    )
 
 class Entity(SceneObject):
   """
@@ -188,13 +210,17 @@ class Entity(SceneObject):
     scene coordinates and then pushing model's vertices via
     calls to OpenGL.
     """
-    glPushMatrix()
+    x, y, z = self.coordinates
+    R = self.rotationMatrix
+    M = [
+      R[0], R[3], R[6], 0.,
+      R[1], R[4], R[7], 0.,
+      R[2], R[5], R[8], 0.,
+      x, y, z, 1.0
+    ]
     
-    # Transformations
-    glRotatef(self.rotation[0], 1, 0, 0)
-    glRotatef(self.rotation[1], 0, 1, 0)
-    glRotatef(self.rotation[2], 0, 0, 1)
-    glScalef(*self.scaling)
+    glPushMatrix()
+    glMultMatrixd(M)
     
     # Render all subentities
     super(Entity, self).render()
@@ -206,6 +232,10 @@ class Entity(SceneObject):
     # Execute precompiled OpenGL commands
     if self.listId:
       glCallList(self.listId)
+    
+    if self.scene.showBoundingBoxes:
+      glScalef(*self.model.dimensions)
+      glutWireCube(1.0)
     
     glPopMatrix()
 
@@ -242,18 +272,7 @@ class PhysicalEntity(Entity):
     Changes object's rotation.
     """
     super(PhysicalEntity, self).setRotation(x, y, z)
-    
-    # Calculate the rotation matrix
-    cx, cy, cz = numpy.cos([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
-    sx, sy, sz = numpy.sin([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
-    
-    R = (
-      cx*cz - sx*cy*sz, -sx*cz - cx*cy*sz, sy*sz,
-      cx*sz + sx*cy*cz, -sx*sz + cx*cy*cz, -sy*cz,
-      sx*sy,            cx*sy,             cy
-    )
-    
-    self.body.setRotation(R)
+    self.body.setRotation(self.rotationMatrix)
   
   def setVisible(self, visible):
     """
@@ -271,30 +290,10 @@ class PhysicalEntity(Entity):
     scene coordinates and then pushing model's vertices via
     calls to OpenGL.
     """
-    x, y, z = self.body.getPosition()
-    R = self.body.getRotation()
-    M = [
-      R[0], R[3], R[6], 0.,
-      R[1], R[4], R[7], 0.,
-      R[2], R[5], R[8], 0.,
-      x, y, z, 1.0
-    ]
+    self.coordinates = self.body.getPosition()
+    self.rotationMatrix = self.body.getRotation()
     
-    glPushMatrix()
-    glMultMatrixd(M)
-    
-    # Render subentities
-    super(Entity, self).render()
-    
-    # Add texture when requested
-    if self.textureId is not None:
-      glBindTexture(GL_TEXTURE_2D, self.textureId)
-    
-    # Execute precompiled OpenGL commands
-    if self.listId:
-      glCallList(self.listId)
-    
-    glPopMatrix()
+    super(PhysicalEntity, self).render()
   
   def preparePhysicalModel(self):
     """
@@ -446,6 +445,9 @@ class Scene(object):
   
   # Entity brain container
   behaviours = None
+  
+  # Settings
+  showBoundingBoxes = False
   
   # Physical world
   physicalWorld = None

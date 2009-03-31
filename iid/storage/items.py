@@ -75,27 +75,34 @@ class BasicModel(Item):
         if maxd[i] is None or d[i] > maxd[i]:
           maxd[i] = d[i]
     
-    glBegin(GL_TRIANGLES)
+    if len(self.polygons):
+      # There are actual polygons (=faces)
+      glBegin(GL_TRIANGLES)
+      
+      for i, p in enumerate(self.polygons):
+        # Prepare materials
+        if self.polygonMaterial[i]:
+          glCallList(self.polygonMaterial[i].prepare())
+        
+        glTexCoord2fv(self.textureMap[p[0]])
+        glVertex3fv(self.vertices[p[0]])
+        check_dimensions(self.vertices[p[0]])
+        
+        glTexCoord2fv(self.textureMap[p[1]])
+        glVertex3fv(self.vertices[p[1]])
+        check_dimensions(self.vertices[p[1]])
+        
+        glTexCoord2fv(self.textureMap[p[2]])
+        glVertex3fv(self.vertices[p[2]])
+        check_dimensions(self.vertices[p[2]])
+      
+      glEnd()
+    else:
+      # There are no faces, we just need to calculate model dimensions from vertices
+      # as this model is "empty"
+      for v in self.vertices:
+        check_dimensions(v)
     
-    for i, p in zip(xrange(len(self.polygons)), self.polygons):
-      
-      # Prepare materials
-      if self.polygonMaterial[i]:
-        glCallList(self.polygonMaterial[i].prepare())
-      
-      glTexCoord2fv(self.textureMap[p[0]])
-      glVertex3fv(self.vertices[p[0]])
-      check_dimensions(self.vertices[p[0]])
-      
-      glTexCoord2fv(self.textureMap[p[1]])
-      glVertex3fv(self.vertices[p[1]])
-      check_dimensions(self.vertices[p[1]])
-      
-      glTexCoord2fv(self.textureMap[p[2]])
-      glVertex3fv(self.vertices[p[2]])
-      check_dimensions(self.vertices[p[2]])
-    
-    glEnd()
     glEndList()
     
     # Set model dimensions
