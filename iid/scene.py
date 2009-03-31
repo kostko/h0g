@@ -468,7 +468,7 @@ class Scene(object):
   behaviours = None
   
   # Settings
-  showBoundingBoxes = True
+  showBoundingBoxes = False
   showSubentityBoxes = True
   
   # Physical world

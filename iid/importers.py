@@ -225,6 +225,13 @@ class ThreeDSModelImporter(Importer):
       elif chunkId == 0xA030:
         # Specular
         materials[currentMaterial].specular = self.__readRgb(f)
+      elif chunkId == 0xA050:
+        # Transparency
+        materials[currentMaterial].transparency = self.__readDoubleByte(f)[0]
+      elif chunkId == 0xA084:
+        # Self illuminations (emission)
+        materials[currentMaterial].emission = self.__readDoubleByte(f)[0]
+        print materials[currentMaterial].emission
       else:
         f.seek(chunkLen - 6, os.SEEK_CUR)
         
@@ -256,6 +263,17 @@ class ThreeDSModelImporter(Importer):
       name += ch
       ch = f.read(1)
     return name
+  
+  def __readDoubleByte(self, f):
+    """
+    Reads two bytes and returns them in a pair.
+    """
+    # Move forward
+    chunkId, chunkLen = struct.unpack('<HI', f.read(6))
+    if chunkId == 0x0030:
+      a, b = struct.unpack('<bb', f.read(struct.calcsize('<bb')))
+      
+    return (a, b)
   
   def __readRgb(self, f):
     """

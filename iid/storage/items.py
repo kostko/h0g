@@ -151,7 +151,8 @@ class BasicMaterial(Item):
   ambient = (0.2,0.2,0.2)
   diffuse = (0.8,0.8,0.8)
   specular = (1.0,1.0,1.0)
-  shininess = 0.0
+  emission = 0.0
+  transparency = 0.0
   
   # OpenGL texture identifier
   __materialId = None
@@ -170,7 +171,7 @@ class BasicMaterial(Item):
     glMaterialfv(GL_FRONT, GL_AMBIENT, self.ambient)
     glMaterialfv(GL_FRONT, GL_DIFFUSE, self.diffuse)
     glMaterialfv(GL_FRONT, GL_SPECULAR, self.specular)
-    glMaterialfv(GL_FRONT, GL_SHININESS, self.shininess)
+    glMaterialfv(GL_FRONT, GL_EMISSION, self.emission)
     glEndList()
     
     return self.__materialId
