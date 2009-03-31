@@ -62,6 +62,7 @@ class BasicModel(Item):
     
     self.__modelId = glGenLists(1)
     glNewList(self.__modelId, GL_COMPILE)
+    glPushMatrix()
     
     # Load object's vertices and texture mapping
     if 'scaling' in self.hints:
@@ -88,6 +89,7 @@ class BasicModel(Item):
       
       glEnd()
     
+    glPopMatrix()
     glEndList()
         
     return self.__modelId

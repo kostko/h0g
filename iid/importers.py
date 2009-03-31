@@ -320,10 +320,6 @@ class ThreeDSModelImporter(Importer):
       obj.mind, obj.maxd = mind, maxd
       obj.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
       
-      if 'scaling' in obj.hints:
-        for i in xrange(3):
-          obj.dimensions[i] *= obj.hints['scaling'][i]
-      
       # Calculate geometric center
       lx, ly, lz = obj.dimensions
       cx, cy, cz = (obj.mind[0] + lx / 2, 
@@ -333,7 +329,11 @@ class ThreeDSModelImporter(Importer):
       for i in xrange(len(obj.vertices)):
         x, y, z = obj.vertices[i]
         obj.vertices[i] = x - cx, y - cy, z - cz
-    
+      
+      
+      if 'scaling' in obj.hints:
+        for i in xrange(3):
+          obj.dimensions[i] *= obj.hints['scaling'][i]
     
     if isinstance(item, BasicModel):
       for vertex in item.vertices:

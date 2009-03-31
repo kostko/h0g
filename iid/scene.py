@@ -234,7 +234,7 @@ class Entity(SceneObject):
     if self.listId:
       glCallList(self.listId)
     
-    if self.scene.showBoundingBoxes:
+    if self.scene.showBoundingBoxes and (self.scene.showSubentityBoxes or self.parent == None):
       self.__drawBoundingBox()
     
     glPopMatrix()
@@ -468,7 +468,8 @@ class Scene(object):
   behaviours = None
   
   # Settings
-  showBoundingBoxes = False
+  showBoundingBoxes = True
+  showSubentityBoxes = False
   
   # Physical world
   physicalWorld = None
