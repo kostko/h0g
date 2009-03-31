@@ -167,7 +167,8 @@ class SceneObject(object):
 
 class Entity(SceneObject):
   """
-  Represents a model that can be drawn by the scene.
+  Represents a model that can be drawn by the scene. This entity does
+  not participate in neither physical simulation nor collision detection.
   """
   model = None
   texture = None
@@ -309,14 +310,27 @@ class PhysicalEntity(Entity):
     M.setBox(2000.0, lx, ly, lz)
     body.setMass(M)
     
-    # Back pointer, so we can reference the original object later
-    body.sceneObject = self
-    
     # Create a box geom for collision detection
     geom = ode.GeomBox(self.scene.space, lengths = (lx, ly, lz))
+    geom.sceneObject = self
     geom.setBody(body)
     
     return body
+
+class StaticObstacle(PhysicalEntity):
+  """
+  Represents an entity that participates in collision detection but not
+  in physical simulation (so it is static).
+  """
+  def preparePhysicalModel(self):
+    """
+    This actually returns a geometry object, since methods match.
+    """
+    lx, ly, lz = self.model.dimensions
+    geom = ode.GeomBox(self.scene.space, lengths = (lx, ly, lz))
+    geom.sceneObject = self
+    
+    return geom
 
 class Camera(SceneObject):
   """
@@ -599,14 +613,14 @@ class Scene(object):
     contacts = ode.collide(g1, g2)
     if contacts:
       # Invoke entity's behaviour class with proper arguments
-      entity1 = g1.getBody().sceneObject
-      entity2 = g2.getBody().sceneObject
+      entity1 = g1.sceneObject
+      entity2 = g2.sceneObject
       
       if entity1.behaviour:
-        entity1.behaviour.collision(g2.getBody().sceneObject)
+        entity1.behaviour.collision(entity2)
       
       if entity2.behaviour:
-        entity2.behaviour.collision(g1.getBody().sceneObject)
+        entity2.behaviour.collision(entity1)
     
     world, contactGroup = args
     for c in contacts:
