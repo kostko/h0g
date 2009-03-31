@@ -307,45 +307,56 @@ class ThreeDSModelImporter(Importer):
     mind = [None, None, None]
     maxd = [None, None, None]
     
-    def check_dimensions(d):
+    def check_dimensions(d, min=mind, max=maxd):
       for i in xrange(3):
-        if mind[i] is None or d[i] < mind[i]:
-          mind[i] = d[i]
+        if min[i] is None or d[i] < min[i]:
+          min[i] = d[i]
         
-        if maxd[i] is None or d[i] > maxd[i]:
-          maxd[i] = d[i]
+        if max[i] is None or d[i] > max[i]:
+          max[i] = d[i]
           
     def set_center(obj):
-      # Set model dimensions
-      obj.mind, obj.maxd = mind, maxd
-      obj.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
-      
       # Calculate geometric center
-      lx, ly, lz = obj.dimensions
-      cx, cy, cz = (obj.mind[0] + lx / 2, 
-                    obj.mind[1] + ly / 2, 
-                    obj.mind[2] + lz / 2)
+      lx, ly, lz = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
+      cx, cy, cz = (mind[0] + lx / 2, 
+                    mind[1] + ly / 2, 
+                    mind[2] + lz / 2)
       
       for i in xrange(len(obj.vertices)):
         x, y, z = obj.vertices[i]
         obj.vertices[i] = x - cx, y - cy, z - cz
       
-      
       if 'scaling' in obj.hints:
         for i in xrange(3):
           obj.dimensions[i] *= obj.hints['scaling'][i]
+          
+    def set_box(obj, min = mind, max = maxd):
+      # Set model dimensions
+      obj.mind, obj.maxd = min, max
+      obj.dimensions = [max[0] - min[0], max[1] - min[1], max[2] - min[2]]
     
     if isinstance(item, BasicModel):
       for vertex in item.vertices:
         check_dimensions(vertex)
+      set_box(item)
       set_center(item)
-    else:
-      # Composite model
+      
+    else: # Composite model
       for child in item.children.values():
+        localMind = [None, None, None]
+        localMaxd = [None, None, None]
+        
         for vertex in child.vertices:
-          check_dimensions(vertex)
+          check_dimensions(vertex)                        # Update global extremes
+          check_dimensions(vertex, localMind, localMaxd)  # Update local extremes
+          
+        set_box(child, localMind, localMaxd)              # Calculate box dimensions based on local extremes
+      
+      # Translate vertices relative to the global center
+      for child in item.children.values():
         set_center(child)
         
+       
 class MapImporter(Importer):
   """
   Map XML descriptor importer.
