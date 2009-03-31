@@ -40,7 +40,11 @@ class BasicModel(Item):
     Class constructor.
     """
     super(BasicModel, self).__init__(storage, itemId, parent)
-    self.hints = {}
+    if parent != None and isinstance(parent, CompositeModel):
+      # Inherit parent's hints
+      self.hints = parent.hints
+    else:
+      self.hints = {}
   
   def prepare(self):
     """
@@ -86,32 +90,17 @@ class BasicModel(Item):
         
         glTexCoord2fv(self.textureMap[p[0]])
         glVertex3fv(self.vertices[p[0]])
-        check_dimensions(self.vertices[p[0]])
         
         glTexCoord2fv(self.textureMap[p[1]])
         glVertex3fv(self.vertices[p[1]])
-        check_dimensions(self.vertices[p[1]])
         
         glTexCoord2fv(self.textureMap[p[2]])
         glVertex3fv(self.vertices[p[2]])
-        check_dimensions(self.vertices[p[2]])
       
       glEnd()
-    else:
-      # There are no faces, we just need to calculate model dimensions from vertices
-      # as this model is "empty"
-      for v in self.vertices:
-        check_dimensions(v)
     
     glEndList()
-    
-    # Set model dimensions
-    self.mind, self.maxd = mind, maxd
-    self.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
-    if 'scaling' in self.hints:
-      for i in xrange(3):
-        self.dimensions[i] *= self.hints['scaling'][i]
-    
+        
     return self.__modelId
   
   def destroy(self):
@@ -296,10 +285,22 @@ class CompositeModel(Container):
   'Virtual model' for storing models consisting 
   of multiple objects. 
   """
+  hints = None
   # Model dimensions (for bounding box)
   dimensions = None
   mind = None
   maxd = None
+  
+  def __init__(self, storage, containerId, parent = None):
+    """
+    Class constructor.
+    
+    @param storage: A valid item storage
+    @param itemId: Unique container identifier
+    @param parent: Parent container
+    """
+    super(CompositeModel, self).__init__(storage, containerId, parent)
+    self.hints = {}
   
   def prepare(self):
     """
@@ -326,5 +327,10 @@ class CompositeModel(Container):
     # Set model dimensions
     self.mind, self.maxd = mind, maxd
     self.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
+    
+    # Apply scaling factors
+    if 'scaling' in self.hints:
+      for i in xrange(3):
+        self.dimensions[i] *= self.hints['scaling'][i]
     
     return None

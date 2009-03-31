@@ -235,10 +235,17 @@ class Entity(SceneObject):
       glCallList(self.listId)
     
     if self.scene.showBoundingBoxes:
-      glScalef(*self.model.dimensions)
-      glutWireCube(1.0)
+      self.__drawBoundingBox()
     
     glPopMatrix()
+    
+  def __drawBoundingBox(self):
+    """
+    Draws a box around the model.
+    """
+    glScalef(*self.model.dimensions)
+    glMaterialfv(GL_FRONT, GL_EMISSION, (1.0, 0.0, 0.0))
+    glutWireCube(1.0)
 
 class PhysicalEntity(Entity):
   """

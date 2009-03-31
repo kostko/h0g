@@ -87,20 +87,12 @@ def scale_factor(item, args):
     raise InvalidOpcodeArguments
 
   try:
-    if isinstance(item, BasicModel):
+    if isinstance(item, (BasicModel, CompositeModel)):
       item.hints['scaling'] = (
         float(args['x']),
         float(args['y']),
         float(args['z'])
       )
-    elif isinstance(item, CompositeModel):
-      # Set scaling to all children
-      for child in item.children:
-        child.hints['scaling'] = (
-          float(args['x']),
-          float(args['y']),
-          float(args['z'])
-        )
   except ValueError:
     logger.error("Invalid opcode arguments for scale factor (x, y and z must be floats)!")
     raise InvalidOpcodeArguments

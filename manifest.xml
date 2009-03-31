@@ -13,15 +13,15 @@
   
   <container id="Models" path="data/models">
     <item name="spaceship" type="BasicModel">
-      <scale_factor x="0.05" y="0.05" z="0.05" />
+      <!-- Note: scale_factor must be defined BEFORE load_file, otherwise the scaling
+           hints will be ignored (because of the vertex repositioning at import). -->
+      <scale_factor x="0.15" y="0.15" z="0.15" />
       <load_file path="spaceship.3ds" loader="iid.importers.ThreeDSModelImporter" />
     </item>
-    <item name="rocketlauncher" type="BasicModel">
-      <scale_factor x="0.15" y="0.15" z="0.15" />
+    <item name="rocketlauncher" type="CompositeModel">
       <load_file path="rocketlauncher.3ds" loader="iid.importers.ThreeDSModelImporter" />
     </item>
     <item name="r2-d2" type="CompositeModel">
-      <scale_factor x="0.05" y="0.05" z="0.05" />
       <load_file path="r2-d2.3ds" subtype="BasicModel" loader="iid.importers.ThreeDSModelImporter" />
     </item>
   </container>

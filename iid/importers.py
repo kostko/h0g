@@ -238,6 +238,9 @@ class ThreeDSModelImporter(Importer):
         self.__prepareMaterialMap(child, materials)
     
     f.close()
+    
+    # Translate model to 'true' center
+    self.__moveToCenter(item)
 
     # Output loaded model statistics
     logger.debug('Loaded 3DS model with %d vertices and %d polygons.' % (totalVertices, totalPolygons))
@@ -293,7 +296,56 @@ class ThreeDSModelImporter(Importer):
 
     # Set to item
     item.polygonMaterial = polygonMaterial
-
+    
+  def __moveToCenter(self, item):
+    """
+    Finds the geometric center of the model and translates
+    the model so that (0,0,0) is in the geometric center.
+    """
+    logger.info("Moving model %s's vertices to true center..." % item.itemId)
+    
+    mind = [None, None, None]
+    maxd = [None, None, None]
+    
+    def check_dimensions(d):
+      for i in xrange(3):
+        if mind[i] is None or d[i] < mind[i]:
+          mind[i] = d[i]
+        
+        if maxd[i] is None or d[i] > maxd[i]:
+          maxd[i] = d[i]
+          
+    def set_center(obj):
+      # Set model dimensions
+      obj.mind, obj.maxd = mind, maxd
+      obj.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
+      
+      if 'scaling' in obj.hints:
+        for i in xrange(3):
+          obj.dimensions[i] *= obj.hints['scaling'][i]
+      
+      # Calculate geometric center
+      lx, ly, lz = obj.dimensions
+      cx, cy, cz = (obj.mind[0] + lx / 2, 
+                    obj.mind[1] + ly / 2, 
+                    obj.mind[2] + lz / 2)
+      
+      for i in xrange(len(obj.vertices)):
+        x, y, z = obj.vertices[i]
+        obj.vertices[i] = x - cx, y - cy, z - cz
+    
+    
+    if isinstance(item, BasicModel):
+      for vertex in item.vertices:
+        check_dimensions(vertex)
+      set_center(item)
+    else:
+      # Composite model
+      for child in item.children.values():
+        for vertex in child.vertices:
+          check_dimensions(vertex)
+        set_center(child)
+        
 class MapImporter(Importer):
   """
   Map XML descriptor importer.
