@@ -68,17 +68,6 @@ class BasicModel(Item):
       # If scaling hints have been given, let's scale the model
       glScalef(*self.hints['scaling'])
     
-    mind = [None, None, None]
-    maxd = [None, None, None]
-    
-    def check_dimensions(d):
-      for i in xrange(3):
-        if mind[i] is None or d[i] < mind[i]:
-          mind[i] = d[i]
-        
-        if maxd[i] is None or d[i] > maxd[i]:
-          maxd[i] = d[i]
-    
     if len(self.polygons):
       # There are actual polygons (=faces)
       glBegin(GL_TRIANGLES)
