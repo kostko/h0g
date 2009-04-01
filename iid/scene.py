@@ -172,6 +172,7 @@ class Entity(SceneObject):
   """
   model = None
   texture = None
+  shader = None
   
   # Entity behaviour
   behaviour = None
@@ -193,6 +194,12 @@ class Entity(SceneObject):
     super(Entity, self).__init__(scene, objectId, parent)
     self.model = model
     self.texture = texture
+  
+  def setShader(self, shader):
+    """
+    Sets a GLSL shader for this entity.
+    """
+    self.shader = shader
   
   def prepare(self):
     """
@@ -223,6 +230,9 @@ class Entity(SceneObject):
     glPushMatrix()
     glMultMatrixd(M)
     
+    if self.shader:
+      self.shader.activate()
+    
     # Render all subentities
     super(Entity, self).render()
     
@@ -233,6 +243,9 @@ class Entity(SceneObject):
     # Execute precompiled OpenGL commands
     if self.listId:
       glCallList(self.listId)
+    
+    if self.shader:
+      self.shader.deactivate()
     
     if self.scene.showBoundingBoxes and (self.scene.showSubentityBoxes or self.parent == None):
       self.__drawBoundingBox()

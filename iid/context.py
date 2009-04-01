@@ -74,7 +74,7 @@ class Context(object):
     """
     logger.info("Initializing OpenGL subsystem...")
     glutInit()
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)
     
     glutInitWindowPosition(0, 0)
     glutInitWindowSize(

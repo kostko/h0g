@@ -242,6 +242,9 @@ class BasicMap(Item):
     if 'rot' in entity.properties:
       e.setRotation(*entity.properties['rot'])
     
+    if 'use_shader' in entity.properties:
+      e.setShader(entity.properties['use_shader'])
+    
     # Add subentities when model has them
     if 'children' in entity.model.__dict__:
       rpl = (

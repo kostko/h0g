@@ -232,7 +232,6 @@ class ThreeDSModelImporter(Importer):
       elif chunkId == 0xA084:
         # Self illuminations (emission)
         materials[currentMaterial].emission = self.__readDoubleByte(f)[0]
-        print materials[currentMaterial].emission
       else:
         f.seek(chunkLen - 6, os.SEEK_CUR)
         
@@ -468,29 +467,9 @@ class MapImporter(Importer):
       
       e.entityClass = self.__loadEntityClass(entity.attrib.get('class', 'iid.scene.Entity'), scripts)
       
-      pos = entity.find("./pos")
-      if pos is not None:
-        try:
-          e.properties['pos'] = (
-            float(pos.findtext("./x")),
-            float(pos.findtext("./y")),
-            float(pos.findtext("./z"))
-          )
-        except (ValueError, TypeError):
-          logging.error("Invalid entity coordinates specified!")
-          raise ItemTypeMismatch
-      
-      rot = entity.find("./rot")
-      if rot is not None:
-        try:
-          e.properties['rot'] = (
-            float(rot.findtext("./x")),
-            float(rot.findtext("./y")),
-            float(rot.findtext("./z"))
-          )
-        except (ValueError, TypeError):
-          logging.error("Invalid entity rotation specified!")
-          raise ItemTypeMismatch
+      self.__getCoordsProperty(entity, 'pos', e)
+      self.__getCoordsProperty(entity, 'rot', e)
+      self.__getStorageProperty(entity, 'use_shader', e, item.storage, 'Shader')
       
       # Add subentity descriptors (if any)
       if isinstance(e.model, CompositeModel):
@@ -516,6 +495,39 @@ class MapImporter(Importer):
     
     # Parse signal/slot connections
     # TODO implement with scripts
+  
+  def __getCoordsProperty(self, node, prop, entity):
+    """
+    Initializes entity's properties from the given XML node.
+    """
+    x = node.find("./%s" % prop)
+    if x is not None:
+      try:
+        entity.properties[prop] = (
+          float(x.findtext("./x")),
+          float(x.findtext("./y")),
+          float(x.findtext("./z"))
+        )
+      except (ValueError, TypeError):
+        logger.error("Invalid entity property value specified for '%s'!" % prop)
+        raise ItemTypeMismatch
+  
+  def __getStorageProperty(self, node, prop, entity, storage, className):
+    """
+    Initializes entity's properties from the given XML node.
+    """
+    x = node.findtext("./%s" % prop)
+    if x is not None:
+      try:
+        item = storage[x]
+        if item.__class__.__name__ != className:
+          logger.error("Invalid item type specified for entity property '%s'!" % prop)
+          raise ItemTypeMismatch
+        
+        entity.properties[prop] = item
+      except KeyError:
+        logger.error("Invalid entity property value specified for '%s'!" % prop)
+        raise ItemTypeMismatch
   
   def __loadEntityClass(self, classPath, scripts):
     """
@@ -573,7 +585,7 @@ class GLSLImporter(Importer):
         currentShader = 'vertex'
         item.vertexShaderSource = ''
         continue
-      elif line == '[Fragment_Shader]':
+      elif line in ('[Fragment_Shader]', '[Pixel_Shader]'):
         currentShader = 'fragment'
         item.fragmentShaderSource = ''
         continue
