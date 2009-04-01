@@ -24,6 +24,7 @@ class BasicModel(Item):
   vertices = None
   polygons = None
   textureMap = None
+  normals = None
   hints = None
   polygonMaterial = None    # Maps a material to a certain polygon
   
@@ -78,14 +79,10 @@ class BasicModel(Item):
         if self.polygonMaterial[i]:
           glCallList(self.polygonMaterial[i].prepare())
         
-        glTexCoord2fv(self.textureMap[p[0]])
-        glVertex3fv(self.vertices[p[0]])
-        
-        glTexCoord2fv(self.textureMap[p[1]])
-        glVertex3fv(self.vertices[p[1]])
-        
-        glTexCoord2fv(self.textureMap[p[2]])
-        glVertex3fv(self.vertices[p[2]])
+        for j in xrange(3):
+          glNormal3fv(self.normals[p[j]])
+          glTexCoord2fv(self.textureMap[p[j]])
+          glVertex3fv(self.vertices[p[j]])
       
       glEnd()
     
@@ -278,6 +275,7 @@ class CompositeModel(Container):
   of multiple objects. 
   """
   hints = None
+  
   # Model dimensions (for bounding box)
   dimensions = None
   mind = None
@@ -326,3 +324,83 @@ class CompositeModel(Container):
         self.dimensions[i] *= self.hints['scaling'][i]
     
     return None
+
+class Shader(Item):
+  """
+  Represents a GLSL shader object.
+  """
+  vertexShaderSource = None
+  fragmentShaderSource = None
+  
+  # OpenGL handles
+  programId = None
+  
+  def __init__(self, storage, containerId, parent = None):
+    """
+    Class constructor.
+    
+    @param storage: A valid item storage
+    @param itemId: Unique container identifier
+    @param parent: Parent container
+    """
+    super(Shader, self).__init__(storage, containerId, parent)
+    self.type = type
+  
+  def activate(self):
+    """
+    Activates this shader.
+    """
+    if not self.programId:
+      self.prepare()
+    
+    glUseProgram(self.programId)
+  
+  def deactivate(self):
+    """
+    Deactivates current shader.
+    """
+    glUseProgram(0)
+  
+  def prepare(self):
+    """
+    Compiles the shader program.
+    """
+    if self.programId:
+      return self.programId
+    
+    self.programId = glCreateProgram()
+    
+    if self.vertexShaderSource:
+      vertexShader = self.__compileShader(self.vertexShaderSource, GL_VERTEX_SHADER)
+      glAttachShader(self.programId, vertexShader)
+    
+    if self.fragmentShaderSource:
+      fragmentShader = self.__compileShader(self.fragmentShaderSource, GL_FRAGMENT_SHADER)
+      glAttachShader(self.programId, fragmentShader)
+    
+    glLinkProgram(self.programId)
+    
+    if vertexShader:
+      glDeleteShader(vertexShader)
+    if fragmentShader:
+      glDeleteShader(fragmentShader)
+    
+    return self.programId
+  
+  def __compileShader(self, source, shaderType):
+    """
+    Compiles the shader source code.
+    """
+    logger.info("Compiling GLSL %s shader (%s)..." % ('vertex' if shaderType == GL_VERTEX_SHADER else 'fragment', self.itemId))
+    shader = glCreateShader(shaderType)
+    glShaderSource(shader, source)
+    glCompileShader(shader)
+    
+    if not glGetShaderiv(shader, GL_COMPILE_STATUS):
+      logger.error("GLSL shader compilation has failed!")
+      logger.error("Dumping compilation log:")
+      logger.error(glGetShaderInfoLog(shader))
+      glDeleteShader(shader)
+      raise ValueError
+    
+    return shader

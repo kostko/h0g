@@ -43,3 +43,6 @@ class ItemFileNotFound(ImporterException):
 
 class ImageFormatError(ImporterException):
   pass
+
+class MissingShaderDeclaration(ImporterException):
+  pass

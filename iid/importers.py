@@ -19,7 +19,7 @@ except:
 
 # IID imports
 from iid.exceptions import *
-from iid.storage.items import BasicTexture, BasicModel, BasicMaterial, CompositeModel, BasicMap
+from iid.storage.items import BasicTexture, BasicModel, BasicMaterial, CompositeModel, BasicMap, Shader
 from iid.scene import Entity
 
 # Logger for this module
@@ -176,6 +176,7 @@ class ThreeDSModelImporter(Importer):
         vertexCount = struct.unpack('<H', f.read(struct.calcsize('<H')))[0]
         currentObject.vertices = numpy.empty((vertexCount, 3))
         currentObject.textureMap = numpy.empty((vertexCount, 2))
+        currentObject.normals = numpy.zeros((vertexCount, 3))
         totalVertices += vertexCount
 
         for i in xrange(vertexCount):
@@ -237,12 +238,14 @@ class ThreeDSModelImporter(Importer):
         
       # TODO: transparency and shininess !
        
-    # Now set proper material for each polygon of each object
+    # Now set proper material for each polygon of each object and compute normals
     if basic:
       self.__prepareMaterialMap(currentObject, materials)
+      self.__computeMeshNormals(currentObject)
     else:
       for child in item.children.values():
         self.__prepareMaterialMap(child, materials)
+        self.__computeMeshNormals(child)
     
     f.close()
     
@@ -291,7 +294,42 @@ class ThreeDSModelImporter(Importer):
       rgb = tuple([float(x)/255 for x in rgb])  # Convert to floats
       
     return rgb
-
+  
+  def __computeMeshNormals(self, item):
+    """
+    Computes vertex normals by doing the average.
+    """
+    tmp = numpy.zeros((len(item.vertices), 1))
+    
+    for i, p in enumerate(item.polygons):
+      side0 = item.vertices[p[0]] - item.vertices[p[1]]
+      side1 = item.vertices[p[2]] - item.vertices[p[1]]
+      
+      normal = numpy.cross(side1, side0)
+      n = numpy.linalg.norm(normal)
+      if n < 0.0001:
+        normal = numpy.array([0., 0., 0.])
+      else:
+        normal = normal / n
+      
+      for i in xrange(3):
+        item.normals[p[i]] += normal
+        tmp[p[i]] += 1
+    
+    # Compute average
+    for i in xrange(len(tmp)):
+      if not tmp[i]:
+        continue
+      
+      item.normals[i] /= tmp[i]
+      n = numpy.linalg.norm(item.normals[i])
+      if n < 0.0001:
+        item.normals[i] = numpy.array([0., 0., 0.])
+      else:
+        item.normals[i] = item.normals[i] / n
+    
+    del tmp
+  
   def __prepareMaterialMap(self, item, materials):
     """
     Prepares a map: polygon number -> the material with which
@@ -373,8 +411,7 @@ class ThreeDSModelImporter(Importer):
       # Translate vertices relative to the global center
       for child in item.children.values():
         set_center(child)
-        
-       
+
 class MapImporter(Importer):
   """
   Map XML descriptor importer.
@@ -507,3 +544,47 @@ class MapImporter(Importer):
       raise ItemTypeMismatch
     
     return cls
+
+class GLSLImporter(Importer):
+  """
+  GLSL shader source importer.
+  """
+  def load(self, item):
+    """
+    Imports the shader source into specified item.
+
+    @param item: A valid Shader instance
+    """
+    if not isinstance(item, Shader):
+      logger.error("Can only load GLSL sources into Shader type items!")
+      raise ItemTypeMismatch
+    
+    try:
+      f = open(self.filename, 'r')
+    except IOError:
+      logger.error("GLSL source data file '%s' not found!" % self.filename)
+      raise ItemFileNotFound
+    
+    currentShader = None
+    
+    for line in f:
+      line = line.strip()
+      if line == '[Vertex_Shader]':
+        currentShader = 'vertex'
+        item.vertexShaderSource = ''
+        continue
+      elif line == '[Fragment_Shader]':
+        currentShader = 'fragment'
+        item.fragmentShaderSource = ''
+        continue
+      
+      if currentShader == 'vertex':
+        item.vertexShaderSource += line + '\n'
+      elif currentShader == 'fragment':
+        item.fragmentShaderSource += line + '\n'
+    
+    f.close()
+    
+    if not currentShader:
+      logger.error('Missing shader declarations in GLSL source file!')
+      raise MissingShaderDeclaration
