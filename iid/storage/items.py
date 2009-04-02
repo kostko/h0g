@@ -244,6 +244,7 @@ class BasicMap(Item):
     
     if 'use_shader' in entity.properties:
       e.setShader(entity.properties['use_shader'])
+      e.shader.prepare()
     
     # Add subentities when model has them
     if 'children' in entity.model.__dict__:
