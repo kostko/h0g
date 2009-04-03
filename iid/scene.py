@@ -34,6 +34,7 @@ class SceneObject(object):
   
   # Object attributes
   visible = False
+  culled = False
   static = True
   
   # Transformations (when not using a physical body)
@@ -147,7 +148,7 @@ class SceneObject(object):
     Should render the given object.
     """
     for obj in self.children.values():
-      if obj.visible:
+      if obj.visible and not obj.culled:
         obj.render()
   
   def __prepareRotationMatrix(self):
@@ -234,7 +235,7 @@ class Entity(SceneObject):
     if self.shader:
       self.shader.activate()
     
-    # Render all subentities
+    # Render all sub-entities
     super(Entity, self).render()
     
     # Add texture when requested
@@ -752,9 +753,9 @@ class Scene(object):
     if self.cull and self.camera.frustum:
       self.__cull(self.objects)
     
-    # Now render all other (visible) objects
+    # Now render all other (visible and marked for rendering) objects
     for obj in self.objects.values():
-      if obj.visible:
+      if obj.visible and not obj.culled:
         try:
           obj.render()
         except:
@@ -813,11 +814,14 @@ class Scene(object):
         objSphere = (coordinates, obj.model.radius)
         state = self.frustum.sphereInFrustum(*objSphere)
         if state == Frustum.OUTSIDE:
-          obj.visible = False
-        else:
-          obj.visible = True
+          obj.culled = True
+        elif state == Frustum.INTERSECT:
+          obj.culled = False
           if obj.children:
-            children += obj.children.values()  # Check the sub entities only if the parent is in the frustum
+            children += obj.children.values()  # Check the sub entities only if the parent is intersecting the frustum
+        else:
+          # The whole entity is inside the frustum
+          obj.culled = False
             
       level = children # Next check the visibility of children of visible objects
   
