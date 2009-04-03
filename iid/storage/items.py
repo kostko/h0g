@@ -8,6 +8,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import logging
 import re
+import numpy
 
 # IID imports
 from iid.storage.base import Item, Container
@@ -326,6 +327,9 @@ class CompositeModel(Container):
     if 'scaling' in self.hints:
       for i in xrange(3):
         self.dimensions[i] *= self.hints['scaling'][i]
+    
+    # Calculate radius for bounding sphere
+    self.radius = numpy.linalg.norm(numpy.array(self.dimensions) / 2)
     
     return None
 

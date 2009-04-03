@@ -97,6 +97,12 @@ class Context(object):
       self.config.set('Window', 'width', '1024')
       self.config.set('Window', 'height', '768')
     
+    if not self.config.has_section('Viewpoint'):
+      self.config.add_section('Viewpoint')
+      self.config.set('Viewpoint', 'angle', '45')
+      self.config.set('Viewpoint', 'nearDistance', '0.1')
+      self.config.set('Viewpoint', 'farDistance', '3000000.0')
+    
     logger.info("Engine configuration loaded.")
   
   def saveConfiguration(self, filename = 'iid.cfg'):
@@ -121,6 +127,9 @@ class Context(object):
     # Prepare the scene
     self.scene.width = self.config.getint('Window', 'width')
     self.scene.height = self.config.getint('Window', 'height')
+    self.scene.angle = self.config.getint('Viewpoint', 'angle')
+    self.scene.nearDistance = self.config.getfloat('Viewpoint', 'nearDistance')
+    self.scene.farDistance = self.config.getfloat('Viewpoint', 'farDistance')
     # FIXME This should be done on map load
     self.scene.prepare()
     

@@ -39,10 +39,10 @@
       </rot>
     </entity>
     -->
-    <entity model="/Models/r2-d2"  class="iid.scene.Entity" id="r2">
+    <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r2">
       <pos>
         <x>0</x>
-        <y>30</y>
+        <y>120</y>
         <z>0</z>
       </pos>
       <rot>

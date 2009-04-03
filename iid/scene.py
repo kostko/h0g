@@ -16,6 +16,7 @@ import traceback
 # IID imports
 from iid.exceptions import *
 from iid.behaviour import EntityBehaviour
+from iid.frustum import Frustum
 
 # Logger for this module
 logger = logging.getLogger(__name__)
@@ -311,10 +312,15 @@ class PhysicalEntity(Entity):
     scene coordinates and then pushing model's vertices via
     calls to OpenGL.
     """
+    self.updateScenePosition()
+    super(PhysicalEntity, self).render()
+  
+  def updateScenePosition(self):
+    """
+    Just updates the object's parameters.
+    """
     self.coordinates = self.body.getPosition()
     self.rotationMatrix = self.body.getRotation()
-    
-    super(PhysicalEntity, self).render()
   
   def preparePhysicalModel(self):
     """
@@ -356,12 +362,108 @@ class Camera(SceneObject):
   """
   Represents the camera.
   """
+  frustum = None
   visible = True
+  
+  # Direction of the camera
+  __direction = numpy.array([0.0, 0.0, -1.0])
+  # Up vector (default)
+  __up = numpy.array([0.0, 1.0, 0.0])
+  
+  def setCoordinates(self, x, y, z):
+    """
+    Changes camera's coordinates.
+    """
+    super(Camera, self).setCoordinates(x, y, z)
+    self.__updateFrustum()
+  
+  def setRotation(self, x, y, z):
+    """
+    Changes camera's rotation.
+    """
+    super(Camera, self).setRotation(x, y, z)
+    self.__updateFrustum()
+    self.__rotateDirectionVector(x, y, z)
+  
+  def rotateX(self, phi):
+    """
+    Rotate the camera on X-axis.
+    
+    @param phi: Rotation angle
+    """
+    super(Camera, self).rotateX(phi)
+    self.__updateFrustum()
+    self.__rotateDirectionVector(phi, 0, 0)
+  
+  def rotateY(self, phi):
+    """
+    Rotate the camera on Y-axis.
+    
+    @param phi: Rotation angle
+    """
+    super(Camera, self).rotateY(phi)
+    self.__updateFrustum()
+    self.__rotateDirectionVector(0, phi, 0)
+  
+  def rotateZ(self, phi):
+    """
+    Rotate the camera on Z-axis.
+    
+    @param phi: Rotation angle
+    """
+    super(Camera, self).rotateZ(phi)
+    self.__updateFrustum()
+    self.__rotateDirectionVector(0, 0, phi)
+    
+  def setFrustum(self, frustum):
+    """
+    Set the camera's frustum.
+    """
+    self.frustum = frustum
+    self.__updateFrustum()
+  
+  def __updateFrustum(self):
+    """
+    Updates the frustum each time the camera's
+    position or orientation changes.
+    """
+    if self.frustum:
+      # Calculate the center of the scene (where the cam is directed)
+      center = self.__direction + self.coordinates
+      # Update frustum
+      self.frustum.setCamDef(
+        self.coordinates,
+        center,
+        self.__up
+      )
+    
+  def __rotateDirectionVector(self, x, y, z):
+    """
+    Properly transform direction vector.
+    """
+    # Calculate the rotation matrix
+    cx, cy, cz = numpy.cos([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    sx, sy, sz = numpy.sin([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    
+    rotationMatrix = numpy.matrix(
+      [[cx*cz - sx*cy*sz, -sx*cz - cx*cy*sz, sy*sz],
+      [cx*sz + sx*cy*cz, -sx*sz + cx*cy*cz, -sy*cz],
+      [sx*sy,            cx*sy,             cy]]
+    )
+    
+    pos = self.coordinates
+    direction = self.__direction
+    center = pos + direction
+    # Rotate
+    center = numpy.dot(center, rotationMatrix).tolist()[0]
+    direction = center - pos
+    self.__direction = direction / numpy.linalg.norm(direction)
   
   def render(self):
     """
     Move the camera to proper position.
     """
+    glMatrixMode(GL_MODELVIEW)
     glRotatef(self.rotation[0], 1, 0, 0)
     glRotatef(360.0 - self.rotation[1], 0, 1, 0)
     glRotatef(self.rotation[2], 0, 0, 1)
@@ -370,7 +472,6 @@ class Camera(SceneObject):
       -self.coordinates[1],
       -self.coordinates[2]
     )
-    
 
 class Light(SceneObject):
   """
@@ -471,16 +572,23 @@ class Scene(object):
   its own coordinate system that corresponds to OpenGL's internal
   coordinate system.
   """
+  # Viewpoint information
+  angle = 0
   width = 0
   height = 0
+  nearDistance = 0
+  farDistance = 0
+  
   objects = None
   camera = None
   lights = None
-  
+  frustum = None
+
   # Entity brain container
   behaviours = None
   
   # Settings
+  cull = False
   showBoundingBoxes = False
   showSubentityBoxes = True
   
@@ -562,6 +670,10 @@ class Scene(object):
     """
     logger.info("Preparing scene objects, stand by...")
     
+    # Prepare frustum and set it to the camera
+    self.frustum = Frustum(self.angle, float(self.width) / float(self.height), self.nearDistance, self.farDistance)
+    self.camera.setFrustum(self.frustum)
+    
     # Prepare lights
     glEnable(GL_LIGHTING)
     for light in self.lights.values():
@@ -578,7 +690,7 @@ class Scene(object):
     glViewport(0, 0, self.width, self.height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluPerspective(45, float(self.width) / float(self.height), 0.1, 3000000.0)
+    gluPerspective(self.angle, float(self.width) / float(self.height), self.nearDistance, self.farDistance)
     
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
@@ -612,6 +724,10 @@ class Scene(object):
     # Render the lights
     for light in self.lights.values():
       light.render()
+      
+    # Determine visible object by frustum culling
+    if self.cull and self.camera.frustum:
+      self.__cull(self.objects)
     
     # Now render all other (visible) objects
     for obj in self.objects.values():
@@ -622,11 +738,14 @@ class Scene(object):
           logger.error("Unhandled exception while rendering an object!")
           logger.error(traceback.format_exc())
           sys.exit(1)
+      elif isinstance(obj, PhysicalEntity):
+        # Just update the position (needed for further frustum checks)
+        obj.updateScenePosition()
     
     # TODO: Now render any GUI elements
     
     glutSwapBuffers()
-  
+
   def __nearCallback(self, args, g1, g2):
     """
     Callback function for collision detection.
@@ -652,6 +771,32 @@ class Scene(object):
       # Create a new contact joint
       j = ode.ContactJoint(world, contactGroup, c)
       j.attach(g1.getBody(), g2.getBody())
+      
+  def __cull(self, objects):
+    """
+    Check for visible objects.
+    """
+    level = objects.values()
+    while len(level):
+      children = []
+      
+      for obj in level:
+        if obj.parent:
+          # Calculate coordinates relative to the parent
+          coordinates = obj.model.center + obj.parent.coordinates
+        else:
+          coordinates = obj.coordinates
+          
+        objSphere = (coordinates, obj.model.radius)
+        state = self.frustum.sphereInFrustum(*objSphere)
+        if state == Frustum.OUTSIDE:
+          obj.visible = False
+        else:
+          obj.visible = True
+          if obj.children:
+            children += obj.children.values()  # Check the sub entities only if the parent is in the frustum
+            
+      level = children # Next check the visibility of children of visible objects
   
   def update(self):
     """
@@ -679,3 +824,17 @@ class Scene(object):
       self.contactGroup.empty()
     
     self.lastTime = time.time()
+
+  def listVisible(self, event):
+    """
+    List all at this moment visible objects.
+    """
+    def vis(objects):
+      l = []
+      for obj in objects:
+        if obj.visible:
+          l.append(obj.model.itemId+"::%s" % vis(obj.children.values()))
+      return l
+    
+    visible = vis(self.objects.values())
+    logger.debug("All visible objects: %s" % visible)
