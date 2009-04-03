@@ -243,6 +243,12 @@ class BasicMap(Item):
     if 'rot' in entity.properties:
       e.setRotation(*entity.properties['rot'])
     
+    if 'density' in entity.properties:
+      e.setDensity(entity.properties['density'])
+    
+    if 'mass' in entity.properties:
+      e.setMass(entity.properties['density'])
+    
     if 'use_shader' in entity.properties:
       e.setShader(entity.properties['use_shader'])
       e.shader.prepare()

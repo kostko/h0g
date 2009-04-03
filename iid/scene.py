@@ -306,6 +306,30 @@ class PhysicalEntity(Entity):
     else:
       self.body.disable()
   
+  def setDensity(self, density):
+    """
+    Sets entity's density.
+    """
+    if not isinstance(self.body, ode.Body):
+      return
+    
+    lx, ly, lz = self.model.dimensions
+    M = self.body.getMass()
+    M.setBox(density, lx, ly, lz)
+    self.body.setMass(M)
+  
+  def setMass(self, mass):
+    """
+    Sets entity's mass.
+    """
+    if not isinstance(self.body, ode.Body):
+      return
+    
+    lx, ly, lz = self.model.dimensions
+    M = self.body.getMass()
+    M.setBoxTotal(mass, lx, ly, lz)
+    self.body.setMass(M)
+  
   def render(self):
     """
     Renders the model by first transforming model coordinates to
@@ -333,7 +357,7 @@ class PhysicalEntity(Entity):
     lx, ly, lz = self.model.dimensions
     body = ode.Body(self.scene.physicalWorld)
     M = ode.Mass()
-    M.setBox(2000.0, lx, ly, lz)
+    M.setBox(10.0, lx, ly, lz)
     body.setMass(M)
     
     # Create a box geom for collision detection
@@ -563,7 +587,6 @@ class Light(SceneObject):
     Set the quadratic attenuation value.
     """
     self.quadraticAttenuation = quadratic
-
  
 class Scene(object):
   """
@@ -756,10 +779,10 @@ class Scene(object):
       entity1 = g1.sceneObject
       entity2 = g2.sceneObject
       
-      if entity1.behaviour:
+      if entity1 and entity1.behaviour:
         entity1.behaviour.collision(entity2)
       
-      if entity2.behaviour:
+      if entity2 and entity2.behaviour:
         entity2.behaviour.collision(entity1)
     
     world, contactGroup = args

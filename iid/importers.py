@@ -478,6 +478,8 @@ class MapImporter(Importer):
       
       self.__getCoordsProperty(entity, 'pos', e)
       self.__getCoordsProperty(entity, 'rot', e)
+      self.__getFloatProperty(entity, 'density', e)
+      self.__getFloatProperty(entity, 'mass', e)
       self.__getStorageProperty(entity, 'use_shader', e, item.storage, 'Shader')
       
       # Add subentity descriptors (if any)
@@ -535,6 +537,18 @@ class MapImporter(Importer):
         
         entity.properties[prop] = item
       except KeyError:
+        logger.error("Invalid entity property value specified for '%s'!" % prop)
+        raise ItemTypeMismatch
+  
+  def __getFloatProperty(self, node, prop, entity):
+    """
+    Initializes entity's properties from the given XML node.
+    """
+    x = node.findtext("./%s" % prop)
+    if x is not None:
+      try:
+        entity.properties[prop] = float(x)
+      except ValueError:
         logger.error("Invalid entity property value specified for '%s'!" % prop)
         raise ItemTypeMismatch
   
