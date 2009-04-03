@@ -15,6 +15,7 @@ import sys
 from iid.scene import Scene
 from iid.storage.itemstorage import ItemStorage
 from iid.events import EventDispatcher
+from iid.gui.manager import WindowManager
 from iid.exceptions import *
 
 # Logger for this module
@@ -28,6 +29,7 @@ class Context(object):
   scene = None
   storage = None
   events = None
+  gui = None
   config = None
   
   def initAll(self, title = 'Infinite Improbability Drive', dataDirectory = '.'):
@@ -38,6 +40,7 @@ class Context(object):
     self.initStorage(dataDirectory)
     self.initEvents()
     self.initScene()
+    self.initGui()
   
   def initStorage(self, dataDirectory = '.'):
     """
@@ -59,6 +62,14 @@ class Context(object):
     logger.info("Initializing the scene...")
     self.scene = Scene()
     logger.info("Scene init done.")
+  
+  def initGui(self):
+    """
+    Initializes the GUI window manager.
+    """
+    logger.info("Initializing the GUI window manager...")
+    self.gui = WindowManager(self)
+    logger.info("Window manager init done.")
   
   def initEvents(self):
     """
@@ -121,8 +132,9 @@ class Context(object):
     glutDisplayFunc(self.__displayCallback)
     glutIdleFunc(self.__updateCallback)
     glutKeyboardFunc(self.events.eventKeyboardInput)
-    glutMouseFunc(self.events.eventMouseClickInput)
+    glutMouseFunc(self.events.eventMousePressInput)
     glutPassiveMotionFunc(self.events.eventMouseMoveInput)
+    glutMotionFunc(self.events.eventMouseMoveInput)
     
     # Prepare the scene
     self.scene.width = self.config.getint('Window', 'width')

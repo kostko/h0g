@@ -17,7 +17,7 @@ class EventType:
   Invalid = 0
   Keyboard = 1
   MouseMove = 2
-  MouseClick = 3
+  MousePress = 3
 
 class Event(object):
   """
@@ -57,6 +57,12 @@ class MouseMoveEvent(Event):
   """
   x = None
   y = None
+  dx = None
+  dy = None
+  
+  # For tracking movement deltas
+  __ox = 0
+  __oy = 0
   
   def __init__(self, x, y):
     """
@@ -68,10 +74,14 @@ class MouseMoveEvent(Event):
     super(MouseMoveEvent, self).__init__(EventType.MouseMove)
     self.x = x
     self.y = y
+    self.dx = x - MouseMoveEvent.__ox
+    self.dy = y - MouseMoveEvent.__oy
+    MouseMoveEvent.__ox = x
+    MouseMoveEvent.__oy = y
 
-class MouseClickEvent(Event):
+class MousePressEvent(Event):
   """
-  A mouse click event.
+  A mouse press event.
   """
   x = None
   y = None
@@ -87,16 +97,23 @@ class MouseClickEvent(Event):
     @param button: Button that was pressed
     @param state: Button state
     """
-    super(MouseClickEvent, self).__init__(EventType.MouseClick)
+    super(MousePressEvent, self).__init__(EventType.MousePress)
     self.x = x
     self.y = y
     self.button = button
+    self.state = state
 
 class Signalizable(object):
   """
   All objects that want to emit signals should mix-in this class.
   """
   __subscribers = None
+  
+  def __init__(self):
+    """
+    Class constructor.
+    """
+    self.__subscribers = {}
   
   def emit(self, name, *args, **kwargs):
     """
@@ -121,12 +138,21 @@ class EventDispatcher(object):
   when needed.
   """
   __subscribers = None
+  __dispatcher = None
   
   def __init__(self):
     """
     Class constructor.
     """
     self.__subscribers = {}
+    EventDispatcher.__dispatcher = self
+  
+  @staticmethod
+  def getDispatcher():
+    """
+    Returns the active dispatcher instance.
+    """
+    return EventDispatcher.__dispatcher
   
   def subscribe(self, eventType, handler):
     """
@@ -137,13 +163,27 @@ class EventDispatcher(object):
     """
     self.__subscribers.setdefault(eventType, []).append(handler)
   
+  def unsubscribe(self, eventType, handler):
+    """
+    Unsubscribes from an event.
+    
+    @param eventType: Event type
+    @param handler: A callable event handler
+    """
+    try:
+      self.__subscribers.get(eventType, []).remove(handler)
+    except ValueError:
+      pass
+  
   def dispatchToSubscribers(self, event):
     """
     Dispatches an event to subscribers.
     
     @param event: A valid Event instance
     """
-    for subscriber in self.__subscribers.get(event.eventType, []):
+    # NOTE: We have to work on a copy of the subscribers list! Otherwise if this list
+    #       is modified while dispatching an event lockups will ocurr!
+    for subscriber in self.__subscribers.get(event.eventType, [])[:]:
       try:
         subscriber(event)
       except SystemExit:
@@ -164,8 +204,8 @@ class EventDispatcher(object):
     """
     self.dispatchToSubscribers(MouseMoveEvent(x, y))
   
-  def eventMouseClickInput(self, button, state, x, y):
+  def eventMousePressInput(self, button, state, x, y):
     """
-    Process mouse click event.
+    Process mouse press event.
     """
-    self.dispatchToSubscribers(MouseClickEvent(x, y, button, state))
+    self.dispatchToSubscribers(MousePressEvent(x, y, button, state))

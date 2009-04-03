@@ -246,6 +246,9 @@ class Entity(SceneObject):
     if self.listId:
       glCallList(self.listId)
     
+    if self.textureId is not None:
+      glBindTexture(GL_TEXTURE_2D, 0)
+    
     if self.shader:
       self.shader.deactivate()
     
@@ -622,6 +625,9 @@ class Scene(object):
   contactGroup = None
   lastTime = 0
   
+  # GUI window manager
+  windowManager = None
+  
   def __init__(self):
     """
     Class constructor.
@@ -766,7 +772,13 @@ class Scene(object):
         # Just update the position (needed for further frustum checks)
         obj.updateScenePosition()
     
-    # TODO: Now render any GUI elements
+    # Now render any GUI elements
+    try:
+      self.windowManager.render()
+    except:
+      logger.error("Unhandled exception in GUI rendering!")
+      logger.error(traceback.format_exc())
+      sys.exit(1)
     
     glutSwapBuffers()
 
