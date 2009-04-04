@@ -392,14 +392,22 @@ class ThreeDSModelImporter(Importer):
       obj.mind, obj.maxd = min, max
       obj.dimensions = [max[0] - min[0], max[1] - min[1], max[2] - min[2]]
       lx, ly, lz = obj.dimensions
-      obj.center = numpy.array(
+      center = numpy.array(
         [min[0] + lx / 2, 
          min[1] + ly / 2, 
          min[2] + lz / 2]
       )
       
+      # Make a copy for radius calculation
+      dimensions = [d for d in obj.dimensions]
+      if 'scaling' in obj.hints:
+        for i in xrange(3):
+          center[i] *= obj.hints['scaling'][i]
+          dimensions[i] *= obj.hints['scaling'][i]
+      
       # Calculate radius for bounding sphere
-      obj.radius = numpy.linalg.norm(numpy.array(obj.dimensions) / 2)
+      obj.radius = numpy.linalg.norm(numpy.array(dimensions) / 2)
+      obj.center = center
     
     if isinstance(item, BasicModel):
       for vertex in item.vertices:

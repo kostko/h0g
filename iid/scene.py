@@ -32,7 +32,6 @@ class SceneObject(object):
   
   # Audio
   player = None
-  sounds = None
   
   # Object hierarchy
   parent = None
