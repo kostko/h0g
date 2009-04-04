@@ -12,6 +12,7 @@ import inspect
 # IID imports
 from iid.storage.base import Item, Container
 from iid.storage.items import BasicModel, BasicTexture, BasicScript, BasicEntity, BasicMap, CompositeModel, Shader
+from iid.sound import BasicSound, StreamedSound
 from iid.storage.opcodes import ArgumentOpcodes
 from iid.exceptions import *
 

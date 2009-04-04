@@ -10,6 +10,7 @@ import numpy
 import os
 import struct
 import xml.etree.cElementTree as XMLTree
+import pyglet.media as Media
 
 # This seems to be somewhat system dependent (?):
 try:
@@ -20,6 +21,7 @@ except:
 # IID imports
 from iid.exceptions import *
 from iid.storage.items import BasicTexture, BasicModel, BasicMaterial, CompositeModel, BasicMap, Shader
+from iid.sound import BasicSound, StreamedSound
 from iid.scene import Entity
 
 # Logger for this module
@@ -623,3 +625,20 @@ class GLSLImporter(Importer):
     if not currentShader:
       logger.error('Missing shader declarations in GLSL source file!')
       raise MissingShaderDeclaration
+
+class SoundImporter(Importer):
+  """
+  Sound file importer.
+  """
+  def load(self, item):
+    """
+    Imports a sound into the item.
+    """
+    if not isinstance(item, BasicSound):
+      logger.error("Can only load sounds into BasicSound (and its subclasses) type items!")
+      raise ItemTypeMismatch
+    
+    # Stream sounds for StreamedSound type items
+    type = item.__class__ == StreamedSound
+    item.source = Media.load(self.filename, streaming=type)
+    logger.info("Loaded sound '%s'" % item.itemId)

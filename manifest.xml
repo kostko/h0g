@@ -15,20 +15,22 @@
     <item name="spaceship" type="BasicModel">
       <!-- Note: scale_factor must be defined BEFORE load_file, otherwise the scaling
            hints will be ignored (because of the vertex repositioning at import). -->
-      <scale_factor x="0.15" y="0.15" z="0.15" />
+      <scale_factor x="0.015" y="0.015" z="0.015" />
       <load_file path="spaceship.3ds" loader="iid.importers.ThreeDSModelImporter" />
     </item>
     <item name="rocketlauncher" type="CompositeModel">
       <load_file path="rocketlauncher.3ds" loader="iid.importers.ThreeDSModelImporter" />
     </item>
     <item name="r2-d2" type="CompositeModel">
-    <scale_factor x="0.75" y="0.75" z="0.75" />
+    <scale_factor x="0.025" y="0.025" z="0.025" />
       <load_file path="r2-d2.3ds" subtype="BasicModel" loader="iid.importers.ThreeDSModelImporter" />
     </item>
   </container>
   
   <container id="Audio" path="data/audio">
-    <!-- ... -->
+    <item name="r2-sound1" type="BasicSound">
+      <load_file path="R2D2.wav" loader="iid.importers.SoundImporter" />
+    </item>
   </container>
   
   <container id="Scripts" path="scripts">

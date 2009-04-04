@@ -12,11 +12,13 @@ import ode
 import logging
 import time
 import traceback
+import pyglet.media as Media
 
 # IID imports
 from iid.exceptions import *
 from iid.behaviour import EntityBehaviour
 from iid.frustum import Frustum
+from iid.sound import *
 
 # Logger for this module
 logger = logging.getLogger(__name__)
@@ -27,6 +29,10 @@ class SceneObject(object):
   """
   objectId = ""
   scene = None
+  
+  # Audio
+  player = None
+  sounds = None
   
   # Object hierarchy
   parent = None
@@ -64,6 +70,9 @@ class SceneObject(object):
     # Insert us into hierarchy
     if self.parent:
       self.parent.children[objectId] = self
+      
+    # Init audio player
+    self.player = Media.Player()
   
   def isChild(self):
     """
@@ -89,6 +98,9 @@ class SceneObject(object):
     Changes object's coordinates.
     """
     self.coordinates[0:3] = [x, y, z]
+    
+    # Update the sound player's position
+    self.player.position = [x, y, z]
   
   def setRotation(self, x, y, z):
     """
@@ -349,6 +361,10 @@ class PhysicalEntity(Entity):
     """
     self.coordinates = self.body.getPosition()
     self.rotationMatrix = self.body.getRotation()
+    
+    # Update the sound player's position
+    if self.player: 
+      self.player.position = self.coordinates 
   
   def preparePhysicalModel(self):
     """
@@ -398,19 +414,34 @@ class Camera(SceneObject):
   # Up vector (default)
   __up = numpy.array([0.0, 1.0, 0.0])
   
+  # Sound listener instance
+  listener = None
+  
+  def __init__(self, scene, objectId, parent = None):
+    """
+    Class constructor.
+    
+    @param scene: A valid Scene instance
+    @param objectId: Unique object identifier
+    @param parent: Parent object if this is a subobject
+    """
+    super(Camera, self).__init__(scene, objectId, parent)
+    # Setup audio listener
+    self.listener = Media.listener
+  
   def setCoordinates(self, x, y, z):
     """
     Changes camera's coordinates.
     """
     super(Camera, self).setCoordinates(x, y, z)
-    self.__updateFrustum()
+    self.__updateDirection()
   
   def setRotation(self, x, y, z):
     """
     Changes camera's rotation.
     """
     super(Camera, self).setRotation(x, y, z)
-    self.__updateFrustum()
+    self.__updateDirection()
     self.__rotateDirectionVector(x, y, z)
   
   def rotateX(self, phi):
@@ -420,7 +451,7 @@ class Camera(SceneObject):
     @param phi: Rotation angle
     """
     super(Camera, self).rotateX(phi)
-    self.__updateFrustum()
+    self.__updateDirection()
     self.__rotateDirectionVector(phi, 0, 0)
   
   def rotateY(self, phi):
@@ -430,7 +461,7 @@ class Camera(SceneObject):
     @param phi: Rotation angle
     """
     super(Camera, self).rotateY(phi)
-    self.__updateFrustum()
+    self.__updateDirection()
     self.__rotateDirectionVector(0, phi, 0)
   
   def rotateZ(self, phi):
@@ -440,7 +471,7 @@ class Camera(SceneObject):
     @param phi: Rotation angle
     """
     super(Camera, self).rotateZ(phi)
-    self.__updateFrustum()
+    self.__updateDirection()
     self.__rotateDirectionVector(0, 0, phi)
     
   def setFrustum(self, frustum):
@@ -448,9 +479,9 @@ class Camera(SceneObject):
     Set the camera's frustum.
     """
     self.frustum = frustum
-    self.__updateFrustum()
+    self.__updateDirection()
   
-  def __updateFrustum(self):
+  def __updateDirection(self):
     """
     Updates the frustum each time the camera's
     position or orientation changes.
@@ -465,6 +496,12 @@ class Camera(SceneObject):
         self.__up
       )
     
+    # Update sound listener orientation
+    self.listener.position = self.coordinates
+    self.listener.forward_orientation = self.__direction
+    self.listener.up_orientation = self.__up
+    
+  
   def __rotateDirectionVector(self, x, y, z):
     """
     Properly transform direction vector.
@@ -504,8 +541,6 @@ class Camera(SceneObject):
 class Light(SceneObject):
   """
   A light source that can be added to a scene.
-  
-  TODO: one million missing possible settings of a light.
   """
   __lightNumber = None
   __globalLights = GL_LIGHT0-1
