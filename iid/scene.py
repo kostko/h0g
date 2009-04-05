@@ -408,10 +408,10 @@ class Camera(SceneObject):
   frustum = None
   visible = True
   
-  # Direction of the camera
-  __direction = numpy.array([0.0, 0.0, -1.0])
+  # At which point is the camera 'looking'
+  __center = numpy.array([0., 0., 0.])
   # Up vector (default)
-  __up = numpy.array([0.0, 1.0, 0.0])
+  __up = numpy.array([0., 1., 0.])
   
   # Sound listener instance
   listener = None
@@ -435,43 +435,19 @@ class Camera(SceneObject):
     super(Camera, self).setCoordinates(x, y, z)
     self.__updateDirection()
   
-  def setRotation(self, x, y, z):
+  def lookAt(self, x, y, z):
     """
-    Changes camera's rotation.
+    Look at point (x,y,z) from the current position.
     """
-    super(Camera, self).setRotation(x, y, z)
+    self.__center = numpy.array([x, y, z])
     self.__updateDirection()
-    self.__rotateDirectionVector(x, y, z)
-  
-  def rotateX(self, phi):
-    """
-    Rotate the camera on X-axis.
     
-    @param phi: Rotation angle
+  def up(self, x, y, z):
     """
-    super(Camera, self).rotateX(phi)
+    Define up vector.
+    """
+    self.__up = numpy.array([x, y, z])
     self.__updateDirection()
-    self.__rotateDirectionVector(phi, 0, 0)
-  
-  def rotateY(self, phi):
-    """
-    Rotate the camera on Y-axis.
-    
-    @param phi: Rotation angle
-    """
-    super(Camera, self).rotateY(phi)
-    self.__updateDirection()
-    self.__rotateDirectionVector(0, phi, 0)
-  
-  def rotateZ(self, phi):
-    """
-    Rotate the camera on Z-axis.
-    
-    @param phi: Rotation angle
-    """
-    super(Camera, self).rotateZ(phi)
-    self.__updateDirection()
-    self.__rotateDirectionVector(0, 0, phi)
     
   def setFrustum(self, frustum):
     """
@@ -486,55 +462,28 @@ class Camera(SceneObject):
     position or orientation changes.
     """
     if self.frustum:
-      # Calculate the center of the scene (where the cam is directed)
-      center = self.__direction + self.coordinates
       # Update frustum
       self.frustum.setCamDef(
         self.coordinates,
-        center,
+        self.__center,
         self.__up
       )
     
     # Update sound listener orientation
     self.listener.position = self.coordinates
-    self.listener.forward_orientation = self.__direction
+    # Direction vector
+    self.listener.forward_orientation = self.__center - self.coordinates  
     self.listener.up_orientation = self.__up
-    
-  
-  def __rotateDirectionVector(self, x, y, z):
-    """
-    Properly transform direction vector.
-    """
-    # Calculate the rotation matrix
-    cx, cy, cz = numpy.cos([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
-    sx, sy, sz = numpy.sin([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
-    
-    rotationMatrix = numpy.matrix(
-      [[cx*cz - sx*cy*sz, -sx*cz - cx*cy*sz, sy*sz],
-      [cx*sz + sx*cy*cz, -sx*sz + cx*cy*cz, -sy*cz],
-      [sx*sy,            cx*sy,             cy]]
-    )
-    
-    pos = self.coordinates
-    direction = self.__direction
-    center = pos + direction
-    # Rotate
-    center = numpy.dot(center, rotationMatrix).tolist()[0]
-    direction = center - pos
-    self.__direction = direction / numpy.linalg.norm(direction)
   
   def render(self):
     """
     Move the camera to proper position.
     """
     glMatrixMode(GL_MODELVIEW)
-    glRotatef(self.rotation[0], 1, 0, 0)
-    glRotatef(360.0 - self.rotation[1], 0, 1, 0)
-    glRotatef(self.rotation[2], 0, 0, 1)
-    glTranslatef(
-      -self.coordinates[0],
-      -self.coordinates[1],
-      -self.coordinates[2]
+    gluLookAt(
+      self.coordinates[0], self.coordinates[1], self.coordinates[2],
+      self.__center[0], self.__center[1], self.__center[2],
+      self.__up[0], self.__up[1], self.__up[2]    
     )
 
 class Light(SceneObject):

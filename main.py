@@ -22,7 +22,7 @@ c.initAll()
 
 cam = Camera(c.scene, 'camera')
 cam.setCoordinates(0, 0, 6)
-cam.setRotation(0, 0, 0)
+cam.lookAt(0, 0, 0)
 c.scene.registerObject(cam)
 
 light1 = Light(c.scene, 'light1')
