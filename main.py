@@ -9,6 +9,7 @@ from iid.context import Context
 from iid.scene import Entity, PhysicalEntity, Camera, Light
 from iid.events import EventType
 from iid.gui.window import Window
+from iid.gui.style import WidgetStyle
 
 # Setup logger
 logging.basicConfig(level = logging.DEBUG,
@@ -36,6 +37,12 @@ c.scene.showSubentityBoxes = False
 # Load a map
 c.storage['/Maps/first'].load(c.scene)
 
+# Setup a widget style
+style = WidgetStyle()
+style.generalFont = c.storage['/Fonts/verdana']
+c.gui.setWidgetStyle(style)
+
+# Create some windows
 win1 = Window(c.gui, caption = "Hello World")
 win1.setPosition(50, 50)
 win1.setSize(600, 300)

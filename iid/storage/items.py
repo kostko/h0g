@@ -418,3 +418,29 @@ class Shader(Item):
       raise ValueError
     
     return shader
+
+class TrueTypeFont(Item):
+  """
+  A simple TTF font.
+  """
+  sizes = None
+  
+  def __init__(self, storage, containerId, parent = None):
+    """
+    Class constructor.
+    
+    @param storage: A valid item storage
+    @param itemId: Unique container identifier
+    @param parent: Parent container
+    """
+    super(TrueTypeFont, self).__init__(storage, containerId, parent)
+    self.sizes = {}
+  
+  def getSize(self, size):
+    """
+    Returns a font instance of proper size.
+    """
+    if size not in self.sizes:
+      raise KeyError("Unsupported font size!")
+    
+    return self.sizes[size]

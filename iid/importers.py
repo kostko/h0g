@@ -11,6 +11,7 @@ import os
 import struct
 import xml.etree.cElementTree as XMLTree
 import pyglet.media as Media
+import FTGL
 
 # This seems to be somewhat system dependent (?):
 try:
@@ -20,7 +21,7 @@ except:
 
 # IID imports
 from iid.exceptions import *
-from iid.storage.items import BasicTexture, BasicModel, BasicMaterial, CompositeModel, BasicMap, Shader
+from iid.storage.items import BasicTexture, BasicModel, BasicMaterial, CompositeModel, BasicMap, Shader, TrueTypeFont
 from iid.sound import BasicSound, StreamedSound
 from iid.scene import Entity
 
@@ -650,3 +651,27 @@ class SoundImporter(Importer):
     type = item.__class__ == StreamedSound
     item.source = Media.load(self.filename, streaming=type)
     logger.info("Loaded sound '%s'" % item.itemId)
+
+class FontImporter(Importer):
+  """
+  Font importer.
+  """
+  def load(self, item):
+    """
+    Imports a TrueType font into the item.
+    """
+    if not isinstance(item, TrueTypeFont):
+      logger.error("Can only load sounds into BasicSound (and its subclasses) type items!")
+      raise ItemTypeMismatch
+    
+    try:
+      for size in (12, 14, 16):
+        font = FTGL.TextureFont(self.filename)
+        font.UseDisplayList(True)
+        font.FaceSize(size, 75)
+        item.sizes[size] = font
+    except:
+      logger.error("Font data file '%s' not found!" % self.filename)
+      raise ItemFileNotFound
+    
+    logger.info("Loaded TrueType font '%s' via FTGL." % item.itemId)

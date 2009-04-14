@@ -10,6 +10,7 @@ import logging
 
 # IID imports
 from iid.events import Signalizable, EventType
+import iid.gui.manager
 
 # Logger for this module
 logger = logging.getLogger(__name__)
@@ -48,6 +49,12 @@ class Widget(Signalizable):
       parent.children.append(self)
     
     logger.debug("Created widget '%s' with parent '%s'." % (self.__class__.__name__, self.parent.__class__.__name__))
+  
+  def getStyle(self):
+    """
+    Returns the current style instance.
+    """
+    return iid.gui.manager.WindowManager.getManager().widgetStyle
   
   def setPosition(self, x, y):
     """

@@ -33,6 +33,12 @@
     </item>
   </container>
   
+  <container id="Fonts" path="data/fonts">
+    <item name="verdana" type="TrueTypeFont">
+      <load_file path="verdana.ttf" loader="iid.importers.FontImporter" />
+    </item>
+  </container>
+  
   <container id="Scripts" path="scripts">
     <!-- ... -->
   </container>

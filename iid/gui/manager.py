@@ -21,6 +21,10 @@ class WindowManager(object):
   """
   context = None
   windows = None
+  widgetStyle = None
+  
+  # Current instance
+  __manager = None
   
   def __init__(self, context):
     """
@@ -28,6 +32,7 @@ class WindowManager(object):
     
     @param context: A valid IID Context instance
     """
+    WindowManager.__manager = self
     self.context = context
     self.context.scene.windowManager = self
     self.windows = []
@@ -35,6 +40,19 @@ class WindowManager(object):
     # Register signal handlers
     context.events.subscribe(EventType.MouseMove, self.event)
     context.events.subscribe(EventType.MousePress, self.event)
+  
+  @staticmethod
+  def getManager():
+    """
+    Returns the current WindowManager instance.
+    """
+    return WindowManager.__manager
+  
+  def setWidgetStyle(self, style):
+    """
+    Sets a widget style to use.
+    """
+    self.widgetStyle = style
   
   def setFocus(self, window):
     """
@@ -44,6 +62,7 @@ class WindowManager(object):
     """
     if len(self.windows):
       self.windows[0].active = False
+      self.windows[0].emit("Window.lostFocus")
     
     try:
       self.windows.remove(window)
@@ -52,6 +71,7 @@ class WindowManager(object):
     
     self.windows.insert(0, window)
     window.active = True
+    window.emit("Window.gotFocus")
   
   def registerWindow(self, window):
     """
@@ -85,6 +105,7 @@ class WindowManager(object):
         # No window accepted mouse press event, active window looses focus
         if len(self.windows) and event.eventType == EventType.MousePress:
           self.windows[0].active = False
+          self.windows[0].emit("Window.lostFocus")
     elif event.eventType == EventType.Keyboard:
       # Get currently focused widget
       if len(self.windows) and self.windows[0].active:
@@ -100,6 +121,7 @@ class WindowManager(object):
     
     glDisable(GL_DEPTH_TEST)
     glDisable(GL_LIGHTING)
+    glDisable(GL_TEXTURE_2D)
     
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
@@ -123,6 +145,7 @@ class WindowManager(object):
     glDisable(GL_BLEND)
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_LIGHTING)
+    glEnable(GL_TEXTURE_2D)
   
   def __paintWindow(self, window):
     """

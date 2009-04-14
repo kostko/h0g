@@ -9,6 +9,7 @@ from OpenGL.GLUT import *
 
 # IID imports
 from iid.gui.widget import Widget
+from iid.gui.label import Label
 from iid.events import EventDispatcher, EventType
 
 class WindowState:
@@ -23,7 +24,7 @@ class Titlebar(Widget):
   """
   Window's titlebar widget.
   """
-  text = ""
+  label = None
   
   def __init__(self, parent):
     """
@@ -35,10 +36,31 @@ class Titlebar(Widget):
     self.parent.subscribe("Widget.resized", self.windowResized)
     self.parent.subscribe("Widget.moved", self.windowMoved)
     self.subscribe("Widget.focused", self.parent.setFocus)
+    self.parent.subscribe("Window.gotFocus", self.windowGotFocus)
+    self.parent.subscribe("Window.lostFocus", self.windowLostFocus)
     
     # Position the titlebar
     self.windowResized(self.parent.width, self.parent.height)
     self.windowMoved(self.parent.x, self.parent.y)
+    
+    # Create the label widget
+    self.label = Label(self)
+    self.label.setPosition(2, 1)
+    self.label.setSize(self.width - 40, self.height - 3)
+    self.label.setColor(self.getStyle().titlebarActiveColor)
+    self.label.text = self.parent.caption
+  
+  def windowGotFocus(self):
+    """
+    Window has received focus.
+    """
+    self.label.setColor(self.getStyle().titlebarActiveColor)
+  
+  def windowLostFocus(self):
+    """
+    Window has lost focus.
+    """
+    self.label.setColor(self.getStyle().titlebarInactiveColor)
   
   def windowResized(self, width, height):
     """
@@ -78,8 +100,6 @@ class Titlebar(Widget):
     glVertex2i(self.x + self.width, self.y + self.height)
     glVertex2i(self.x, self.y + self.height)
     glEnd()
-    
-    # TODO: Draw text
 
 class Window(Widget):
   """
