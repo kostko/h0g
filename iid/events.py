@@ -198,6 +198,12 @@ class EventDispatcher(object):
     """
     self.dispatchToSubscribers(KeyboardEvent(key))
   
+  def eventKeyboardSpecialInput(self, key, x, y):
+    """
+    Process keyboard input event.
+    """
+    self.dispatchToSubscribers(KeyboardEvent(key, True))
+  
   def eventMouseMoveInput(self, x, y):
     """
     Process mouse move event.

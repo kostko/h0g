@@ -132,6 +132,7 @@ class Context(object):
     glutDisplayFunc(self.__displayCallback)
     glutIdleFunc(self.__updateCallback)
     glutKeyboardFunc(self.events.eventKeyboardInput)
+    glutSpecialFunc(self.events.eventKeyboardSpecialInput)
     glutMouseFunc(self.events.eventMousePressInput)
     glutPassiveMotionFunc(self.events.eventMouseMoveInput)
     glutMotionFunc(self.events.eventMouseMoveInput)

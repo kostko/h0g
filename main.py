@@ -3,6 +3,7 @@
 #
 import logging
 import sys
+from OpenGL.GLUT import *
 
 # IID imports
 from iid.context import Context
@@ -30,7 +31,7 @@ light1 = Light(c.scene, 'light1')
 light1.setCoordinates(0, 10, 10, 1)
 c.scene.registerObject(light1)
 
-c.scene.cull = False
+c.scene.cull = True
 c.scene.showBoundingBoxes = True
 c.scene.showSubentityBoxes = False
 
@@ -51,8 +52,22 @@ win2 = Window(c.gui, caption = "Another")
 win2.setPosition(600, 510)
 win2.setSize(200, 200)
 
-# Exit on key-press
-c.events.subscribe(EventType.Keyboard, lambda event: sys.exit(0))
+# Test camera controller
+def keyboardEvent(event):
+  if event.special:
+    # Special key was pressed
+    if event.key == GLUT_KEY_DOWN:
+      cam.walk(-0.2)
+    elif event.key == GLUT_KEY_UP:
+      cam.walk(0.2)
+    elif event.key == GLUT_KEY_LEFT:
+      cam.setRotation(0, 2., 0)
+    elif event.key == GLUT_KEY_RIGHT:
+      cam.setRotation(0, -2., 0)
+  else:
+    sys.exit(0)
+
+c.events.subscribe(EventType.Keyboard, keyboardEvent)
 
 #
 # Sound test script

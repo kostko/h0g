@@ -409,9 +409,10 @@ class Camera(SceneObject):
   visible = True
   
   # At which point is the camera 'looking'
-  __center = numpy.array([0., 0., 0.])
+  center = numpy.array([0., 0., 0.])
+  
   # Up vector (default)
-  __up = numpy.array([0., 1., 0.])
+  up = numpy.array([0., 1., 0.])
   
   # Sound listener instance
   listener = None
@@ -425,6 +426,7 @@ class Camera(SceneObject):
     @param parent: Parent object if this is a subobject
     """
     super(Camera, self).__init__(scene, objectId, parent)
+    
     # Setup audio listener
     self.listener = Media.listener
   
@@ -439,14 +441,44 @@ class Camera(SceneObject):
     """
     Look at point (x,y,z) from the current position.
     """
-    self.__center = numpy.array([x, y, z])
+    self.center[0:3] = (x, y, z)
     self.__updateDirection()
+  
+  def walk(self, distance):
+    """
+    Move camera forward or backward according to current center point.
+    """
+    x = self.center - self.coordinates
+    x = (x / numpy.linalg.norm(x)) * distance
     
-  def up(self, x, y, z):
+    self.setCoordinates(*self.coordinates + x)
+    self.lookAt(*self.center + x)
+  
+  def setRotation(self, x, y, z):
+    """
+    Set camera rotation.
+    """
+    self.rotation[0:3] = (x, y, z)
+    
+    # Calculate the rotation matrix
+    cx, cy, cz = numpy.cos([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    sx, sy, sz = numpy.sin([numpy.pi * x/180., numpy.pi * y/180., numpy.pi * z/180.])
+    
+    R = numpy.array([
+      [cy*cz,            -cy*sz,           sy    ],
+      [cz*sx*sy + cx*sz, cx*cz - sz*sx*sy, -sx*cy],
+      [sx*sz - cx*sy*cz, cy*sy*sz + sx*cz, cx*cy ]
+    ])
+    
+    self.up = numpy.dot(R, self.up)
+    self.center = numpy.dot(R, self.center - self.coordinates) + self.coordinates
+    self.__updateDirection()
+  
+  def setUp(self, x, y, z):
     """
     Define up vector.
     """
-    self.__up = numpy.array([x, y, z])
+    self.up[0:3] = (x, y, z)
     self.__updateDirection()
     
   def setFrustum(self, frustum):
@@ -465,15 +497,16 @@ class Camera(SceneObject):
       # Update frustum
       self.frustum.setCamDef(
         self.coordinates,
-        self.__center,
-        self.__up
+        self.center,
+        self.up
       )
     
     # Update sound listener orientation
     self.listener.position = self.coordinates
+    
     # Direction vector
-    self.listener.forward_orientation = self.__center - self.coordinates  
-    self.listener.up_orientation = self.__up
+    self.listener.forward_orientation = self.center - self.coordinates  
+    self.listener.up_orientation = self.up
   
   def render(self):
     """
@@ -482,8 +515,8 @@ class Camera(SceneObject):
     glMatrixMode(GL_MODELVIEW)
     gluLookAt(
       self.coordinates[0], self.coordinates[1], self.coordinates[2],
-      self.__center[0], self.__center[1], self.__center[2],
-      self.__up[0], self.__up[1], self.__up[2]    
+      self.center[0], self.center[1], self.center[2],
+      self.up[0], self.up[1], self.up[2]    
     )
 
 class Light(SceneObject):
