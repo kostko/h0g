@@ -53,6 +53,34 @@
         <z>0</z>
       </rot>
     </entity>
+    
+    <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r3">
+      <density>10.0</density>
+      <pos>
+        <x>0</x>
+        <y>5</y>
+        <z>0</z>
+      </pos>
+      <rot>
+        <x>30</x>
+        <y>-50</y>
+        <z>0</z>
+      </rot>
+    </entity>
+    
+    <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r4">
+      <density>10.0</density>
+      <pos>
+        <x>0</x>
+        <y>25</y>
+        <z>0</z>
+      </pos>
+      <rot>
+        <x>30</x>
+        <y>-50</y>
+        <z>0</z>
+      </rot>
+    </entity>
   </scene>
   
   <!-- Signal/slot connections -->
