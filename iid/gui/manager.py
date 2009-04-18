@@ -94,7 +94,7 @@ class WindowManager(object):
       for window in self.windows:
         # Window titlebars are separate entities, since they are drawn
         # by the window manager and are not part of a window
-        if window.titlebar.containsCoordinates(event.x, event.y):
+        if window.titlebar and window.titlebar.containsCoordinates(event.x, event.y):
           window.titlebar.event(event)
           break
         
@@ -151,7 +151,7 @@ class WindowManager(object):
     """
     Paints a window to the screen.
     """
-    if window.titlebar.visible:
+    if window.titlebar and window.titlebar.visible:
       window.titlebar._paint()
     
     window._paint()
