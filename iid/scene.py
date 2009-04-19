@@ -151,6 +151,10 @@ class SceneObject(object):
     """
     Should prepare the object for rendering.
     """
+    # Call play on the player to initialize it, otherwise it takes 0.1 sec
+    # when play is first called and this might cause nasty lag the first time
+    self.player.play()
+    
     for obj in self.children.values():
       obj.prepare()
   

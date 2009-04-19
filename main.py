@@ -76,14 +76,20 @@ c.events.subscribe(EventType.Keyboard, keyboardEvent)
 #
 from iid.behaviour import EntityBehaviour
 class R2Behaviour(EntityBehaviour):
+  complained = False
+  
   @Signalizable.slot("Entity.userMouseClick")
   def clickedOnMeh(self, x, y):
     print "r2 has been clicked!"
   
   def collision(self, entity):
+    if self.complained:
+      return
+    
     self.entity.player.queue(c.storage['/Audio/r2-sound1'].source)
     self.entity.player.eos_action = "pause"
     self.entity.player.play()
+    self.complained = True
   
   def update(self):
     self.entity.player.dispatch_events()
