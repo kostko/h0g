@@ -842,12 +842,11 @@ class Scene(object):
       for obj in level:
         if obj.parent:
           # Calculate coordinates relative to the parent
-          coordinates = obj.model.center + obj.parent.coordinates
+          coordinates = obj.coordinates + obj.parent.coordinates
         else:
           coordinates = obj.coordinates
-          
-        objSphere = (coordinates, obj.model.radius)
-        state = self.frustum.sphereInFrustum(*objSphere)
+        
+        state = self.frustum.sphereInFrustum(coordinates, obj.model.radius)
         if state == Frustum.OUTSIDE:
           obj.culled = True
         elif state == Frustum.INTERSECT:
