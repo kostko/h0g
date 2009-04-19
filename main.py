@@ -32,8 +32,10 @@ light1.setCoordinates(0, 10, 10, 1)
 c.scene.registerObject(light1)
 
 c.scene.cull = True
+c.scene.showBoundingVolumes = True
+c.scene.showSubentityVolumes = False
 c.scene.showBoundingBoxes = True
-c.scene.showSubentityBoxes = False
+c.scene.showBoundingSpheres = False
 
 # Load a map
 c.storage['/Maps/first'].load(c.scene)

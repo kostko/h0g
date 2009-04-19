@@ -28,6 +28,7 @@ class BasicModel(Item):
   normals = None
   hints = None
   polygonMaterial = None    # Maps a material to a certain polygon
+  relative = None
   
   # Model dimensions (for bounding box)
   dimensions = None
@@ -276,6 +277,8 @@ class BasicMap(Item):
           # No regular expression has matched, default to Entity with no textures
           se = Entity(scene, objectId, model, None, e)
         
+        if model.relative is not None:
+          se.setCoordinates(*model.relative)
         se.setVisible(True)
     
     scene.registerObject(e)

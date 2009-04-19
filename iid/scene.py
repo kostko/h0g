@@ -263,18 +263,23 @@ class Entity(SceneObject):
     if self.shader:
       self.shader.deactivate()
     
-    if self.scene.showBoundingBoxes and (self.scene.showSubentityBoxes or self.parent == None):
-      self.__drawBoundingBox()
+    if self.scene.showBoundingVolumes and (self.scene.showSubentityVolumes or self.parent == None):
+      self.__drawBoundingVolume()
     
     glPopMatrix()
     
-  def __drawBoundingBox(self):
+  def __drawBoundingVolume(self):
     """
-    Draws a box around the model.
+    Draws a bounding volume of the model
     """
-    glScalef(*self.model.dimensions)
-    glMaterialfv(GL_FRONT, GL_EMISSION, (1.0, 0.0, 0.0))
-    glutWireCube(1.0)
+    if self.scene.showBoundingSpheres:
+      glMaterialfv(GL_FRONT, GL_EMISSION, (1.0, 0.0, 0.0))
+      glutWireSphere(self.model.radius, 10, 10)
+    
+    if self.scene.showBoundingBoxes:
+      glMaterialfv(GL_FRONT, GL_EMISSION, (0.0, 1.0, 0.0))
+      glScalef(*self.model.dimensions)
+      glutWireCube(1.0)
 
 class PhysicalEntity(Entity):
   """
@@ -632,8 +637,10 @@ class Scene(object):
   
   # Settings
   cull = False
+  showBoundingVolumes = False
+  showSubentityVolumes = True
   showBoundingBoxes = False
-  showSubentityBoxes = True
+  showBoundingSpheres = False
   
   # Physical world
   physicalWorld = None

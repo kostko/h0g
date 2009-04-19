@@ -362,33 +362,45 @@ class ThreeDSModelImporter(Importer):
     """
     logger.info("Moving model %s's vertices to true center..." % item.itemId)
     
-    mind = [None, None, None]
-    maxd = [None, None, None]
+    globalMind = [None, None, None]
+    globalMaxd = [None, None, None]
     
-    def check_dimensions(d, min=mind, max=maxd):
+    def check_dimensions(d, min = globalMind, max = globalMaxd):
       for i in xrange(3):
         if min[i] is None or d[i] < min[i]:
           min[i] = d[i]
         
         if max[i] is None or d[i] > max[i]:
           max[i] = d[i]
-          
-    def set_center(obj):
+    
+    def get_center(mind, maxd):
       # Calculate geometric center
       lx, ly, lz = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
       cx, cy, cz = (mind[0] + lx / 2, 
                     mind[1] + ly / 2, 
                     mind[2] + lz / 2)
       
+      return numpy.array((cx, cy, cz))
+    
+    def set_center(obj, mind = globalMind, maxd = globalMaxd):
+      c = get_center(mind, maxd)
+      
       for i in xrange(len(obj.vertices)):
-        x, y, z = obj.vertices[i]
-        obj.vertices[i] = x - cx, y - cy, z - cz
+        obj.vertices[i] -= c
       
       if 'scaling' in obj.hints:
         for i in xrange(3):
           obj.dimensions[i] *= obj.hints['scaling'][i]
-          
-    def set_box(obj, min = mind, max = maxd):
+    
+    def set_relative_hint(obj, localMind, localMaxd):
+      # Calculate global geometric center
+      cG = get_center(globalMind, globalMaxd)
+      cL = get_center(localMind, localMaxd)
+      
+      # Set relative position hint
+      obj.relative = (cL - cG) * obj.hints.get('scaling', 1.0)
+    
+    def set_box(obj, min = globalMind, max = globalMaxd):
       # Set model dimensions
       obj.mind, obj.maxd = min, max
       obj.dimensions = [max[0] - min[0], max[1] - min[1], max[2] - min[2]]
@@ -413,10 +425,12 @@ class ThreeDSModelImporter(Importer):
     if isinstance(item, BasicModel):
       for vertex in item.vertices:
         check_dimensions(vertex)
+      
       set_box(item)
       set_center(item)
-      
-    else: # Composite model
+    else:
+      # Composite model
+      tmp = {}
       for child in item.children.values():
         localMind = [None, None, None]
         localMaxd = [None, None, None]
@@ -426,10 +440,12 @@ class ThreeDSModelImporter(Importer):
           check_dimensions(vertex, localMind, localMaxd)  # Update local extremes
           
         set_box(child, localMind, localMaxd)              # Calculate box dimensions based on local extremes
+        set_center(child, localMind, localMaxd)
+        tmp[child] = localMind, localMaxd
       
-      # Translate vertices relative to the global center
+      # Set subentity relative positions
       for child in item.children.values():
-        set_center(child)
+        set_relative_hint(child, *tmp[child])
 
 class MapImporter(Importer):
   """
