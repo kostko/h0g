@@ -461,7 +461,12 @@ class MapImporter(Importer):
       logger.error("Can only load maps into BasicMap type items!")
       raise ItemTypeMismatch
     
-    xml = XMLTree.parse(self.filename)
+    try:
+      xml = XMLTree.parse(self.filename)
+    except SyntaxError:
+      logger.error("Invalid map XML file!")
+      raise ItemFileNotFound
+    
     m = xml.getroot()
     if m.tag != "map":
       logger.error("Invalid map XML file!")
@@ -507,6 +512,8 @@ class MapImporter(Importer):
       self.__getCoordsProperty(entity, 'rot', e)
       self.__getFloatProperty(entity, 'density', e)
       self.__getFloatProperty(entity, 'mass', e)
+      self.__getFloatProperty(entity, 'bounce', e)
+      self.__getFloatProperty(entity, 'friction', e)
       self.__getStorageProperty(entity, 'use_shader', e, item.storage, 'Shader')
       
       # Add subentity descriptors (if any)

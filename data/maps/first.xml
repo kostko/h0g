@@ -27,6 +27,8 @@
          When no class is defined the default iid.scene.Entity is used, otherwise classes must
          be predefined in the properties section of this map. -->
     <entity model="/Models/spaceship" texture="/Textures/spaceship" class="iid.scene.StaticObstacle" id="test">
+      <bounce>0.2</bounce>
+      <friction>5000</friction>
       <pos>
         <x>0</x>
         <y>0</y>

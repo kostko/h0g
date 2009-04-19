@@ -288,6 +288,10 @@ class PhysicalEntity(Entity):
   """
   body = None
   
+  # Some properties
+  bounce = 0.2
+  friction = 5000
+  
   def __init__(self, scene, objectId, model, texture, parent = None):
     """
     Class constructor.
@@ -809,23 +813,33 @@ class Scene(object):
     """
     Callback function for collision detection.
     """
+    bounce = 0.2
+    friction = 5000
     contacts = ode.collide(g1, g2)
     if contacts:
       # Invoke entity's behaviour class with proper arguments
       entity1 = g1.sceneObject
       entity2 = g2.sceneObject
       
-      if entity1 and entity1.behaviour:
-        entity1.behaviour.collision(entity2)
+      if entity1:
+        bounce = entity1.bounce
+        friction = entity1.friction
+        
+        if entity1.behaviour:
+          entity1.behaviour.collision(entity2)
       
-      if entity2 and entity2.behaviour:
-        entity2.behaviour.collision(entity1)
+      if entity2:
+        bounce = (bounce + entity2.bounce) / 2.
+        friction += entity2.friction
+        
+        if entity2.behaviour:
+          entity2.behaviour.collision(entity1)
     
     world, contactGroup = args
     for c in contacts:
-      # TODO: Bounce/MU should be per-object configurable
-      c.setBounce(0.2)
-      c.setMu(5000)
+      # Set bounce/friction coefficients
+      c.setBounce(bounce)
+      c.setMu(friction)
       
       # Create a new contact joint
       j = ode.ContactJoint(world, contactGroup, c)

@@ -250,6 +250,12 @@ class BasicMap(Item):
     if 'mass' in entity.properties:
       e.setMass(entity.properties['density'])
     
+    if 'bounce' in entity.properties:
+      e.bounce = entity.properties['bounce']
+    
+    if 'friction' in entity.properties:
+      e.friction = entity.properties['friction']
+    
     if 'use_shader' in entity.properties:
       e.setShader(entity.properties['use_shader'])
       e.shader.prepare()
