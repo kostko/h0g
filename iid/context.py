@@ -152,9 +152,20 @@ class Context(object):
   
   def __displayCallback(self):
     """
-    Render the scene here.
+    Outputs stuff to the screen.
     """
+    # Render the 3D scene
     self.scene.render()
+    
+    # Render the GUI elements
+    try:
+      self.gui.render()
+    except:
+      logger.error("Unhandled exception in GUI rendering!")
+      logger.error(traceback.format_exc())
+      sys.exit(1)
+    
+    glutSwapBuffers()
   
   def __updateCallback(self):
     """

@@ -29,6 +29,7 @@
     <entity model="/Models/spaceship" texture="/Textures/spaceship" class="iid.scene.StaticObstacle" id="test">
       <bounce>0.2</bounce>
       <friction>5000</friction>
+      <pickable>true</pickable>
       <pos>
         <x>0</x>
         <y>0</y>

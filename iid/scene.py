@@ -154,13 +154,13 @@ class SceneObject(object):
     for obj in self.children.values():
       obj.prepare()
   
-  def render(self):
+  def render(self, picking = False):
     """
     Should render the given object.
     """
     for obj in self.children.values():
       if obj.visible and not obj.culled:
-        obj.render()
+        obj.render(picking)
   
   def __prepareRotationMatrix(self):
     """
@@ -190,9 +190,13 @@ class Entity(SceneObject):
   # Entity behaviour
   behaviour = None
   
+  # Can the object be picked
+  pickable = False
+  
   # OpenGL list identifier
   textureId = None
   listId = None
+  nameId = 0
   
   def __init__(self, scene, objectId, model, texture, parent = None):
     """
@@ -224,8 +228,12 @@ class Entity(SceneObject):
     # Prepare this entity texture and model
     self.textureId = self.texture.prepare() if self.texture else None
     self.listId = self.model.prepare()
+    
+    # Prepare object name identifier when the object is marked as pickable
+    if self.pickable:
+      self.nameId = self.scene.assignName(self)
   
-  def render(self):
+  def render(self, picking = False):
     """
     Renders the model by first transforming model coordinates to
     scene coordinates and then pushing model's vertices via
@@ -243,27 +251,28 @@ class Entity(SceneObject):
     glPushMatrix()
     glMultMatrixd(M)
     
-    if self.shader:
+    if self.shader and not picking:
       self.shader.activate()
     
     # Render all sub-entities
-    super(Entity, self).render()
+    super(Entity, self).render(picking)
     
     # Add texture when requested
-    if self.textureId is not None:
+    if self.textureId is not None and not picking:
       glBindTexture(GL_TEXTURE_2D, self.textureId)
     
     # Execute precompiled OpenGL commands
     if self.listId:
+      glLoadName(self.nameId)
       glCallList(self.listId)
     
     if self.textureId is not None:
       glBindTexture(GL_TEXTURE_2D, 0)
     
-    if self.shader:
+    if self.shader and not picking:
       self.shader.deactivate()
     
-    if self.scene.showBoundingVolumes and (self.scene.showSubentityVolumes or self.parent == None):
+    if self.scene.showBoundingVolumes and (self.scene.showSubentityVolumes or self.parent == None) and not picking:
       self.__drawBoundingVolume()
     
     glPopMatrix()
@@ -354,14 +363,14 @@ class PhysicalEntity(Entity):
     M.setBoxTotal(mass, lx, ly, lz)
     self.body.setMass(M)
   
-  def render(self):
+  def render(self, picking = False):
     """
     Renders the model by first transforming model coordinates to
     scene coordinates and then pushing model's vertices via
     calls to OpenGL.
     """
     self.updateScenePosition()
-    super(PhysicalEntity, self).render()
+    super(PhysicalEntity, self).render(picking)
   
   def updateScenePosition(self):
     """
@@ -635,6 +644,10 @@ class Scene(object):
   camera = None
   lights = None
   frustum = None
+  
+  # Object naming (name 0 is reserved)
+  names = None
+  lastNameId = 0
 
   # Entity brain container
   behaviours = None
@@ -652,9 +665,6 @@ class Scene(object):
   contactGroup = None
   lastTime = 0
   
-  # GUI window manager
-  windowManager = None
-  
   def __init__(self):
     """
     Class constructor.
@@ -662,6 +672,7 @@ class Scene(object):
     self.objects = {}
     self.behaviours = {}
     self.lights = {}
+    self.names = {}
     
     # Create ODE physical world
     self.physicalWorld = ode.World()
@@ -671,6 +682,14 @@ class Scene(object):
 
     self.space = ode.Space()
     self.contactGroup = ode.JointGroup()
+  
+  def assignName(self, obj):
+    """
+    Assign a name to an object.
+    """
+    self.lastNameId += 1
+    self.names[self.lastNameId] = obj
+    return self.lastNameId
   
   def registerObject(self, obj):
     """
@@ -767,7 +786,57 @@ class Scene(object):
     
     logger.info("Scene preparation completed! Let's render some stuff.")
   
-  def render(self):
+  def pick(self, x, y):
+    """
+    Returns the object that is under the specified window coordinates.
+    """
+    y = self.height - y
+    
+    # Get viewport information
+    view = glGetIntegerv(GL_VIEWPORT)
+    
+    # Prepare the name buffer
+    glSelectBuffer(64)
+    glRenderMode(GL_SELECT)
+    glInitNames()
+    glPushName(0)
+    
+    # Modify the projection so we only render one pixel around the cursor
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix()
+    glLoadIdentity()
+    
+    # Perform picking
+    gluPickMatrix(x, y, 1.0, 1.0, view)
+    gluPerspective(self.angle, float(self.width) / float(self.height), self.nearDistance, self.farDistance)
+    glMatrixMode(GL_MODELVIEW)
+    
+    # Render the scene as usual
+    glDisable(GL_LIGHTING)
+    glDisable(GL_TEXTURE_2D)
+    self.render(picking = True)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_TEXTURE_2D)
+    
+    # Restore projection
+    glMatrixMode(GL_PROJECTION)
+    glPopMatrix()
+    glMatrixMode(GL_MODELVIEW)
+    
+    # Get the closest object
+    closest = (None, None)
+    selection = glRenderMode(GL_RENDER)
+    
+    for minZ, maxZ, names in selection:
+      if not closest[0] or minZ < closest[0]:
+        closest = (minZ, names[0])
+    
+    if closest[1] in self.names:
+      return self.names[closest[1]]
+    
+    return None
+  
+  def render(self, picking = False):
     """
     Renders all visible objects to the scene.
     """
@@ -790,7 +859,7 @@ class Scene(object):
     for obj in self.objects.values():
       if obj.visible and not obj.culled:
         try:
-          obj.render()
+          obj.render(picking)
         except:
           logger.error("Unhandled exception while rendering an object!")
           logger.error(traceback.format_exc())
@@ -798,16 +867,6 @@ class Scene(object):
       elif isinstance(obj, PhysicalEntity):
         # Just update the position (needed for further frustum checks)
         obj.updateScenePosition()
-    
-    # Now render any GUI elements
-    try:
-      self.windowManager.render()
-    except:
-      logger.error("Unhandled exception in GUI rendering!")
-      logger.error(traceback.format_exc())
-      sys.exit(1)
-    
-    glutSwapBuffers()
 
   def __nearCallback(self, args, g1, g2):
     """

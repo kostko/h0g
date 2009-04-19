@@ -228,16 +228,10 @@ class BasicMap(Item):
     
     logger.info("Map loaded!")
   
-  def __createEntity(self, scene, entity):
+  def __loadEntityProperties(self, entity, e):
     """
-    Spawn entity and its subentities.
-    
-    @param scene: Scene instance
-    @param entity: An entity descriptor
+    A helper method for loading entity properties.
     """
-    e = entity.entityClass(scene, entity.objectId, entity.model, entity.texture)
-    e.setVisible(True)
-    
     if 'pos' in entity.properties:
       e.setCoordinates(*entity.properties['pos'])
     
@@ -259,6 +253,20 @@ class BasicMap(Item):
     if 'use_shader' in entity.properties:
       e.setShader(entity.properties['use_shader'])
       e.shader.prepare()
+    
+    if 'pickable' in entity.properties:
+      e.pickable = entity.properties['pickable']
+  
+  def __createEntity(self, scene, entity):
+    """
+    Spawn entity and its subentities.
+    
+    @param scene: Scene instance
+    @param entity: An entity descriptor
+    """
+    e = entity.entityClass(scene, entity.objectId, entity.model, entity.texture)
+    e.setVisible(True)
+    self.__loadEntityProperties(entity, e)
     
     # Add subentities when model has them
     if 'children' in entity.model.__dict__:
@@ -282,10 +290,14 @@ class BasicMap(Item):
         else:
           # No regular expression has matched, default to Entity with no textures
           se = Entity(scene, objectId, model, None, e)
+          subentity = None
         
         if model.relative is not None:
           se.setCoordinates(*model.relative)
         se.setVisible(True)
+        
+        if subentity:
+          self.__loadEntityProperties(subentity, se)
     
     scene.registerObject(e)
 

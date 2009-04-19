@@ -515,6 +515,7 @@ class MapImporter(Importer):
       self.__getFloatProperty(entity, 'bounce', e)
       self.__getFloatProperty(entity, 'friction', e)
       self.__getStorageProperty(entity, 'use_shader', e, item.storage, 'Shader')
+      self.__getBooleanProperty(entity, 'pickable', e)
       
       # Add subentity descriptors (if any)
       if isinstance(e.model, CompositeModel):
@@ -533,6 +534,8 @@ class MapImporter(Importer):
           if entityClass:
             se.entityClass = self.__loadEntityClass(entityClass, scripts)
           
+          self.__getBooleanProperty(subentity, 'pickable', se)
+          
           se.match = subentity.attrib.get('match', '*')
           e.children.append(se)
       
@@ -540,6 +543,21 @@ class MapImporter(Importer):
     
     # Parse signal/slot connections
     # TODO implement with scripts
+  
+  def __getBooleanProperty(self, node, prop, entity):
+    """
+    Initializes entity's properties from the given XML node.
+    """
+    x = node.findtext("./%s" % prop)
+    if x is not None:
+      try:
+        if x.lower() not in ('true', 'false'):
+          raise ValueError
+        
+        entity.properties[prop] = bool(x.lower() == "true")
+      except (ValueError, TypeError):
+        logger.error("Invalid entity property value specified for '%s'!" % prop)
+        raise ItemTypeMismatch
   
   def __getCoordsProperty(self, node, prop, entity):
     """

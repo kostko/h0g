@@ -71,6 +71,16 @@ def keyboardEvent(event):
 
 c.events.subscribe(EventType.Keyboard, keyboardEvent)
 
+# Test object selection
+def mouseEvent(x, y):
+  obj = c.scene.pick(x, y)
+  if obj:
+    print "clicked on object '%s'!" % obj.objectId
+  else:
+    print "clicked on non-object (or non-pickable object)!"
+
+c.gui.subscribe("Game.click", mouseEvent)
+
 #
 # Sound test script
 #

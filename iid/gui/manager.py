@@ -6,22 +6,26 @@
 #
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GLUT import *
 import logging
 
 # IID imports
-from iid.events import EventDispatcher, EventType
+from iid.events import EventDispatcher, EventType, Signalizable
 from iid.gui.window import Titlebar, WindowFlags
 
 # Logger for this module
 logger = logging.getLogger(__name__)
 
-class WindowManager(object):
+class WindowManager(Signalizable):
   """
   Window manager is the top level manager for GUI events.
   """
   context = None
   windows = None
   widgetStyle = None
+  
+  # For handling game clicks
+  gameClickState = 0
   
   # Current instance
   __manager = None
@@ -32,9 +36,9 @@ class WindowManager(object):
     
     @param context: A valid IID Context instance
     """
+    super(WindowManager, self).__init__()
     WindowManager.__manager = self
     self.context = context
-    self.context.scene.windowManager = self
     self.windows = []
     
     # Register signal handlers
@@ -95,10 +99,12 @@ class WindowManager(object):
         # Window titlebars are separate entities, since they are drawn
         # by the window manager and are not part of a window
         if window.titlebar and window.titlebar.containsCoordinates(event.x, event.y):
+          self.gameClickState = 0
           window.titlebar.event(event)
           break
         
         if window.containsCoordinates(event.x, event.y):
+          self.gameClickState = 0
           window.event(event)
           break
       else:
@@ -106,6 +112,13 @@ class WindowManager(object):
         if len(self.windows) and event.eventType == EventType.MousePress:
           self.windows[0].active = False
           self.windows[0].emit("Window.lostFocus")
+          
+          # Emit game mouse click event
+          if event.state == GLUT_DOWN:
+            self.gameClickState = 1
+          elif event.state == GLUT_UP and self.gameClickState == 1:
+            self.gameClickState = 0
+            self.emit("Game.click", event.x, event.y)
     elif event.eventType == EventType.Keyboard:
       # Get currently focused widget
       if len(self.windows) and self.windows[0].active:
