@@ -108,12 +108,18 @@ class Signalizable(object):
   All objects that want to emit signals should mix-in this class.
   """
   __subscribers = None
+  __slots = None
   
   def __init__(self):
     """
     Class constructor.
     """
     self.__subscribers = {}
+    
+    # Add all slots as subscribers
+    if self.__slots:
+      for name, callback in self.__slots:
+        self.subscribe(name, callback.__get__(self, type(self)))
   
   def emit(self, name, *args, **kwargs):
     """
@@ -130,6 +136,22 @@ class Signalizable(object):
     @param callback: A valid callback
     """
     self.__subscribers.setdefault(name, []).append(callback)
+  
+  @classmethod
+  def slot(cls, name):
+    """
+    A decorator for establishing a subscription to a local signal.
+    """
+    # Prepare slots list if not yet ready
+    if not cls.__slots:
+      cls.__slots = []
+    
+    def decorator(f):
+      # Register this slot and return the function unmodified
+      cls.__slots.append((name, f))
+      return f
+    
+    return decorator
 
 class EventDispatcher(object):
   """
