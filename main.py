@@ -8,7 +8,7 @@ from OpenGL.GLUT import *
 # IID imports
 from iid.context import Context
 from iid.scene import Entity, PhysicalEntity, Camera, Light
-from iid.events import EventType
+from iid.events import EventType, Signalizable
 from iid.gui.window import Window
 from iid.gui.style import WidgetStyle
 
@@ -71,29 +71,25 @@ def keyboardEvent(event):
 
 c.events.subscribe(EventType.Keyboard, keyboardEvent)
 
-# Test object selection
-def mouseEvent(x, y):
-  obj = c.scene.pick(x, y)
-  if obj:
-    print "clicked on object '%s'!" % obj.objectId
-  else:
-    print "clicked on non-object (or non-pickable object)!"
-
-c.gui.subscribe("Game.click", mouseEvent)
-
 #
 # Sound test script
 #
 from iid.behaviour import EntityBehaviour
 class R2Behaviour(EntityBehaviour):
+  @Signalizable.slot("Entity.userMouseClick")
+  def clickedOnMeh(self, x, y):
+    print "r2 has been clicked!"
+  
   def collision(self, entity):
     self.entity.player.queue(c.storage['/Audio/r2-sound1'].source)
     self.entity.player.eos_action = "pause"
     self.entity.player.play()
+  
   def update(self):
     self.entity.player.dispatch_events()
-b = R2Behaviour(c.scene.objects['r2'])
-c.scene.behaviours['r2-behaviour'] = b
+
+b = R2Behaviour(c.scene.objects['r3'])
+c.scene.behaviours['r3-behaviour'] = b
 #
 # End test script
 #

@@ -89,6 +89,16 @@ class WindowManager(Signalizable):
       # Generate a titlebar
       window.titlebar = Titlebar(window)
   
+  @Signalizable.slot("Game.click")
+  def gameAreaClicked(self, x, y):
+    """
+    Called when game area has been clicked. Perform scene picking and
+    call entity behaviour routines.
+    """
+    obj = self.context.scene.pick(x, y)
+    if obj and obj.behaviour:
+      obj.behaviour.emit("Entity.userMouseClick", x, y)
+  
   def event(self, event):
     """
     Event handler (dispatch events to widgets).

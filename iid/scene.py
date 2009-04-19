@@ -248,6 +248,7 @@ class Entity(SceneObject):
       x, y, z, 1.0
     ]
     
+    glPushName(self.nameId)
     glPushMatrix()
     glMultMatrixd(M)
     
@@ -263,7 +264,6 @@ class Entity(SceneObject):
     
     # Execute precompiled OpenGL commands
     if self.listId:
-      glLoadName(self.nameId)
       glCallList(self.listId)
     
     if self.textureId is not None:
@@ -276,6 +276,7 @@ class Entity(SceneObject):
       self.__drawBoundingVolume()
     
     glPopMatrix()
+    glPopName()
     
   def __drawBoundingVolume(self):
     """
@@ -799,7 +800,6 @@ class Scene(object):
     glSelectBuffer(64)
     glRenderMode(GL_SELECT)
     glInitNames()
-    glPushName(0)
     
     # Modify the projection so we only render one pixel around the cursor
     glMatrixMode(GL_PROJECTION)
@@ -829,10 +829,14 @@ class Scene(object):
     
     for minZ, maxZ, names in selection:
       if not closest[0] or minZ < closest[0]:
-        closest = (minZ, names[0])
+        closest = (minZ, names)
     
-    if closest[1] in self.names:
-      return self.names[closest[1]]
+    # Return the first name that matches, starting with subentity that has the
+    # most depth (otherwise subentities would never be matched)
+    if closest[1] is not None:
+      for name in closest[1][::-1]:
+        if name in self.names:
+          return self.names[name]
     
     return None
   

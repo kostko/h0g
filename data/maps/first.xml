@@ -45,6 +45,7 @@
     <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r2">
       <!-- <use_shader>/Shaders/point_light</use_shader> -->
       <density>10.0</density>
+      <pickable>true</pickable>
       <pos>
         <x>0</x>
         <y>15</y>
@@ -59,6 +60,7 @@
     
     <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r3">
       <density>10.0</density>
+      <pickable>true</pickable>
       <pos>
         <x>0</x>
         <y>5</y>
@@ -73,6 +75,7 @@
     
     <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r4">
       <density>10.0</density>
+      <pickable>true</pickable>
       <pos>
         <x>0</x>
         <y>25</y>

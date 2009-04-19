@@ -20,6 +20,7 @@ class EntityBehaviour(Signalizable):
     
     @param entity: A valid Entity instance
     """
+    super(EntityBehaviour, self).__init__()
     self.entity = entity
     entity.behaviour = self
   
