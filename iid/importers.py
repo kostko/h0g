@@ -244,10 +244,12 @@ class ThreeDSModelImporter(Importer):
     if basic:
       self.__prepareMaterialMap(currentObject, materials)
       self.__computeMeshNormals(currentObject)
+      self.__scaleMesh(currentObject)
     else:
       for child in item.children.values():
         self.__prepareMaterialMap(child, materials)
         self.__computeMeshNormals(child)
+        self.__scaleMesh(child)
     
     f.close()
     
@@ -296,6 +298,14 @@ class ThreeDSModelImporter(Importer):
       rgb = tuple([float(x)/255 for x in rgb])  # Convert to floats
       
     return rgb
+  
+  def __scaleMesh(self, item):
+    """
+    Scales the mesh according to scale factor hint.
+    """
+    if 'scaling' in item.hints:
+      for i in xrange(len(item.vertices)):
+        item.vertices[i] *= item.hints['scaling']
   
   def __computeMeshNormals(self, item):
     """
@@ -387,10 +397,6 @@ class ThreeDSModelImporter(Importer):
       
       for i in xrange(len(obj.vertices)):
         obj.vertices[i] -= c
-      
-      if 'scaling' in obj.hints:
-        for i in xrange(3):
-          obj.dimensions[i] *= obj.hints['scaling'][i]
     
     def set_relative_hint(obj, localMind, localMaxd):
       # Calculate global geometric center
@@ -398,7 +404,7 @@ class ThreeDSModelImporter(Importer):
       cL = get_center(localMind, localMaxd)
       
       # Set relative position hint
-      obj.relative = (cL - cG) * obj.hints.get('scaling', 1.0)
+      obj.relative = cL - cG
     
     def set_box(obj, min = globalMind, max = globalMaxd):
       # Set model dimensions
@@ -411,16 +417,8 @@ class ThreeDSModelImporter(Importer):
          min[2] + lz / 2]
       )
       
-      # Make a copy for radius calculation
-      dimensions = [d for d in obj.dimensions]
-      if 'scaling' in obj.hints:
-        for i in xrange(3):
-          center[i] *= obj.hints['scaling'][i]
-          dimensions[i] *= obj.hints['scaling'][i]
-      
       # Calculate radius for bounding sphere
-      obj.radius = numpy.linalg.norm(numpy.array(dimensions) / 2)
-      obj.center = center
+      obj.radius = numpy.linalg.norm(numpy.array(obj.dimensions) / 2)
     
     if isinstance(item, BasicModel):
       for vertex in item.vertices:

@@ -67,11 +67,6 @@ class BasicModel(Item):
     glNewList(self.__modelId, GL_COMPILE)
     glPushMatrix()
     
-    # Load object's vertices and texture mapping
-    if 'scaling' in self.hints:
-      # If scaling hints have been given, let's scale the model
-      glScalef(*self.hints['scaling'])
-    
     if len(self.polygons):
       # There are actual polygons (=faces)
       glBegin(GL_TRIANGLES)
@@ -349,11 +344,6 @@ class CompositeModel(Container):
     # Set model dimensions
     self.mind, self.maxd = mind, maxd
     self.dimensions = [maxd[0] - mind[0], maxd[1] - mind[1], maxd[2] - mind[2]]
-    
-    # Apply scaling factors
-    if 'scaling' in self.hints:
-      for i in xrange(3):
-        self.dimensions[i] *= self.hints['scaling'][i]
     
     # Calculate radius for bounding sphere
     self.radius = numpy.linalg.norm(numpy.array(self.dimensions) / 2)
