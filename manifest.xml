@@ -2,61 +2,39 @@
   <!-- This is a manifest file for the virtual Infinite Improbability Drive
        item storage. It describes item hierarchy and points to actual data
        files. All paths are relative to the root game directory. -->
+  
+  <container id="Materials">
+    <!-- Materials go here -->
+  </container>
+  
   <container id="Textures" path="data/textures">
-    <item name="spaceship" type="BasicTexture">
-      <load_file path="spaceshiptexture.bmp" loader="iid.importers.PILTextureImporter" />
+    <item name="spaceship" type="Texture">
+      <load_file path="spaceshiptexture.png" loader="iid.ImageImporter" />
     </item>
-    <item name="rocketlauncher" type="BasicTexture">
-      <load_file path="rocketlauncher.jpg" loader="iid.importers.PILTextureImporter" />
+    <item name="rocketlauncher" type="Texture">
+      <load_file path="rocketlauncher.jpg" loader="iid.ImageImporter" />
     </item>
   </container>
   
   <container id="Models" path="data/models">
-    <item name="spaceship" type="BasicModel">
+    <item name="spaceship" type="Mesh">
       <!-- Note: scale_factor must be defined BEFORE load_file, otherwise the scaling
            hints will be ignored (because of the vertex repositioning at import). -->
-      <scale_factor x="0.015" y="0.015" z="0.015" />
-      <load_file path="spaceship.3ds" loader="iid.importers.ThreeDSModelImporter" />
-    </item>
-    <item name="rocketlauncher" type="CompositeModel">
-      <load_file path="rocketlauncher.3ds" loader="iid.importers.ThreeDSModelImporter" />
-    </item>
-    <item name="r2-d2" type="CompositeModel">
-    <scale_factor x="0.025" y="0.025" z="0.025" />
-      <load_file path="r2-d2.3ds" subtype="BasicModel" loader="iid.importers.ThreeDSModelImporter" />
+      <attribute name="Mesh.ScaleFactor" x="0.015" y="0.015" z="0.015" />
+      <attribute name="Mesh.Materials" container="/Materials" />
+      <load_file path="spaceship.3ds" loader="iid.3DSMeshImporter" />
     </item>
   </container>
   
-  <container id="Audio" path="data/audio">
-    <item name="r2-sound1" type="BasicSound">
-      <load_file path="R2D2.wav" loader="iid.importers.SoundImporter" />
+  <container id="Shaders" path="data/shaders">
+    <!-- This shader renders textures, supports materials and does lighting -->
+    <item name="general" type="Shader">
+      <load_file path="general.glsl" loader="iid.GLSLImporter" />
     </item>
-  </container>
-  
-  <container id="Fonts" path="data/fonts">
-    <item name="verdana" type="TrueTypeFont">
-      <load_file path="verdana.ttf" loader="iid.importers.FontImporter" />
-    </item>
-  </container>
-  
-  <container id="Scripts" path="scripts">
-    <!-- ... -->
-  </container>
-  
-  <!-- Containers without a specified path are virtual containers that only
-       link different objects together. It this case, in-game entities (these
-       are scripted models). -->
-  <container id="Entities">
-    <!-- <item name="stupid_enemy" type="BasicEntity">
-      <model path="/Models/cube" />
-      <script path="/Scripts/stupid_enemy" />
-    </item> -->
-  </container>
-  
-  <!-- Maps contain models, initial entity placements and global scripts. -->
-  <container id="Maps" path="data/maps">
-    <item name="first" type="BasicMap">
-      <load_file path="first.xml" loader="iid.importers.MapImporter" />
+    
+    <!-- A debug shader that renders everything in red. -->
+    <item name="debug" type="Shader">
+      <load_file path="debug.glsl" loader="iid.GLSLImporter" />
     </item>
   </container>
 </manifest>

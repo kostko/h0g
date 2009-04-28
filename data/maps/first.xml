@@ -27,6 +27,7 @@
          When no class is defined the default iid.scene.Entity is used, otherwise classes must
          be predefined in the properties section of this map. -->
     <entity model="/Models/spaceship" texture="/Textures/spaceship" class="iid.scene.StaticObstacle" id="test">
+      <use_shader>/Shaders/general</use_shader>
       <bounce>0.2</bounce>
       <friction>5000</friction>
       <pickable>true</pickable>
@@ -42,8 +43,22 @@
       </rot>
     </entity>
     
-    <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r2">
-      <!-- <use_shader>/Shaders/point_light</use_shader> -->
+    <entity model="/Models/level" class="iid.scene.StaticObstacle" id="level">
+      <use_shader>/Shaders/debug</use_shader>
+      <pos>
+        <x>0</x>
+        <y>0</y>
+        <z>0</z>
+      </pos>
+      <rot>
+        <x>0</x>
+        <y>90</y>
+        <z>0</z>
+      </rot>
+    </entity>
+    <!--
+    <entity model="/Models/r2-d2" class="iid.scene.PhysicalEntity" id="r2">
+      <use_shader>/Shaders/debug</use_shader>
       <density>10.0</density>
       <pickable>true</pickable>
       <pos>
@@ -58,7 +73,8 @@
       </rot>
     </entity>
     
-    <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r3">
+    <entity model="/Models/r2-d2" class="iid.scene.PhysicalEntity" id="r3">
+      <use_shader>/Shaders/debug</use_shader>
       <density>10.0</density>
       <pickable>true</pickable>
       <pos>
@@ -73,7 +89,8 @@
       </rot>
     </entity>
     
-    <entity model="/Models/r2-d2"  class="iid.scene.PhysicalEntity" id="r4">
+    <entity model="/Models/r2-d2" class="iid.scene.PhysicalEntity" id="r4">
+      <use_shader>/Shaders/debug</use_shader>
       <density>10.0</density>
       <pickable>true</pickable>
       <pos>
@@ -86,7 +103,7 @@
         <y>-50</y>
         <z>0</z>
       </rot>
-    </entity>
+    </entity> -->
   </scene>
   
   <!-- Signal/slot connections -->

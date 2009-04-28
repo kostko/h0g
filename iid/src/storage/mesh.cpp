@@ -1,0 +1,102 @@
+/*
+ * This file is part of the Infinite Improbability Drive.
+ *
+ * Copyright (C) 2009 by Jernej Kos <kostko@unimatrix-one.org>
+ * Copyright (C) 2009 by Anze Vavpetic <anze.vavpetic@gmail.com>
+ */
+#include "storage/mesh.h"
+#include "drivers/base.h"
+#include "context.h"
+
+#include <iostream>
+#define RECORD_SIZE 32
+
+namespace IID {
+
+Mesh::Mesh(Storage *storage, const std::string &itemId, Item *parent)
+  : Item(storage, "Mesh", itemId, "", parent),
+    m_attributes(0),
+    m_indices(0),
+    m_rawVertices(0),
+    m_rawIndices(0)
+{
+}
+
+Mesh::~Mesh()
+{
+  delete m_rawVertices;
+  delete m_rawIndices;
+  delete m_attributes;
+  delete m_indices;
+}
+
+void Mesh::setMesh(int vertexCount, int indexCount, unsigned char *vertices, unsigned char *normals,
+                   unsigned char *tex, unsigned char *indices)
+{
+  // Set raw vertices
+  m_rawVertices = (float*) vertices;
+  m_rawIndices = (float*) indices;
+  
+  // Combine everything into one big array
+  unsigned char *attributes = new unsigned char[vertexCount * RECORD_SIZE];
+  for (int i = 0; i < vertexCount; i++) {
+    memcpy(attributes + i*32, vertices + i*12, 12);
+    memcpy(attributes + i*32 + 12, normals + i*12, 12);
+    memcpy(attributes + i*32 + 24, tex + i*8, 8);
+  }
+  
+  m_driver = m_storage->context()->driver();
+  m_vertexCount = vertexCount;
+  m_indexCount = indexCount;
+  m_attributes = m_driver->createVertexBuffer(
+    vertexCount * RECORD_SIZE,
+    attributes,
+    DVertexBuffer::StaticDraw,
+    DVertexBuffer::VertexArray
+  );
+  m_indices = m_driver->createVertexBuffer(
+    indexCount * 4,
+    indices,
+    DVertexBuffer::StaticDraw,
+    DVertexBuffer::ElementArray
+  );
+  
+  delete attributes;
+}
+
+void Mesh::setBounds(const Vector3f &min, const Vector3f &max, float radius)
+{
+  m_boundAABB = AxisAlignedBox(min, max);
+  m_boundRadius = radius;
+}
+
+void Mesh::bind() const
+{
+  m_attributes->bind();
+  m_indices->bind();
+  
+  DShader *shader = m_driver->currentShader();
+  if (shader) {
+    shader->bindAttributePointer("Vertex", 3, RECORD_SIZE, 0);
+    shader->bindAttributePointer("Normal", 3, RECORD_SIZE, 12);
+    shader->bindAttributePointer("TexCoord", 2, RECORD_SIZE, 24);
+  }
+}
+
+void Mesh::unbind() const
+{
+  m_attributes->unbind();
+  m_indices->unbind();
+}
+
+void Mesh::draw() const
+{
+  m_driver->drawElements(m_indexCount, 0);
+}
+
+Item *MeshFactory::create(Storage *storage, const std::string &itemId, Item *parent)
+{
+  return new Mesh(storage, itemId, parent);
+}
+
+}
