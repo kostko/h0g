@@ -16,6 +16,7 @@ class SceneNode;
 class StateBatcher;
 class ViewTransform;
 class Item;
+class Octree;
 
 /**
  * Represents the 3D scene.
@@ -30,6 +31,11 @@ public:
     Scene(Context *context);
     
     /**
+     * Class destructor.
+     */
+    ~Scene();
+    
+    /**
      * Returns the current engine context.
      */
     Context *context() { return m_context; }
@@ -42,7 +48,12 @@ public:
     /**
      * Returns the view transformation instance.
      */
-    ViewTransform *viewTransform() { return m_viewTransform; }
+    ViewTransform *viewTransform() const { return m_viewTransform; }
+    
+    /**
+     * Returns the octree associated with this scene.
+     */
+    Octree *getOctree() const { return m_octree; }
     
     /**
      * Perform scene graph updates that have been previously queued
@@ -83,6 +94,9 @@ private:
     
     // Render batcher
     StateBatcher *m_stateBatcher;
+    
+    // Octree
+    Octree *m_octree;
 };
 
 }

@@ -11,6 +11,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <Eigen/Array>
 
 USING_PART_OF_NAMESPACE_EIGEN
 

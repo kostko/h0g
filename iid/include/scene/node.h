@@ -15,6 +15,8 @@
 namespace IID {
 
 class Scene;
+class Octree;
+class OctreeNode;
 
 /**
  * A scene node represents an object in the scene graph.
@@ -123,9 +125,24 @@ public:
     Transform3f worldTransform() const { return m_worldTransform; }
     
     /**
+     * Returns this node's bounding box in world coordinates.
+     */
+    const AxisAlignedBox &getBoundingBox() const { return m_worldBounds; }
+    
+    /**
      * Renders this node if it is rendrable.
      */
     virtual void render();
+    
+    /**
+     * Sets this node's octree node.
+     */
+    void setOctreeNode(OctreeNode *node);
+    
+    /**
+     * Returns reference to this node's octree node.
+     */
+    OctreeNode *getOctreeNode() const { return m_octreeNode; }
 protected:
     /**
      * Performs transformation updates.
@@ -162,6 +179,10 @@ private:
     bool m_needChildUpdate;
     bool m_parentNotified;
     std::list<SceneNode*> m_childrenToUpdate;
+    
+    // Octree linkage
+    OctreeNode *m_octreeNode;
+    Octree *m_octree;
 protected:
     // Scene associated with this node
     Scene *m_scene;
@@ -180,9 +201,6 @@ protected:
     // Flags
     bool m_inheritOrientation;
     bool m_dirty;
-    
-    // TODO Modifiers
-    // std::list<Modifier*> m_modifiers;
 };
 
 }

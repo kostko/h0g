@@ -8,6 +8,7 @@
 #include "scene/node.h"
 #include "scene/rendrable.h"
 #include "scene/viewtransform.h"
+#include "scene/octree.h"
 #include "renderer/statebatcher.h"
 #include "storage/storage.h"
 #include "storage/mesh.h"
@@ -22,8 +23,17 @@ Scene::Scene(Context *context)
   : m_context(context),
     m_root(new SceneNode("root", 0, this)),
     m_stateBatcher(new StateBatcher(this)),
-    m_viewTransform(new ViewTransform())
+    m_viewTransform(new ViewTransform()),
+    m_octree(new Octree())
 {
+}
+
+Scene::~Scene()
+{
+  delete m_octree;
+  delete m_root;
+  delete m_viewTransform;
+  delete m_stateBatcher;
 }
 
 void Scene::update()

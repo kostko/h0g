@@ -5,6 +5,8 @@
  * Copyright (C) 2009 by Anze Vavpetic <anze.vavpetic@gmail.com>
  */
 #include "scene/node.h"
+#include "scene/scene.h"
+#include "scene/octree.h"
 
 #include <boost/foreach.hpp>
 
@@ -25,7 +27,9 @@ SceneNode::SceneNode(const std::string &name, SceneNode *parent, Scene *scene)
     m_needChildUpdate(false),
     m_parentNotified(false),
     m_inheritOrientation(true),
-    m_dirty(false)
+    m_dirty(false),
+    m_octreeNode(0),
+    m_octree(0)
 {
   if (m_parent) {
     m_parent->attachChild(this);
@@ -43,6 +47,7 @@ SceneNode::~SceneNode()
 void SceneNode::updateSceneFromParent()
 {
   m_scene = m_parent->m_scene;
+  m_octree = m_scene->getOctree();
   
   BOOST_FOREACH(Child child, m_children) {
     child.second->updateSceneFromParent();
@@ -64,12 +69,15 @@ void SceneNode::attachChild(SceneNode *child)
 
 void SceneNode::detachChild(SceneNode *child)
 {
-  m_children.erase(child->getName());
-  needUpdate();
+  detachChild(child->getName());
 }
     
 void SceneNode::detachChild(const std::string &name)
 {
+  // Remove this node from octree
+  if (m_octree)
+    m_octree->removeNode(this);
+  
   m_children.erase(name);
   needUpdate();
 }
@@ -180,10 +188,13 @@ void SceneNode::updateBounds()
   m_worldBounds = m_localBounds;
   m_worldBounds.transformAffine(m_worldTransform);
   
-  // Merge all child nodes
-  BOOST_FOREACH(Child child, m_children) {
-    m_worldBounds.merge(child.second->m_worldBounds);
-  }
+  // Update octree here
+  m_octree->updateNode(this);
+}
+
+void SceneNode::setOctreeNode(OctreeNode *node)
+{
+  m_octreeNode = node;
 }
 
 void SceneNode::setInheritOrientation(bool value)
