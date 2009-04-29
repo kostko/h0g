@@ -10,11 +10,10 @@
 
 namespace IID {
 
-LightNode::LightNode(SceneNode *parent)
-  : SceneNode(parent)
+LightNode::LightNode(const std::string &name, SceneNode *parent)
+  : SceneNode(name, parent),
+    m_stateBatcher(0)
 {
-  if (m_scene)
-    m_stateBatcher = m_scene->stateBatcher();
 }
 
 LightNode::~LightNode()
@@ -34,6 +33,9 @@ void LightNode::setProperties(const Vector4f &ambient, const Vector4f &diffuse, 
 
 void LightNode::render()
 {
+  if (!m_stateBatcher)
+    m_stateBatcher = m_scene->stateBatcher();
+  
   m_stateBatcher->addLight(
     m_worldPosition,
     m_ambient,

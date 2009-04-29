@@ -24,9 +24,10 @@ public:
     /**
      * Class constructor.
      *
+     * @param name Node name
      * @param parent Parent node
      */
-    LightNode(SceneNode *parent = 0);
+    LightNode(const std::string &name, SceneNode *parent = 0);
     
     /**
      * Class destructor.

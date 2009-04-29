@@ -94,7 +94,7 @@ void MeshImporter::translateMesh(const Vector3f &vector, int vertexCount, float 
 
 Vector3f MeshImporter::geometricCenter(const Vector3f &mind, const Vector3f &maxd) const
 {
-  return mind + ((maxd - mind) / 2.);
+  return (mind + maxd) * 0.5;
 }
 
 }

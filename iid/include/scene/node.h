@@ -20,16 +20,18 @@ class Scene;
  * A scene node represents an object in the scene graph.
  */
 class SceneNode {
+friend class Scene;
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
     /**
      * Class constructor.
      *
+     * @param name Node name
      * @param parent Parent node
      * @param scene Scene instance
      */
-    SceneNode(SceneNode *parent = 0, Scene *scene = 0);
+    SceneNode(const std::string &name, SceneNode *parent = 0, Scene *scene = 0);
     
     /**
      * Class destructor.
@@ -40,13 +42,6 @@ public:
      * Returns node's name.
      */
     std::string getName() const { return m_name; }
-    
-    /**
-     * Sets node name (nodes must have a unique name among their siblings).
-     *
-     * @param name Node name
-     */
-    void setName(const std::string &name);
     
     /**
      * Attaches a child node to this node.
@@ -110,9 +105,12 @@ public:
     void setInheritOrientation(bool value);
     
     /**
-     * Performs transformation updates.
+     * Mark this node and all children as out of date and in need of
+     * transformation updates.
+     *
+     * @param updateParent Should parent update be forced
      */
-    virtual void update();
+    void needUpdate(bool updateParent = false);
     
     /**
      * Returns true if this node has unupdated changes.
@@ -128,6 +126,29 @@ public:
      * Renders this node if it is rendrable.
      */
     virtual void render();
+protected:
+    /**
+     * Performs transformation updates.
+     */
+    virtual void update(bool updateChildren, bool parentHasChanged);
+    
+    /**
+     * Child update request.
+     *
+     * @param child Child node that is requesting an update
+     * @param updateParent Should parent update be forced
+     */
+    void requestUpdate(SceneNode *child, bool updateParent);
+    
+    /**
+     * Performs bound updates.
+     */
+    void updateBounds();
+    
+    /**
+     * Updates scene pointer from parent node.
+     */
+    void updateSceneFromParent();
 private:
     // Parent node and children list
     SceneNode *m_parent;
@@ -135,16 +156,22 @@ private:
     
     // Naming
     std::string m_name;
+    
+    // Updates
+    bool m_needParentUpdate;
+    bool m_needChildUpdate;
+    bool m_parentNotified;
+    std::list<SceneNode*> m_childrenToUpdate;
 protected:
     // Scene associated with this node
     Scene *m_scene;
     
     // Transformations
     Transform3f m_worldTransform;
-    Transform3f m_localTransform;
-    Vector3f m_position;
+    Vector3f m_localPosition;
     Vector3f m_worldPosition;
-    Quaternionf m_orientation;
+    Quaternionf m_localOrientation;
+    Quaternionf m_worldOrientation;
     
     // Bounding box
     AxisAlignedBox m_localBounds;

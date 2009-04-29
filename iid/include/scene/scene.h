@@ -15,6 +15,7 @@ class Context;
 class SceneNode;
 class StateBatcher;
 class ViewTransform;
+class Item;
 
 /**
  * Represents the 3D scene.
@@ -42,6 +43,35 @@ public:
      * Returns the view transformation instance.
      */
     ViewTransform *viewTransform() { return m_viewTransform; }
+    
+    /**
+     * Perform scene graph updates that have been previously queued
+     * when nodes were allowed to move. Must be called after dynamics
+     * simulation step.
+     */
+    void update();
+    
+    /**
+     * Renders all visible objects on the scene.
+     */
+    void render();
+    
+    /**
+     * Creates a scene node hierarchy from the specified storage item
+     * and returns the root node. When an invalid storage item is
+     * specified, this method returns NULL.
+     *
+     * @param mesh Storage item that must be a valid Mesh/CompositeMesh
+     * @return Root scene node or NULL
+     */
+    SceneNode *createNodeFromStorage(Item *mesh);
+    
+    /**
+     * Attaches a node directly under the root of the scene graph.
+     *
+     * @param node Node to attach
+     */
+    void attachNode(SceneNode *node);
 private:
     Context *m_context;
     

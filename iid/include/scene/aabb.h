@@ -15,81 +15,234 @@ class AxisAlignedBox {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
+    enum Extent {
+      Null,
+      Finite,
+      Infinite
+    };
+    
     /**
      * Class constructor.
      */
     AxisAlignedBox()
-      : m_box(AlignedBox<float, 3>())
+      : m_extent(Null)
     {}
     
     /**
      * Class constructor.
      */
-    AxisAlignedBox(const AxisAlignedBox &other)
-      : m_box(AlignedBox<float, 3>(other.m_box))
-    {}
+    AxisAlignedBox(const AxisAlignedBox &box)
+      : m_extent(Null)
+    {
+      if (box.isNull())
+        m_extent = Null;
+      else if (box.isInfinite())
+        m_extent = Infinite;
+      else
+        setBounds(box.m_min, box.m_max);
+    }
     
     /**
      * Class constructor.
      */
     AxisAlignedBox(const Vector3f &min, const Vector3f &max)
-      : m_box(AlignedBox<float, 3>(min, max))
-    {}
-    
-    /**
-     * Translates this AABB for the given vector.
-     */
-    void translate(const Vector3f &vec)
     {
-      m_box = m_box.translate(vec);
+      setBounds(min, max);
     }
     
     /**
-     * Transforms this AABB with the given transformation.
+     * Returns true if the bounding box is null.
      */
-    void transform(const Transform3f &transform)
+    bool isNull() const
     {
-      Vector3f oldMin, oldMax, currentCorner;
-      
-      // Save old values
-      oldMin = m_box.min();
-      oldMax = m_box.max();
-      
-      // Transform corners
-      currentCorner = oldMin;
-      m_box = m_box.extend(transform * currentCorner);
-      
-      currentCorner[2] = oldMax[2];
-      m_box = m_box.extend(transform * currentCorner);
-      
-      currentCorner[1] = oldMax[1];
-      m_box = m_box.extend(transform * currentCorner);
-      
-      currentCorner[2] = oldMin[2];
-      m_box = m_box.extend(transform * currentCorner);
-      
-      currentCorner[0] = oldMax[0];
-      m_box = m_box.extend(transform * currentCorner);
-      
-      currentCorner[2] = oldMax[2];
-      m_box = m_box.extend(transform * currentCorner);
-      
-      currentCorner[1] = oldMin[1];
-      m_box = m_box.extend(transform * currentCorner);
-      
-      currentCorner[2] = oldMin[2];
-      m_box = m_box.extend(transform * currentCorner);
+      return m_extent == Null;
     }
     
     /**
-     * Extends this AABB.
+     * Returns true if the bounding box is infinite.
      */
-    void extend(const AxisAlignedBox &box)
+    bool isInfinite() const
     {
-      m_box = m_box.extend(box.m_box);
+      return m_extent == Infinite;
+    }
+    
+    /**
+     * Sets bounding box bounds.
+     *
+     * @param min Minimum corner
+     * @param max Maximum corner
+     */
+    void setBounds(const Vector3f &min, const Vector3f &max)
+    {
+      m_min = min;
+      m_max = max;
+      m_extent = Finite;
+    }
+    
+    /**
+     * Sets bounding box minimum corner.
+     *
+     * @param x X component
+     * @param y Y component
+     * @param z Z component
+     */
+    void setMinimum(float x, float y, float z)
+    {
+      m_min << x, y, z;
+    }
+    
+    /**
+     * Returns bounding box minimum corner.
+     */
+    const Vector3f& getMinimum() const
+    {
+      return m_min;
+    }
+    
+    /**
+     * Sets bounding box maximum corner.
+     *
+     * @param x X component
+     * @param y Y component
+     * @param z Z component
+     */
+    void setMaximum(float x, float y, float z)
+    {
+      m_max << x, y, z;
+    }
+    
+    /**
+     * Returns bounding box maximum corner.
+     */
+    const Vector3f& getMaximum() const
+    {
+      return m_max;
+    }
+    
+    /**
+     * Merges the given point into the bounding box.
+     */
+    inline void merge(const Vector3f &point)
+    {
+      switch (m_extent) {
+        case Null: {
+          // We are null, so we become the point
+          setBounds(point, point);
+          return;
+        }
+        case Finite: {
+          // We are finite, so we expand to contain the point
+          for (int i = 0; i < 3; i++) {
+            if (point[i] > m_max[i])
+              m_max[i] = point[i]; 
+            
+            if (point[i] < m_min[i])
+              m_min[i] = point[i];
+          }
+          return;
+        }
+        case Infinite: {
+          // We are infinite, so we can grow no larger
+          return;
+        }
+      }
+    }
+    
+    /**
+     * Merges the given bounding box into this bounding box.
+     */
+    void merge(const AxisAlignedBox &box)
+    {
+      if (box.m_extent == Null || m_extent == Infinite) {
+        return;
+      } else if (box.m_extent == Infinite) {
+        m_extent = Infinite;
+      } else if (m_extent == Null) {
+        setBounds(box.m_min, box.m_max);
+      } else {
+        // Actual merge
+        Vector3f min = m_min;
+        Vector3f max = m_max;
+        
+        for (int i = 0; i < 3; i++) {
+          if (box.m_max[i] > max[i])
+            max[i] = box.m_max[i]; 
+          
+          if (box.m_min[i] < min[i])
+            min[i] = box.m_min[i];
+        }
+        
+        setBounds(min, max);
+      }
+    }
+    
+    /**
+     * Performs an affine transformation on the bounding box.
+     *
+     * @param transform Transformation descriptor
+     */
+    inline void transformAffine(const Transform3f &transform)
+    {
+      if (m_extent != Finite)
+        return;
+      
+      Vector3f center = getCenter();
+      Vector3f halfSize = getHalfSize();
+      
+      Matrix4f m = transform.matrix();
+      Vector3f newCenter = transform * center;
+      Vector3f newHalfSize(
+        std::abs(m(0, 0)) * halfSize[0] + std::abs(m(0, 1)) * halfSize[1] + std::abs(m(0, 2)) * halfSize[2],
+        std::abs(m(1, 0)) * halfSize[0] + std::abs(m(1, 1)) * halfSize[1] + std::abs(m(1, 2)) * halfSize[2],
+        std::abs(m(2, 0)) * halfSize[0] + std::abs(m(2, 1)) * halfSize[1] + std::abs(m(2, 2)) * halfSize[2]
+      );
+      
+      setBounds(newCenter - newHalfSize, newCenter + newHalfSize);
+    }
+    
+    /**
+     * Returns bounding box geometric center.
+     */
+    Vector3f getCenter() const
+    {
+      return (m_max + m_min) * 0.5;
+    }
+    
+    /**
+     * Returns bounding box size.
+     */
+    Vector3f getSize() const
+    {
+      switch (m_extent) {
+        case Null: return Vector3f(0, 0, 0);
+        case Finite: return m_max - m_min;
+        case Infinite: return Vector3f(
+          std::numeric_limits<float>::infinity(),
+          std::numeric_limits<float>::infinity(),
+          std::numeric_limits<float>::infinity()
+        );
+      }
+    }
+    
+    /**
+     * Returns bound box half size.
+     */
+    Vector3f getHalfSize() const
+    {
+      switch (m_extent) {
+        case Null: return Vector3f(0, 0, 0);
+        case Finite: return (m_max - m_min) * 0.5;
+        case Infinite: return Vector3f(
+          std::numeric_limits<float>::infinity(),
+          std::numeric_limits<float>::infinity(),
+          std::numeric_limits<float>::infinity()
+        );
+      }
     }
 protected:
-    AlignedBox<float, 3> m_box;
+    Vector3f m_min;
+    Vector3f m_max;
+    Extent m_extent;
 };
 
 }

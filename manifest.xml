@@ -24,6 +24,12 @@
       <attribute name="Mesh.Materials" container="/Materials" />
       <load_file path="spaceship.3ds" loader="iid.3DSMeshImporter" />
     </item>
+    
+    <item name="r2-d2" type="CompositeMesh">
+      <attribute name="Mesh.ScaleFactor" x="0.025" y="0.025" z="0.025" />
+      <attribute name="Mesh.Materials" container="/Materials" />
+      <load_file path="r2-d2.3ds" loader="iid.3DSMeshImporter" />
+    </item>
   </container>
   
   <container id="Shaders" path="data/shaders">

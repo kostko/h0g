@@ -12,10 +12,20 @@ namespace IID {
 
 typedef std::pair<std::string, SceneNode*> Child;
 
-SceneNode::SceneNode(SceneNode *parent, Scene *scene)
+SceneNode::SceneNode(const std::string &name, SceneNode *parent, Scene *scene)
   : m_parent(parent),
+    m_name(name),
     m_scene(scene),
-    m_dirty(true)
+    m_worldTransform(Matrix4f::Identity()),
+    m_localPosition(0, 0, 0),
+    m_worldPosition(0, 0, 0),
+    m_localOrientation(Quaternionf::Identity()),
+    m_worldOrientation(Quaternionf::Identity()),
+    m_needParentUpdate(false),
+    m_needChildUpdate(false),
+    m_parentNotified(false),
+    m_inheritOrientation(true),
+    m_dirty(false)
 {
   if (m_parent) {
     m_parent->attachChild(this);
@@ -30,17 +40,15 @@ SceneNode::~SceneNode()
   }
 }
 
-void SceneNode::setName(const std::string &name)
+void SceneNode::updateSceneFromParent()
 {
-  if (m_parent) {
-    m_parent->detachChild(this);
-    m_name = name;
-    m_parent->attachChild(this);
-  } else {
-    m_name = name;
+  m_scene = m_parent->m_scene;
+  
+  BOOST_FOREACH(Child child, m_children) {
+    child.second->updateSceneFromParent();
   }
 }
-    
+
 void SceneNode::attachChild(SceneNode *child)
 {
   if (m_children.find(child->getName()) != m_children.end())
@@ -48,16 +56,22 @@ void SceneNode::attachChild(SceneNode *child)
   
   m_children[child->getName()] = child;
   child->m_scene = m_scene;
+  child->m_parent = this;
+  child->m_parentNotified = false;
+  child->needUpdate();
+  child->updateSceneFromParent();
 }
 
 void SceneNode::detachChild(SceneNode *child)
 {
   m_children.erase(child->getName());
+  needUpdate();
 }
     
 void SceneNode::detachChild(const std::string &name)
 {
   m_children.erase(name);
+  needUpdate();
 }
     
 void SceneNode::setPosition(float x, float y, float z)
@@ -67,8 +81,8 @@ void SceneNode::setPosition(float x, float y, float z)
 
 void SceneNode::setPosition(Vector3f pos)
 {
-  m_position = pos;
-  m_dirty = true;
+  m_localPosition = pos;
+  needUpdate();
 }
 
 void SceneNode::setOrientation(float w, float x, float y, float z)
@@ -78,38 +92,98 @@ void SceneNode::setOrientation(float w, float x, float y, float z)
 
 void SceneNode::setOrientation(Quaternionf orientation)
 {
-  m_orientation = orientation;
-  m_dirty = true;
+  m_localOrientation = orientation;
+  needUpdate();
 }
 
-void SceneNode::update()
+void SceneNode::needUpdate(bool updateParent)
 {
-  if (!m_dirty)
+  m_needParentUpdate = true;
+  m_needChildUpdate = true;
+  m_dirty = true;
+  
+  if (m_parent && (!m_parentNotified || updateParent)) {
+    m_parent->requestUpdate(this, updateParent);
+    m_parentNotified = true;
+  }
+  
+  m_childrenToUpdate.clear();
+}
+
+void SceneNode::requestUpdate(SceneNode *child, bool updateParent)
+{
+  // Since we are going to update everything, just return
+  if (m_needChildUpdate)
     return;
   
-  m_localTransform.setIdentity();
-  m_localTransform.rotate(m_orientation);
-  m_worldBounds = m_localBounds;
-  m_worldBounds.transform(m_localTransform);
-  m_localTransform.translate(m_position);
+  m_childrenToUpdate.push_back(child);
+  if (m_parent && (!m_parentNotified || updateParent)) {
+    m_parent->requestUpdate(this, updateParent);
+    m_parentNotified = true;
+  }
+}
+
+void SceneNode::update(bool updateChildren, bool parentHasChanged)
+{
+  m_parentNotified = false;
   
-  if (!m_parent) {
-    m_worldTransform = m_localTransform;
-    m_worldPosition = m_position;
+  if (!updateChildren && !m_needParentUpdate && !m_needChildUpdate && !parentHasChanged)
+    return;
+  
+  if (m_needParentUpdate || parentHasChanged) {
+    // Update transformations from parent
+    if (m_parent) {
+      // Check for orientation inheritance
+      if (m_inheritOrientation) {
+        m_worldOrientation = m_parent->m_worldOrientation * m_localOrientation;
+      } else {
+        m_worldOrientation = m_localOrientation;
+      }
+      
+      m_worldPosition = m_parent->m_worldOrientation * m_localPosition;
+      m_worldPosition += m_parent->m_worldPosition;
+    } else {
+      m_worldPosition = m_localPosition;
+      m_worldOrientation = m_localOrientation;
+    }
+    
+    // Update transformations
+    m_worldTransform.setIdentity();
+    m_worldTransform.translate(m_worldPosition);
+    m_worldTransform.rotate(m_worldOrientation);
+    
+    m_needParentUpdate = false;
+    m_dirty = false;
+  }
+  
+  if (m_needChildUpdate || parentHasChanged) {
+    // We are updating all the children
+    BOOST_FOREACH(Child child, m_children) {
+      child.second->update(true, true);
+    }
   } else {
-    m_worldTransform = m_parent->m_worldTransform * m_localTransform;
-    m_worldPosition = m_parent->m_worldPosition + m_position;
+    // Only update queued children
+    BOOST_FOREACH(SceneNode *child, m_childrenToUpdate) {
+      child->update(true, false);
+    }
   }
   
-  m_worldBounds.translate(m_worldPosition);
+  m_childrenToUpdate.clear();
+  m_needChildUpdate = false;
   
-  // Update all child nodes
+  // Update boundaries
+  updateBounds();
+}
+
+void SceneNode::updateBounds()
+{
+  m_worldBounds = m_localBounds;
+  m_worldBounds.transformAffine(m_worldTransform);
+  
+  // Merge all child nodes
   BOOST_FOREACH(Child child, m_children) {
-    child.second->update();
-    m_worldBounds.extend(child.second->m_worldBounds);
+    m_worldBounds.merge(child.second->m_worldBounds);
   }
-  
-  m_dirty = false;
 }
 
 void SceneNode::setInheritOrientation(bool value)

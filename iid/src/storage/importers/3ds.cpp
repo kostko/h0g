@@ -36,6 +36,17 @@ struct Object3DS {
   Vector3f relative;
   Vector3f mind;
   Vector3f maxd;
+  
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  
+  Object3DS()
+    : vertexCount(0),
+      faceCount(0),
+      vertices(0),
+      tex(0),
+      normals(0),
+      indices(0)
+  {}
 };
 
 ThreeDSMeshImporter::ThreeDSMeshImporter(Context *context)
@@ -76,7 +87,6 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
   float *vertices = 0;
   float *tex = 0;
   unsigned int *indices = 0;
-  int endOfObject = 0;
   std::list<Object3DS*> objects;
   Object3DS *obj;
   
@@ -108,8 +118,7 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
         
         obj = new Object3DS();
         obj->name = objectId;
-        
-        endOfObject++;
+        objects.push_back(obj);
         break;
       }
       case 0x4100: {
@@ -120,7 +129,8 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
         // Process vertex list
         fread(&vertexCount, sizeof(unsigned short), 1, f);
         vertices = new float[vertexCount * 3];
-        endOfObject++;
+        obj->vertexCount = vertexCount;
+        obj->vertices = vertices;
         
         for (int i = 0; i < vertexCount; i++) {
           fread(&vertices[i*3], sizeof(float), 1, f);
@@ -134,7 +144,8 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
         unsigned short flags;
         fread(&faceCount, sizeof(unsigned short), 1, f);
         indices = new unsigned int[faceCount * 3];
-        endOfObject++;
+        obj->faceCount = faceCount;
+        obj->indices = indices;
         
         for (int i = 0; i < faceCount; i++) {
           unsigned short a;
@@ -156,7 +167,7 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
         // Process texture mapping data
         fread(&vertexCount, sizeof(unsigned short), 1, f);
         tex = new float[vertexCount * 2];
-        endOfObject++;
+        obj->tex = tex;
         
         for (int i = 0; i < vertexCount; i++) {
           fread(&tex[i*2], sizeof(float), 1, f);
@@ -170,39 +181,31 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
         break;
       }
     }
+  }
+  
+  // Compute normals and apply scaling
+  BOOST_FOREACH(Object3DS *obj, objects) {
+    // Compute mesh normals
+    float *normals = computeNormals(vertexCount, faceCount, vertices, indices);
     
-    // Check if the current object has been read
-    if (endOfObject == 4) {
-      endOfObject = 0;
+    // Scale mesh if needed
+    if (item->hasAttribute("Mesh.ScaleFactor")) {
+      StringMap factors = item->getAttribute("Mesh.ScaleFactor");
       
-      // Compute mesh normals
-      float *normals = computeNormals(vertexCount, faceCount, vertices, indices);
-      
-      // Scale mesh if needed
-      if (item->hasAttribute("Mesh.ScaleFactor")) {
-        StringMap factors = item->getAttribute("Mesh.ScaleFactor");
-        
-        scaleMesh(
-          boost::lexical_cast<float>(factors["x"]),
-          boost::lexical_cast<float>(factors["y"]),
-          boost::lexical_cast<float>(factors["z"]),
-          vertexCount,
-          vertices
-        );
-      }
-      
-      obj->vertexCount = vertexCount;
-      obj->faceCount = faceCount;
-      obj->vertices = vertices;
-      obj->tex = tex;
-      obj->normals = normals;
-      obj->indices = indices;
-      objects.push_back(obj);
-      
-      totalVertexCount += vertexCount;
-      totalFaceCount += faceCount;
-      totalObjectCount++;
+      scaleMesh(
+        boost::lexical_cast<float>(factors["x"]),
+        boost::lexical_cast<float>(factors["y"]),
+        boost::lexical_cast<float>(factors["z"]),
+        vertexCount,
+        vertices
+      );
     }
+    
+    obj->normals = normals;
+    
+    totalVertexCount += vertexCount;
+    totalFaceCount += faceCount;
+    totalObjectCount++;
   }
   
   // Determine global and local geometric centers

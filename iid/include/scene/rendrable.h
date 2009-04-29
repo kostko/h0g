@@ -26,9 +26,10 @@ public:
     /**
      * Class constructor.
      *
+     * @param name Node name
      * @param parent Parent node
      */
-    RendrableNode(SceneNode *parent = 0);
+    RendrableNode(const std::string &name, SceneNode *parent = 0);
     
     /**
      * Class destructor.

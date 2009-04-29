@@ -25,6 +25,8 @@
 #include "scene/scene.h"
 // FIXME view transform here just for debug
 #include "scene/viewtransform.h"
+#include "scene/node.h"
+#include "scene/rendrable.h"
 #include "renderer/statebatcher.h"
 
 // Drivers
@@ -100,19 +102,8 @@ void Context::displayCallback()
     Vector3f(0., 1., 0.)
   );
   
-  Shader *shader = m_storage->get<Shader>("/Shaders/general");
-  Mesh *mesh = m_storage->get<Mesh>("/Models/spaceship");
-  Texture *texture = m_storage->get<Texture>("/Textures/spaceship");
-  Transform3f transform;
-  transform = Matrix4f::Identity();
-  
-  m_scene->stateBatcher()->add(
-    shader,
-    mesh,
-    texture,
-    0,
-    transform
-  );
+  m_scene->update();
+  m_scene->render();
   m_scene->stateBatcher()->render();
   
   m_driver->swap();
@@ -136,6 +127,32 @@ void Context::start()
   // XXX FIXME TODO DEBUG
   glutDisplayFunc(displayCb);
   glutIdleFunc(idleCb);
+  
+  // Create a test scene
+  Shader *shader = m_storage->get<Shader>("/Shaders/general");
+  Mesh *mesh = m_storage->get<Mesh>("/Models/spaceship");
+  Texture *texture = m_storage->get<Texture>("/Textures/spaceship");
+  
+  RendrableNode *node = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
+  node->setTexture(texture);
+  node->setShader(shader);
+  node->setOrientation(
+    AngleAxisf(0.25*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  m_scene->attachNode(node);
+  
+  RendrableNode *node2 = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
+  node2->setTexture(texture);
+  node2->setShader(shader);
+  node2->setPosition(0., 0., 1.);
+  node2->setOrientation(
+    AngleAxisf(0.0*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.5*M_PI, Vector3f::UnitZ())
+  );
+  node->attachChild(node2);
   
   m_driver->processEvents();
 }

@@ -17,6 +17,7 @@ USING_PART_OF_NAMESPACE_EIGEN
 using Eigen::Quaternionf;
 using Eigen::Transform3f;
 using Eigen::AlignedBox;
+using Eigen::AngleAxisf;
 
 namespace IID {
 

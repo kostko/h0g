@@ -42,7 +42,11 @@ void Mesh::setMesh(int vertexCount, int indexCount, unsigned char *vertices, uns
   for (int i = 0; i < vertexCount; i++) {
     memcpy(attributes + i*32, vertices + i*12, 12);
     memcpy(attributes + i*32 + 12, normals + i*12, 12);
-    memcpy(attributes + i*32 + 24, tex + i*8, 8);
+    
+    if (tex)
+      memcpy(attributes + i*32 + 24, tex + i*8, 8);
+    else
+      memset(attributes + i*32 + 24, 0, 8);
   }
   
   m_driver = m_storage->context()->driver();

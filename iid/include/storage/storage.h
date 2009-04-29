@@ -103,6 +103,11 @@ public:
      *         can be found
      */
     Item *child(const std::string &itemId);
+    
+    /**
+     * Returns this item's children list.
+     */
+    boost::unordered_map<std::string, Item*> *children() { return &m_children; }
 protected:
     // Storage instance
     Storage *m_storage;

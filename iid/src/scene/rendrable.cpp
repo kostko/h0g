@@ -13,15 +13,14 @@
 
 namespace IID {
 
-RendrableNode::RendrableNode(SceneNode *parent)
-  : SceneNode(parent),
+RendrableNode::RendrableNode(const std::string &name, SceneNode *parent)
+  : SceneNode(name, parent),
     m_mesh(0),
     m_texture(0),
     m_shader(0),
-    m_material(0)
+    m_material(0),
+    m_stateBatcher(0)
 {
-  if (m_scene)
-    m_stateBatcher = m_scene->stateBatcher();
 }
 
 RendrableNode::~RendrableNode()
@@ -51,6 +50,9 @@ void RendrableNode::setMaterial(Material *material)
 
 void RendrableNode::render()
 {
+  if (!m_stateBatcher)
+    m_stateBatcher = m_scene->stateBatcher();
+  
   m_stateBatcher->add(
     m_shader,
     m_mesh,
