@@ -237,9 +237,12 @@ void OpenGLDriver::swap() const
   glutSwapBuffers();
 }
 
-void OpenGLDriver::drawElements(int count, unsigned int offset) const
+void OpenGLDriver::drawElements(int count, unsigned int offset, DrawPrimitive primitive) const
 {
-  glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, (GLvoid*) offset);
+  switch (primitive) {
+    case Triangles: glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, (GLvoid*) offset); break;
+    case Lines: glDrawElements(GL_LINES, count, GL_UNSIGNED_INT, (GLvoid*) offset); break;
+  }
 }
 
 void OpenGLDriver::applyModelViewTransform(const float *transform) const
@@ -247,12 +250,12 @@ void OpenGLDriver::applyModelViewTransform(const float *transform) const
   glLoadMatrixf(transform);
 }
 
-void OpenGLDriver::applyMaterial(const float *ambient, const float *diffuse, const float *specular, float emission) const
+void OpenGLDriver::applyMaterial(const float *ambient, const float *diffuse, const float *specular, const float *emission) const
 {
   glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
   glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
   glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-  glMaterialf(GL_FRONT, GL_EMISSION, emission);
+  glMaterialfv(GL_FRONT, GL_EMISSION, emission);
 }
 
 void OpenGLDriver::createLight(int index, const float *position, const float *ambient,

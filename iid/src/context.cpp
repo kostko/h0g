@@ -27,6 +27,7 @@
 #include "scene/viewtransform.h"
 #include "scene/node.h"
 #include "scene/rendrable.h"
+#include "scene/camera.h"
 #include "renderer/statebatcher.h"
 
 // Drivers
@@ -95,12 +96,6 @@ static void displayCb()
 void Context::displayCallback()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  m_scene->viewTransform()->loadIdentity();
-  m_scene->viewTransform()->lookAt(
-    Vector3f(0., 0., 6.),
-    Vector3f(0., 0., 0.),
-    Vector3f(0., 1., 0.)
-  );
   
   m_scene->update();
   m_scene->render();
@@ -120,7 +115,7 @@ void Context::start()
   glViewport(0, 0, 1024, 768);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(45., 1024. / 768., 0.1, 3000000.0);
+  gluPerspective(45., 1024. / 768., 0.1, 100.0);
   
   glMatrixMode(GL_MODELVIEW);
   
@@ -129,6 +124,15 @@ void Context::start()
   glutIdleFunc(idleCb);
   
   // Create a test scene
+  Camera *camera = new Camera(m_scene);
+  camera->setCamInternals(45., 1024. / 768., 0.1, 100.0);
+  camera->lookAt(
+    Vector3f(0., 0., 6.),
+    Vector3f(0., 0., 0.),
+    Vector3f(0., 1., 0.)
+  );
+  m_scene->setCamera(camera);
+  
   Shader *shader = m_storage->get<Shader>("/Shaders/general");
   Mesh *mesh = m_storage->get<Mesh>("/Models/spaceship");
   Texture *texture = m_storage->get<Texture>("/Textures/spaceship");

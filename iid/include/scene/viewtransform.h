@@ -54,7 +54,15 @@ public:
     /**
      * Returns the actual transformation matrix.
      */
-    Transform3f transform() { return m_transform; }
+    Transform3f transform() const { return m_transform; }
+    
+    /**
+     * Sets current view transformation.
+     */
+    void setTransform(const Transform3f &transform)
+    {
+      m_transform = transform;
+    }
 private:
     Transform3f m_transform;
 };

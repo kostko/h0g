@@ -65,9 +65,18 @@ public:
     void setMaterial(Material *material);
     
     /**
-     * Renders this node.
+     * Sets status of displaying this object's bounding box.
+     *
+     * @param value AABB display status
      */
-    void render();
+    void setShowBoundingBox(bool value);
+    
+    /**
+     * Renders this node.
+     *
+     * @param batcher State batcher that holds the render queue
+     */
+    void render(StateBatcher *batcher);
 private:
     // Resources used for rendering this node
     Mesh *m_mesh;
@@ -75,8 +84,8 @@ private:
     Shader *m_shader;
     Material *m_material;
     
-    // Pointer to state batcher to avoid lookups
-    StateBatcher *m_stateBatcher;
+    // Bounding box display
+    bool m_showBoundingBox;
 };
 
 }

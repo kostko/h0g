@@ -17,6 +17,7 @@ class StateBatcher;
 class ViewTransform;
 class Item;
 class Octree;
+class Camera;
 
 /**
  * Represents the 3D scene.
@@ -83,6 +84,13 @@ public:
      * @param node Node to attach
      */
     void attachNode(SceneNode *node);
+    
+    /**
+     * Sets scene active camera.
+     *
+     * @param camera A valid Camera instance
+     */
+    void setCamera(Camera *camera);
 private:
     Context *m_context;
     
@@ -97,6 +105,9 @@ private:
     
     // Octree
     Octree *m_octree;
+    
+    // Camera describing the current viewpoint
+    Camera *m_camera;
 };
 
 }

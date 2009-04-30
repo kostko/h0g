@@ -17,6 +17,7 @@ namespace IID {
 class Scene;
 class Octree;
 class OctreeNode;
+class StateBatcher;
 
 /**
  * A scene node represents an object in the scene graph.
@@ -131,8 +132,10 @@ public:
     
     /**
      * Renders this node if it is rendrable.
+     *
+     * @param batcher State batcher that holds the render queue
      */
-    virtual void render();
+    virtual void render(StateBatcher *batcher);
     
     /**
      * Sets this node's octree node.

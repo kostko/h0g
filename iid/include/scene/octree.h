@@ -14,6 +14,8 @@ namespace IID {
 
 class OctreeNode;
 class SceneNode;
+class Camera;
+class StateBatcher;
 
 /**
  * A simple loose octree implementation for frustum culling purpuses.
@@ -29,6 +31,16 @@ public:
      * Class destructor.
      */
     ~Octree();
+    
+    /**
+     * Walk the octree, cull invisible objects and add visible ones
+     * to the render queue via the specified state batcher.
+     *
+     * @param camera Camera describing the viewpoint
+     * @param batcher State batcher
+     */
+    void walkAndCull(Camera *camera, StateBatcher *batcher, OctreeNode *oc = 0,
+                     bool fullyVisible = false);
     
     /**
      * Adds a node into this octree. Note that you should not need to call this

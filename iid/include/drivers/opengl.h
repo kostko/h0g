@@ -191,8 +191,9 @@ public:
      *
      * @param count Number of elements to draw
      * @param offset Buffer start offset
+     * @param primitive What kind of primitive to draw
      */
-    void drawElements(int count, unsigned int offset) const;
+    void drawElements(int count, unsigned int offset, DrawPrimitive primitive) const;
     
     /**
      * Apply given model-view transformation.
@@ -210,7 +211,7 @@ public:
      * @param emission Emission
      */
     void applyMaterial(const float *ambient, const float *diffuse, const float *specular,
-                       float emission) const;
+                       const float *emission) const;
     
     /**
      * Creates a light.

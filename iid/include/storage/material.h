@@ -18,6 +18,8 @@ class Driver;
  */
 class Material : public Item {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    
     /**
      * Class constructor.
      *
@@ -42,7 +44,7 @@ public:
      * @param emission Emission
      */
     void setProperties(const Vector3f &ambient, const Vector3f &diffuse,
-                       const Vector3f &specular, float emission);
+                       const Vector3f &specular, const Vector3f &emission);
     
     /**
      * Binds this material.
@@ -58,7 +60,7 @@ private:
     Vector3f m_ambient;
     Vector3f m_diffuse;
     Vector3f m_specular;
-    float m_emission;
+    Vector3f m_emission;
     
     // Driver instance to avoid lookups
     Driver *m_driver;

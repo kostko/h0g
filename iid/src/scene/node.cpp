@@ -202,7 +202,7 @@ void SceneNode::setInheritOrientation(bool value)
   m_inheritOrientation = value;
 }
 
-void SceneNode::render()
+void SceneNode::render(StateBatcher *batcher)
 {
 }
 

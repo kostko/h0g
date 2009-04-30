@@ -9,6 +9,7 @@
 
 #include "storage.h"
 #include "scene/aabb.h"
+#include "drivers/base.h"
 
 namespace IID {
 
@@ -48,7 +49,7 @@ public:
      * @param indices Index data
      */
     void setMesh(int vertexCount, int indexCount, unsigned char *vertices, unsigned char *normals,
-                 unsigned char *tex, unsigned char *indices);
+                 unsigned char *tex, unsigned char *indices, Driver::DrawPrimitive primitive = Driver::Triangles);
     
     /**
      * Specifies mesh boundaries.
@@ -98,7 +99,7 @@ public:
     /**
      * Returns an index list associated with this mesh.
      */
-    float *indices() const { return m_rawIndices; }
+    unsigned int *indices() const { return m_rawIndices; }
 private:
     // Vertex buffers
     DVertexBuffer *m_attributes;
@@ -109,11 +110,14 @@ private:
     int m_vertexCount;
     int m_indexCount;
     float *m_rawVertices;
-    float *m_rawIndices;
+    unsigned int *m_rawIndices;
     
     // Boundaries
     AxisAlignedBox m_boundAABB;
     float m_boundRadius;
+    
+    // Primitive type
+    Driver::DrawPrimitive m_primitive;
 };
 
 /**

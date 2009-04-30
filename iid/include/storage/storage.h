@@ -93,7 +93,7 @@ public:
     /**
      * Returns the storage instance that contains this item.
      */
-    Storage *storage();
+    Storage *storage() const { return m_storage; }
     
     /**
      * Returns the specified child item.

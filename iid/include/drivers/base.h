@@ -208,6 +208,14 @@ public:
 class Driver {
 public:
     /**
+     * Type of primitive to draw.
+     */
+    enum DrawPrimitive {
+      Triangles,
+      Lines
+    };
+    
+    /**
      * Class constructor.
      *
      * @param name Driver name
@@ -239,8 +247,9 @@ public:
      *
      * @param count Number of elements to draw
      * @param offset Buffer start offset
+     * @param primitive What kind of primitive to draw
      */
-    virtual void drawElements(int count, unsigned int offset) const = 0;
+    virtual void drawElements(int count, unsigned int offset, DrawPrimitive primitive) const = 0;
     
     /**
      * Apply given model-view transformation.
@@ -258,7 +267,7 @@ public:
      * @param emission Emission
      */
     virtual void applyMaterial(const float *ambient, const float *diffuse, const float *specular,
-                               float emission) const = 0;
+                               const float *emission) const = 0;
     
     /**
      * Creates a light.

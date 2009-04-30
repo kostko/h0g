@@ -19,6 +19,7 @@ using Eigen::Quaternionf;
 using Eigen::Transform3f;
 using Eigen::AlignedBox;
 using Eigen::AngleAxisf;
+using Eigen::Hyperplane;
 
 namespace IID {
 

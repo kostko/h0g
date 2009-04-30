@@ -288,10 +288,11 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
     relative["z"] = boost::lexical_cast<std::string>(obj->relative[2]);
     mesh->setAttribute("Mesh.RelativePosition", relative);
     
-    // Free object resources - note that vertices and indices are not freed
-    // as they are used internally by Mesh objects
+    // Free object resources
+    delete obj->vertices;
     delete obj->normals;
     delete obj->tex;
+    delete obj->indices;
     delete obj;
   }
   

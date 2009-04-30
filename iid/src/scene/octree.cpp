@@ -6,6 +6,10 @@
  */
 #include "scene/octree.h"
 #include "scene/node.h"
+#include "scene/camera.h"
+#include "renderer/statebatcher.h"
+
+#include <boost/foreach.hpp>
 
 namespace IID {
 
@@ -72,6 +76,25 @@ public:
         (size[1] <= m_halfSize[1]) &&
         (size[2] <= m_halfSize[2])
       );
+    }
+    
+    void getCullBounds(AxisAlignedBox *box) const
+    {
+      box->setBounds(m_box.getMinimum() - m_halfSize, m_box.getMaximum() + m_halfSize);
+    }
+    
+    void incrNodes()
+    {
+      m_numNodes++;
+      if (m_parent)
+        m_parent->incrNodes();
+    }
+    
+    void decrNodes()
+    {
+      m_numNodes--;
+      if (m_parent)
+        m_parent->decrNodes();
     }
 private:
     OctreeNode *m_parent;
@@ -151,6 +174,7 @@ void Octree::addNode(SceneNode *node, OctreeNode *oc, int depth)
     addNode(node, oc->m_children[x][y][z], ++depth);
   } else {
     // Node should go into this node
+    oc->incrNodes();
     oc->m_nodes.push_back(node);
     node->setOctreeNode(oc);
   }
@@ -189,6 +213,7 @@ void Octree::updateNode(SceneNode *node)
   if (!oc) {
     // No octree node assigned
     if (!isNodeInBox(box, m_root->m_box)) {
+      m_root->incrNodes();
       m_root->m_nodes.push_back(node);
       node->setOctreeNode(m_root);
     } else {
@@ -200,6 +225,7 @@ void Octree::updateNode(SceneNode *node)
     
     // If outside the octree, put into root node
     if (!isNodeInBox(box, m_root->m_box)) {
+      m_root->incrNodes();
       m_root->m_nodes.push_back(node);
       node->setOctreeNode(m_root);
     } else {
@@ -216,12 +242,88 @@ void Octree::removeNode(SceneNode *node)
   OctreeNode *oc = node->getOctreeNode();
   if (oc) {
     // Erase the node from list (this list contains a small amount of nodes)
+    oc->decrNodes();
     oc->m_nodes.erase(
       std::find(oc->m_nodes.begin(), oc->m_nodes.end(), node)
     );
     
     // Set octree node pointer to NULL
     node->setOctreeNode(0);
+  }
+}
+
+void Octree::walkAndCull(Camera *camera, StateBatcher *batcher, OctreeNode *oc,
+                         bool fullyVisible)
+{
+  if (!oc)
+    oc = m_root;
+  
+  // If there are no nodes, don't go down there
+  if (oc->m_numNodes == 0)
+    return;
+  
+  Camera::Position pos = Camera::Outside;
+  if (fullyVisible) {
+    pos = Camera::Inside;
+  } else if (oc == m_root) {
+    pos = Camera::Intersect;
+  } else {
+    AxisAlignedBox box;
+    oc->getCullBounds(&box);
+    
+    // First test the sphere, then test the full AABB
+    pos = camera->containsSphere(box.getCenter(), box.getRadius());
+    if (pos == Camera::Intersect)
+      pos = camera->containsBox(box);
+  }
+  
+  // If octree node is visible or it is a root node
+  if (pos != Camera::Outside) {
+    // Add objects to the render queue
+    bool vis = true;
+    
+    BOOST_FOREACH(SceneNode *node, oc->m_nodes) {
+      // If this octree node is partially visible, manually cull all
+      // scene nodes attached to this level
+      if (pos == Camera::Intersect) {
+        AxisAlignedBox box = node->getBoundingBox();
+        Camera::Position npos = camera->containsSphere(box.getCenter(), box.getRadius());
+        if (npos == Camera::Intersect)
+          npos = camera->containsBox(box);
+        
+        vis = (npos != Camera::Outside);
+      }
+      
+      if (vis) {
+        // Push the node to the render queue if it's visible
+        node->render(batcher);
+      }
+    }
+    
+    // Recurse to other octree nodes
+    OctreeNode *child;
+    fullyVisible = (pos == Camera::Inside);
+    
+    if ((child = oc->m_children[0][0][0]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
+    
+    if ((child = oc->m_children[1][0][0]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
+    
+    if ((child = oc->m_children[0][1][0]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
+    
+    if ((child = oc->m_children[1][1][0]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
+    
+    if ((child = oc->m_children[0][0][1]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
+    
+    if ((child = oc->m_children[1][0][1]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
+    
+    if ((child = oc->m_children[1][1][1]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
   }
 }
 

@@ -9,6 +9,7 @@
 #include "scene/rendrable.h"
 #include "scene/viewtransform.h"
 #include "scene/octree.h"
+#include "scene/camera.h"
 #include "renderer/statebatcher.h"
 #include "storage/storage.h"
 #include "storage/mesh.h"
@@ -24,7 +25,8 @@ Scene::Scene(Context *context)
     m_root(new SceneNode("root", 0, this)),
     m_stateBatcher(new StateBatcher(this)),
     m_viewTransform(new ViewTransform()),
-    m_octree(new Octree())
+    m_octree(new Octree()),
+    m_camera(0)
 {
 }
 
@@ -47,21 +49,16 @@ void Scene::update()
 
 void Scene::render()
 {
-  // FIXME this is a stupid renderer and should be replaced by an octree
-  //       that performs frustum culling
-  std::list<SceneNode*> n;
-  n.push_back(m_root);
+  // When no camera is currently active, show nothing at all
+  if (!m_camera)
+    return;
   
-  while (!n.empty()) {
-    SceneNode *node = n.front();
-    n.pop_front();
-    node->render();
-    
-    typedef std::pair<std::string, SceneNode*> Child;
-    BOOST_FOREACH(Child child, node->m_children) {
-      n.push_back(child.second);
-    }
-  }
+  // First render the camera to apply a proper view transform
+  m_camera->render();
+  
+  // Then perform view frustum culling and add all nodes to the state
+  // batcher render queue for rendering
+  m_octree->walkAndCull(m_camera, m_stateBatcher);
 }
 
 void Scene::attachNode(SceneNode *node)
@@ -102,6 +99,11 @@ SceneNode *Scene::createNodeFromStorage(Item *mesh)
   } else {
     return 0;
   }
+}
+
+void Scene::setCamera(Camera *camera)
+{
+  m_camera = camera;
 }
 
 }

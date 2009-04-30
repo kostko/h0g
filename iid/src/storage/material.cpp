@@ -23,7 +23,7 @@ Material::~Material()
 }
 
 void Material::setProperties(const Vector3f &ambient, const Vector3f &diffuse,
-                             const Vector3f &specular, float emission)
+                             const Vector3f &specular, const Vector3f &emission)
 {
   m_ambient = ambient;
   m_diffuse = diffuse;
@@ -33,7 +33,7 @@ void Material::setProperties(const Vector3f &ambient, const Vector3f &diffuse,
 
 void Material::bind()
 {
-  m_driver->applyMaterial(m_ambient.data(), m_diffuse.data(), m_specular.data(), m_emission);
+  m_driver->applyMaterial(m_ambient.data(), m_diffuse.data(), m_specular.data(), m_emission.data());
 }
 
 void Material::unbind() const

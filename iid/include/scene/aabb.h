@@ -76,6 +76,7 @@ public:
     {
       m_min = min;
       m_max = max;
+      m_radius = ((m_max - m_min) * 0.5).norm();
       m_extent = Finite;
     }
     
@@ -89,6 +90,7 @@ public:
     void setMinimum(float x, float y, float z)
     {
       m_min << x, y, z;
+      m_radius = ((m_max - m_min) * 0.5).norm();
     }
     
     /**
@@ -109,6 +111,7 @@ public:
     void setMaximum(float x, float y, float z)
     {
       m_max << x, y, z;
+      m_radius = ((m_max - m_min) * 0.5).norm();
     }
     
     /**
@@ -201,6 +204,24 @@ public:
     }
     
     /**
+     * Sets corner coordinates.
+     *
+     * @param corners An array of 8 vectors where corners will be saved
+     */
+    inline void getCorners(Vector3f *corners) const
+    {
+      corners[0] = m_min;
+      corners[1] << m_min[0], m_max[1], m_min[2];
+      corners[2] << m_max[0], m_max[1], m_min[2];
+      corners[3] << m_max[0], m_min[1], m_min[2];
+      
+      corners[4] = m_max;
+      corners[5] << m_min[0], m_max[1], m_max[2];
+      corners[6] << m_min[0], m_min[1], m_max[2];
+      corners[7] << m_max[0], m_min[1], m_max[2];
+    }
+    
+    /**
      * Returns bounding box geometric center.
      */
     Vector3f getCenter() const
@@ -239,10 +260,21 @@ public:
         );
       }
     }
+    
+    /**
+     * Returns the bounding sphere radius for this AABB.
+     */
+    float getRadius() const
+    {
+      return m_radius;
+    }
 protected:
     Vector3f m_min;
     Vector3f m_max;
     Extent m_extent;
+    
+    // Bounding sphere radius
+    float m_radius;
 };
 
 }
