@@ -137,7 +137,19 @@ void Context::start()
   Mesh *mesh = m_storage->get<Mesh>("/Models/spaceship");
   Texture *texture = m_storage->get<Texture>("/Textures/spaceship");
   
-  RendrableNode *node = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
+  Shader *shader2 = m_storage->get<Shader>("/Shaders/material");
+  Mesh *mesh2 = m_storage->get<Mesh>("/Models/r2-d2");
+  
+  SceneNode *node3 = m_scene->createNodeFromStorage(mesh2);
+  node3->setShader(shader2);
+  node3->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  m_scene->attachNode(node3);
+  
+  /*RendrableNode *node = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
   node->setTexture(texture);
   node->setShader(shader);
   node->setOrientation(
@@ -156,7 +168,7 @@ void Context::start()
     AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
     AngleAxisf(0.5*M_PI, Vector3f::UnitZ())
   );
-  node->attachChild(node2);
+  node->attachChild(node2);*/
   
   m_driver->processEvents();
 }

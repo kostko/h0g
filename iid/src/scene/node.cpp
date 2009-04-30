@@ -46,6 +46,9 @@ SceneNode::~SceneNode()
 
 void SceneNode::updateSceneFromParent()
 {
+  if (!m_parent->m_scene)
+    return;
+  
   m_scene = m_parent->m_scene;
   m_octree = m_scene->getOctree();
   
@@ -160,6 +163,9 @@ void SceneNode::update(bool updateChildren, bool parentHasChanged)
     m_worldTransform.translate(m_worldPosition);
     m_worldTransform.rotate(m_worldOrientation);
     
+    // Update boundaries
+    updateBounds();
+    
     m_needParentUpdate = false;
     m_dirty = false;
   }
@@ -178,9 +184,6 @@ void SceneNode::update(bool updateChildren, bool parentHasChanged)
   
   m_childrenToUpdate.clear();
   m_needChildUpdate = false;
-  
-  // Update boundaries
-  updateBounds();
 }
 
 void SceneNode::updateBounds()
@@ -200,6 +203,30 @@ void SceneNode::setOctreeNode(OctreeNode *node)
 void SceneNode::setInheritOrientation(bool value)
 {
   m_inheritOrientation = value;
+}
+
+void SceneNode::setTexture(Texture *texture)
+{
+  // Apply texture to all child nodes
+  BOOST_FOREACH(Child child, m_children) {
+    child.second->setTexture(texture);
+  }
+}
+
+void SceneNode::setShader(Shader *shader)
+{
+  // Apply shader to all child nodes
+  BOOST_FOREACH(Child child, m_children) {
+    child.second->setShader(shader);
+  }
+}
+
+void SceneNode::setMaterial(Material *material)
+{
+  // Apply material to all child nodes
+  BOOST_FOREACH(Child child, m_children) {
+    child.second->setMaterial(material);
+  }
 }
 
 void SceneNode::render(StateBatcher *batcher)

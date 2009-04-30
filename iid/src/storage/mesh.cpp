@@ -77,10 +77,9 @@ void Mesh::setMesh(int vertexCount, int indexCount, unsigned char *vertices, uns
   delete attributes;
 }
 
-void Mesh::setBounds(const Vector3f &min, const Vector3f &max, float radius)
+void Mesh::setBounds(const Vector3f &min, const Vector3f &max)
 {
   m_boundAABB = AxisAlignedBox(min, max);
-  m_boundRadius = radius;
 }
 
 void Mesh::bind() const

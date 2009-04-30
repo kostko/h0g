@@ -186,7 +186,7 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
   // Compute normals and apply scaling
   BOOST_FOREACH(Object3DS *obj, objects) {
     // Compute mesh normals
-    float *normals = computeNormals(vertexCount, faceCount, vertices, indices);
+    float *normals = computeNormals(obj->vertexCount, obj->faceCount, obj->vertices, obj->indices);
     
     // Scale mesh if needed
     if (item->hasAttribute("Mesh.ScaleFactor")) {
@@ -196,8 +196,8 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
         boost::lexical_cast<float>(factors["x"]),
         boost::lexical_cast<float>(factors["y"]),
         boost::lexical_cast<float>(factors["z"]),
-        vertexCount,
-        vertices
+        obj->vertexCount,
+        obj->vertices
       );
     }
     
@@ -216,7 +216,11 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
     std::numeric_limits<float>::infinity(),
     std::numeric_limits<float>::infinity()
   );
-  Vector3f globalMaxd(0, 0, 0);
+  Vector3f globalMaxd(
+    -std::numeric_limits<float>::infinity(),
+    -std::numeric_limits<float>::infinity(),
+    -std::numeric_limits<float>::infinity()
+  );
   
   BOOST_FOREACH(Object3DS *obj, objects) {
     Vector3f localMind(
@@ -224,7 +228,11 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
       std::numeric_limits<float>::infinity(),
       std::numeric_limits<float>::infinity()
     );
-    Vector3f localMaxd(0, 0, 0);
+    Vector3f localMaxd(
+      -std::numeric_limits<float>::infinity(),
+      -std::numeric_limits<float>::infinity(),
+      -std::numeric_limits<float>::infinity()
+    );
     
     for (int i = 0; i < obj->vertexCount; i++) {
       for (int j = 0; j < 3; j++) {
@@ -254,6 +262,8 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
   // Move all objects to (0, 0, 0) and update relative hints
   BOOST_FOREACH(Object3DS *obj, objects) {
     translateMesh(-obj->center, obj->vertexCount, obj->vertices);
+    obj->mind -= obj->center;
+    obj->maxd -= obj->center;
     obj->relative = obj->center - center;
   }
   
@@ -279,7 +289,7 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
     );
     
     // Setup mesh bounds
-    mesh->setBounds(obj->mind, obj->maxd, (obj->dimensions / 2.).norm());
+    mesh->setBounds(obj->mind, obj->maxd);
     
     // Configure parent-relative position hint
     StringMap relative;

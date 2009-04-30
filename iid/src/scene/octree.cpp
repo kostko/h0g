@@ -307,19 +307,22 @@ void Octree::walkAndCull(Camera *camera, StateBatcher *batcher, OctreeNode *oc,
     if ((child = oc->m_children[0][0][0]) != 0)
       walkAndCull(camera, batcher, child, fullyVisible);
     
-    if ((child = oc->m_children[1][0][0]) != 0)
+    if ((child = oc->m_children[0][0][1]) != 0)
       walkAndCull(camera, batcher, child, fullyVisible);
     
     if ((child = oc->m_children[0][1][0]) != 0)
       walkAndCull(camera, batcher, child, fullyVisible);
     
-    if ((child = oc->m_children[1][1][0]) != 0)
+    if ((child = oc->m_children[0][1][1]) != 0)
       walkAndCull(camera, batcher, child, fullyVisible);
     
-    if ((child = oc->m_children[0][0][1]) != 0)
+    if ((child = oc->m_children[1][0][0]) != 0)
       walkAndCull(camera, batcher, child, fullyVisible);
     
     if ((child = oc->m_children[1][0][1]) != 0)
+      walkAndCull(camera, batcher, child, fullyVisible);
+    
+    if ((child = oc->m_children[1][1][0]) != 0)
       walkAndCull(camera, batcher, child, fullyVisible);
     
     if ((child = oc->m_children[1][1][1]) != 0)

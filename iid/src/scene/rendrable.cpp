@@ -38,16 +38,19 @@ void RendrableNode::setMesh(Mesh *mesh)
 void RendrableNode::setTexture(Texture *texture)
 {
   m_texture = texture;
+  SceneNode::setTexture(texture);
 }
 
 void RendrableNode::setShader(Shader *shader)
 {
   m_shader = shader;
+  SceneNode::setShader(shader);
 }
 
 void RendrableNode::setMaterial(Material *material)
 {
   m_material = material;
+  SceneNode::setMaterial(material);
 }
 
 void RendrableNode::setShowBoundingBox(bool value)

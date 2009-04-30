@@ -18,6 +18,9 @@ class Scene;
 class Octree;
 class OctreeNode;
 class StateBatcher;
+class Texture;
+class Shader;
+class Material;
 
 /**
  * A scene node represents an object in the scene graph.
@@ -146,6 +149,27 @@ public:
      * Returns reference to this node's octree node.
      */
     OctreeNode *getOctreeNode() const { return m_octreeNode; }
+    
+    /**
+     * Set node's texture.
+     *
+     * @param texture Texture instance
+     */
+    virtual void setTexture(Texture *texture);
+    
+    /**
+     * Sets node's shader.
+     *
+     * @param shader Shader instance
+     */
+    virtual void setShader(Shader *shader);
+    
+    /**
+     * Sets node's material.
+     *
+     * @param material Material instance
+     */
+    virtual void setMaterial(Material *material);
 protected:
     /**
      * Performs transformation updates.

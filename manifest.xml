@@ -42,5 +42,9 @@
     <item name="debug" type="Shader">
       <load_file path="debug.glsl" loader="iid.GLSLImporter" />
     </item>
+    
+    <item name="material" type="Shader">
+      <load_file path="material.glsl" loader="iid.GLSLImporter" />
+    </item>
   </container>
 </manifest>

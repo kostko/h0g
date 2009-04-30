@@ -56,9 +56,8 @@ public:
      *
      * @param min Minimum AABB corner
      * @param max Maximum AABB corner
-     * @param radius Sphere radius
      */
-    void setBounds(const Vector3f &min, const Vector3f &max, float radius);
+    void setBounds(const Vector3f &min, const Vector3f &max);
     
     /**
      * Returns the axis aligned bounding box of this 3D mesh.
@@ -114,7 +113,6 @@ private:
     
     // Boundaries
     AxisAlignedBox m_boundAABB;
-    float m_boundRadius;
     
     // Primitive type
     Driver::DrawPrimitive m_primitive;

@@ -96,6 +96,8 @@ SceneNode *Scene::createNodeFromStorage(Item *mesh)
         );
       }
     }
+    
+    return group;
   } else {
     return 0;
   }
