@@ -250,6 +250,13 @@ void OpenGLDriver::applyModelViewTransform(const float *transform) const
   glLoadMatrixf(transform);
 }
 
+void OpenGLDriver::applyProjectionTransform(const float *transform) const
+{
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(transform);
+  glMatrixMode(GL_MODELVIEW);
+}
+
 void OpenGLDriver::applyMaterial(const float *ambient, const float *diffuse, const float *specular, const float *emission) const
 {
   glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);

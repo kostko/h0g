@@ -66,18 +66,18 @@ void Scene::attachNode(SceneNode *node)
   m_root->attachChild(node);
 }
 
-SceneNode *Scene::createNodeFromStorage(Item *mesh)
+SceneNode *Scene::createNodeFromStorage(Item *mesh, const std::string &name)
 {
   if (mesh->getType() == "Mesh") {
     // A simple mesh will result in creation of a single rendrable node
     // that will be returned
-    RendrableNode *node = new RendrableNode(mesh->getId());
+    RendrableNode *node = new RendrableNode(name.empty() ? mesh->getId() : name);
     node->setMesh(static_cast<Mesh*>(mesh));
     return node;
   } else if (mesh->getType() == "CompositeMesh") {
     // A composite mesh will result in creation of a grouping SceneNode
     // that will contain all child nodes with relative position hints
-    SceneNode *group = new SceneNode(mesh->getId());
+    SceneNode *group = new SceneNode(name.empty() ? mesh->getId() : name);
     
     typedef std::pair<std::string, Item*> Child;
     BOOST_FOREACH(Child child, *mesh->children()) {
@@ -106,6 +106,42 @@ SceneNode *Scene::createNodeFromStorage(Item *mesh)
 void Scene::setCamera(Camera *camera)
 {
   m_camera = camera;
+  
+  // Update camera configuration to match current perspective settings
+  m_camera->setCamInternals(
+    m_perspective.fov,
+    m_perspective.ratio,
+    m_perspective.near,
+    m_perspective.far
+  );
+}
+
+void Scene::setPerspective(float fov, float ratio, float near, float far)
+{
+  m_perspective.fov = fov;
+  m_perspective.ratio = ratio;
+  m_perspective.near = near;
+  m_perspective.far = far;
+  
+  // If a camera is set, update it as well
+  if (m_camera)
+    m_camera->setCamInternals(fov, ratio, near, far);
+  
+  // Update the projection matrix
+  Matrix4f m;
+  float f = 1. / std::tan(0.5 * M_PI * fov / 180.);
+  float nfd = near - far;
+  m << f / ratio, 0, 0,                  0,
+       0,         f, 0,                  0,
+       0,         0, (far + near) / nfd, (2 * far * near) / nfd,
+       0,         0, -1,                 0;
+  
+  m_context->driver()->applyProjectionTransform(m.data());
+}
+
+const ScenePerspective &Scene::getPerspective() const
+{
+  return m_perspective;
 }
 
 }

@@ -113,11 +113,8 @@ void Context::start()
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
   
   glViewport(0, 0, 1024, 768);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(45., 1024. / 768., 0.1, 100.0);
   
-  glMatrixMode(GL_MODELVIEW);
+  m_scene->setPerspective(45., 1024. / 768., 0.1, 100.0);
   
   // XXX FIXME TODO DEBUG
   glutDisplayFunc(displayCb);
@@ -125,13 +122,12 @@ void Context::start()
   
   // Create a test scene
   Camera *camera = new Camera(m_scene);
-  camera->setCamInternals(45., 1024. / 768., 0.1, 100.0);
+  m_scene->setCamera(camera);
   camera->lookAt(
     Vector3f(0., 0., 6.),
     Vector3f(0., 0., 0.),
     Vector3f(0., 1., 0.)
   );
-  m_scene->setCamera(camera);
   
   Shader *shader = m_storage->get<Shader>("/Shaders/general");
   Mesh *mesh = m_storage->get<Mesh>("/Models/spaceship");
@@ -148,6 +144,46 @@ void Context::start()
     AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
   );
   m_scene->attachNode(node3);
+  
+  SceneNode *node4 = m_scene->createNodeFromStorage(mesh2, "r3-d2");
+  node4->setShader(shader2);
+  node4->setPosition(0.9, 0., 0.);
+  node4->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  m_scene->attachNode(node4);
+  
+  SceneNode *node5 = m_scene->createNodeFromStorage(mesh2, "r4-d2");
+  node5->setShader(shader2);
+  node5->setPosition(-0.9, 0., 0.);
+  node5->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  m_scene->attachNode(node5);
+  
+  SceneNode *node6 = m_scene->createNodeFromStorage(mesh2, "r5-d2");
+  node6->setShader(shader2);
+  node6->setPosition(1.8, 0., 0.);
+  node6->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  m_scene->attachNode(node6);
+  
+  SceneNode *node7 = m_scene->createNodeFromStorage(mesh2, "r6-d2");
+  node7->setShader(shader2);
+  node7->setPosition(-1.8, 0., 0.);
+  node7->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  m_scene->attachNode(node7);
   
   /*RendrableNode *node = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
   node->setTexture(texture);

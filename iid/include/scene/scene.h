@@ -20,6 +20,16 @@ class Octree;
 class Camera;
 
 /**
+ * A structure used to describe scene perspective.
+ */
+struct ScenePerspective {
+    float fov;
+    float ratio;
+    float near;
+    float far;
+};
+
+/**
  * Represents the 3D scene.
  */
 class Scene {
@@ -74,9 +84,10 @@ public:
      * specified, this method returns NULL.
      *
      * @param mesh Storage item that must be a valid Mesh/CompositeMesh
+     * @param name Wanted scene node name
      * @return Root scene node or NULL
      */
-    SceneNode *createNodeFromStorage(Item *mesh);
+    SceneNode *createNodeFromStorage(Item *mesh, const std::string &name = "");
     
     /**
      * Attaches a node directly under the root of the scene graph.
@@ -91,6 +102,21 @@ public:
      * @param camera A valid Camera instance
      */
     void setCamera(Camera *camera);
+    
+    /**
+     * Sets scene perspective.
+     *
+     * @param fov Field of view angle
+     * @param ratio Viewport aspect ratio
+     * @param near Distance from the viewer to the near clipping plane
+     * @param far Distance from the viewer to the far clipping plane
+     */
+    void setPerspective(float fov, float ratio, float near, float far);
+    
+    /**
+     * Returns current perspective properties.
+     */
+    const ScenePerspective &getPerspective() const;
 private:
     Context *m_context;
     
@@ -108,6 +134,9 @@ private:
     
     // Camera describing the current viewpoint
     Camera *m_camera;
+    
+    // Current perspective
+    ScenePerspective m_perspective;
 };
 
 }

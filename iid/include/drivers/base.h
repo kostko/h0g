@@ -259,6 +259,13 @@ public:
     virtual void applyModelViewTransform(const float *transform) const = 0;
     
     /**
+     * Apply given projection transformation.
+     *
+     * @param transform Transformation matrix
+     */
+    virtual void applyProjectionTransform(const float *transform) const = 0;
+    
+    /**
      * Apply given material properties.
      *
      * @param ambient Ambient component
