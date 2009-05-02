@@ -6,51 +6,16 @@
  */
 #include "storage/importers/collada.h"
 #include "storage/storage.h"
-#include "storage/mesh.h"
 #include "logger.h"
 
 // TinyXML parser
 #include "tinyxml/ticpp.h"
 
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
 #include <list>
 #include <stdio.h>
 
-using boost::format;
-
 namespace IID {
-
-/**
- * A class for holding COLLADA objects so some post-processing can be
- * performed after they are loaded.
- */
-struct ObjectCollada {
-  std::string name;
-  int vertexCount;
-  int faceCount;
-  float *vertices;
-  float *tex;
-  float *normals;
-  unsigned int *indices;
-  Vector3f center;
-  Vector3f dimensions;
-  Vector3f relative;
-  Vector3f mind;
-  Vector3f maxd;
-  
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  
-  ObjectCollada()
-    : vertexCount(0),
-      faceCount(0),
-      vertices(0),
-      tex(0),
-      normals(0),
-      indices(0)
-  {}
-};
 
 ColladaMeshImporter::ColladaMeshImporter(Context *context)
   : MeshImporter(context)
@@ -65,7 +30,7 @@ void ColladaMeshImporter::load(Storage *storage, Item *item, const std::string &
   }
   
   // List of final parsed meshes
-  std::list<ObjectCollada*> objects;
+  std::list<SubmeshObject*> objects;
   int objectIdx = 0;
   
   try {
@@ -154,7 +119,7 @@ void ColladaMeshImporter::load(Storage *storage, Item *item, const std::string &
                 bool hasTextures = false;
                 
                 // Create an object
-                ObjectCollada *obj = new ObjectCollada();
+                SubmeshObject *obj = new SubmeshObject();
                 obj->name = "object" + boost::lexical_cast<std::string>(objectIdx++);
                 obj->faceCount = faceCount;
                 obj->indices = new unsigned int[faceCount * 3];
@@ -214,123 +179,8 @@ void ColladaMeshImporter::load(Storage *storage, Item *item, const std::string &
     m_logger->error("Unable to open specified COLLADA model!");
   }
   
-  int totalVertexCount = 0;
-  int totalFaceCount = 0;
-  int totalObjectCount = 0;
-  
-  // Apply scaling
-  BOOST_FOREACH(ObjectCollada *obj, objects) {
-    // Scale mesh if needed
-    if (item->hasAttribute("Mesh.ScaleFactor")) {
-      StringMap factors = item->getAttribute("Mesh.ScaleFactor");
-      
-      scaleMesh(
-        boost::lexical_cast<float>(factors["x"]),
-        boost::lexical_cast<float>(factors["y"]),
-        boost::lexical_cast<float>(factors["z"]),
-        obj->vertexCount,
-        obj->vertices
-      );
-    }
-    
-    totalVertexCount += obj->vertexCount;
-    totalFaceCount += obj->faceCount;
-    totalObjectCount++;
-  }
-  
-  // Determine global and local geometric centers
-  Vector3f center;
-  Vector3f dimensions;
-  Vector3f globalMind(
-    std::numeric_limits<float>::infinity(),
-    std::numeric_limits<float>::infinity(),
-    std::numeric_limits<float>::infinity()
-  );
-  Vector3f globalMaxd(
-    -std::numeric_limits<float>::infinity(),
-    -std::numeric_limits<float>::infinity(),
-    -std::numeric_limits<float>::infinity()
-  );
-  
-  BOOST_FOREACH(ObjectCollada *obj, objects) {
-    Vector3f localMind(
-      std::numeric_limits<float>::infinity(),
-      std::numeric_limits<float>::infinity(),
-      std::numeric_limits<float>::infinity()
-    );
-    Vector3f localMaxd(
-      -std::numeric_limits<float>::infinity(),
-      -std::numeric_limits<float>::infinity(),
-      -std::numeric_limits<float>::infinity()
-    );
-    
-    for (int i = 0; i < obj->vertexCount; i++) {
-      for (int j = 0; j < 3; j++) {
-        if (obj->vertices[3*i + j] < localMind[j])
-          localMind[j] = obj->vertices[3*i + j];
-        
-        if (obj->vertices[3*i + j] < globalMind[j])
-          globalMind[j] = obj->vertices[3*i + j];
-        
-        if (obj->vertices[3*i + j] > localMaxd[j])
-          localMaxd[j] = obj->vertices[3*i + j];
-        
-        if (obj->vertices[3*i + j] > globalMaxd[j])
-          globalMaxd[j] = obj->vertices[3*i + j];
-      }
-    }
-    
-    obj->center = geometricCenter(localMind, localMaxd);
-    obj->dimensions = localMaxd - localMind;
-    obj->mind = localMind;
-    obj->maxd = localMaxd;
-  }
-  
-  center = geometricCenter(globalMind, globalMaxd);
-  dimensions = globalMaxd - globalMind;
-  
-  // Move all objects to (0, 0, 0) and update relative hints
-  BOOST_FOREACH(ObjectCollada *obj, objects) {
-    translateMesh(-obj->center, obj->vertexCount, obj->vertices);
-    obj->mind -= obj->center;
-    obj->maxd -= obj->center;
-    obj->relative = obj->center - center;
-  }
-  
-  // Create all objects
-  BOOST_FOREACH(ObjectCollada *obj, objects) {
-    Mesh *mesh = new Mesh(storage, obj->name, item);
-    
-    // Setup our mesh
-    mesh->setMesh(
-      obj->vertexCount,
-      obj->faceCount * 3,
-      (unsigned char*) obj->vertices,
-      (unsigned char*) obj->normals,
-      (unsigned char*) obj->tex,
-      (unsigned char*) obj->indices
-    );
-    
-    // Setup mesh bounds
-    mesh->setBounds(obj->mind, obj->maxd);
-    
-    // Configure parent-relative position hint
-    StringMap relative;
-    relative["x"] = boost::lexical_cast<std::string>(obj->relative[0]);
-    relative["y"] = boost::lexical_cast<std::string>(obj->relative[1]);
-    relative["z"] = boost::lexical_cast<std::string>(obj->relative[2]);
-    mesh->setAttribute("Mesh.RelativePosition", relative);
-    
-    // Free object resources
-    delete obj->vertices;
-    delete obj->normals;
-    delete obj->tex;
-    delete obj->indices;
-    delete obj;
-  }
-  
-  // Log some statistics
-  m_logger->info(str(format("Loaded %d objects containing %d vertices and %d faces.") % totalObjectCount % totalVertexCount % totalFaceCount));
+  // Perform submesh post-processing and generate storage items
+  postProcessSubmeshObjects(item, objects);
 }
 
 }

@@ -6,48 +6,12 @@
  */
 #include "storage/importers/3ds.h"
 #include "storage/storage.h"
-#include "storage/mesh.h"
 #include "logger.h"
 
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
 #include <list>
 #include <stdio.h>
 
-using boost::format;
-
 namespace IID {
-
-/**
- * A class for holding 3DS objects so some post-processing can be
- * performed after they are loaded.
- */
-struct Object3DS {
-  std::string name;
-  int vertexCount;
-  int faceCount;
-  float *vertices;
-  float *tex;
-  float *normals;
-  unsigned int *indices;
-  Vector3f center;
-  Vector3f dimensions;
-  Vector3f relative;
-  Vector3f mind;
-  Vector3f maxd;
-  
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  
-  Object3DS()
-    : vertexCount(0),
-      faceCount(0),
-      vertices(0),
-      tex(0),
-      normals(0),
-      indices(0)
-  {}
-};
 
 ThreeDSMeshImporter::ThreeDSMeshImporter(Context *context)
   : MeshImporter(context)
@@ -81,14 +45,11 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
   unsigned int chunkLength;
   unsigned short vertexCount;
   unsigned short faceCount;
-  int totalVertexCount = 0;
-  int totalFaceCount = 0;
-  int totalObjectCount = 0;
   float *vertices = 0;
   float *tex = 0;
   unsigned int *indices = 0;
-  std::list<Object3DS*> objects;
-  Object3DS *obj;
+  std::list<SubmeshObject*> objects;
+  SubmeshObject *obj;
   
   while (ftell(f) < fileSize) {
     fread(&chunkId, 2, 1, f);
@@ -116,7 +77,7 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
         
         m_logger->info("Found object named '" + objectId + "' in 3DS file!");
         
-        obj = new Object3DS();
+        obj = new SubmeshObject();
         obj->name = objectId;
         objects.push_back(obj);
         break;
@@ -183,133 +144,10 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
     }
   }
   
-  // Compute normals and apply scaling
-  BOOST_FOREACH(Object3DS *obj, objects) {
-    // Compute mesh normals
-    float *normals = computeNormals(obj->vertexCount, obj->faceCount, obj->vertices, obj->indices);
-    
-    // Scale mesh if needed
-    if (item->hasAttribute("Mesh.ScaleFactor")) {
-      StringMap factors = item->getAttribute("Mesh.ScaleFactor");
-      
-      scaleMesh(
-        boost::lexical_cast<float>(factors["x"]),
-        boost::lexical_cast<float>(factors["y"]),
-        boost::lexical_cast<float>(factors["z"]),
-        obj->vertexCount,
-        obj->vertices
-      );
-    }
-    
-    obj->normals = normals;
-    
-    totalVertexCount += obj->vertexCount;
-    totalFaceCount += obj->faceCount;
-    totalObjectCount++;
-  }
-  
-  // Determine global and local geometric centers
-  Vector3f center;
-  Vector3f dimensions;
-  Vector3f globalMind(
-    std::numeric_limits<float>::infinity(),
-    std::numeric_limits<float>::infinity(),
-    std::numeric_limits<float>::infinity()
-  );
-  Vector3f globalMaxd(
-    -std::numeric_limits<float>::infinity(),
-    -std::numeric_limits<float>::infinity(),
-    -std::numeric_limits<float>::infinity()
-  );
-  
-  BOOST_FOREACH(Object3DS *obj, objects) {
-    Vector3f localMind(
-      std::numeric_limits<float>::infinity(),
-      std::numeric_limits<float>::infinity(),
-      std::numeric_limits<float>::infinity()
-    );
-    Vector3f localMaxd(
-      -std::numeric_limits<float>::infinity(),
-      -std::numeric_limits<float>::infinity(),
-      -std::numeric_limits<float>::infinity()
-    );
-    
-    for (int i = 0; i < obj->vertexCount; i++) {
-      for (int j = 0; j < 3; j++) {
-        if (obj->vertices[3*i + j] < localMind[j])
-          localMind[j] = obj->vertices[3*i + j];
-        
-        if (obj->vertices[3*i + j] < globalMind[j])
-          globalMind[j] = obj->vertices[3*i + j];
-        
-        if (obj->vertices[3*i + j] > localMaxd[j])
-          localMaxd[j] = obj->vertices[3*i + j];
-        
-        if (obj->vertices[3*i + j] > globalMaxd[j])
-          globalMaxd[j] = obj->vertices[3*i + j];
-      }
-    }
-    
-    obj->center = geometricCenter(localMind, localMaxd);
-    obj->dimensions = localMaxd - localMind;
-    obj->mind = localMind;
-    obj->maxd = localMaxd;
-  }
-  
-  center = geometricCenter(globalMind, globalMaxd);
-  dimensions = globalMaxd - globalMind;
-  
-  // Move all objects to (0, 0, 0) and update relative hints
-  BOOST_FOREACH(Object3DS *obj, objects) {
-    translateMesh(-obj->center, obj->vertexCount, obj->vertices);
-    obj->mind -= obj->center;
-    obj->maxd -= obj->center;
-    obj->relative = obj->center - center;
-  }
-  
-  // Create all objects
-  BOOST_FOREACH(Object3DS *obj, objects) {
-    Mesh *mesh;
-    if (composite) {
-      // We are loading into a composite mesh, so we create new subitems
-      mesh = new Mesh(storage, obj->name, item);
-    } else {
-      // We are only interested in the last object
-      mesh = static_cast<Mesh*>(item);
-    }
-    
-    // Setup our mesh
-    mesh->setMesh(
-      obj->vertexCount,
-      obj->faceCount * 3,
-      (unsigned char*) obj->vertices,
-      (unsigned char*) obj->normals,
-      (unsigned char*) obj->tex,
-      (unsigned char*) obj->indices
-    );
-    
-    // Setup mesh bounds
-    mesh->setBounds(obj->mind, obj->maxd);
-    
-    // Configure parent-relative position hint
-    StringMap relative;
-    relative["x"] = boost::lexical_cast<std::string>(obj->relative[0]);
-    relative["y"] = boost::lexical_cast<std::string>(obj->relative[1]);
-    relative["z"] = boost::lexical_cast<std::string>(obj->relative[2]);
-    mesh->setAttribute("Mesh.RelativePosition", relative);
-    
-    // Free object resources
-    delete obj->vertices;
-    delete obj->normals;
-    delete obj->tex;
-    delete obj->indices;
-    delete obj;
-  }
-  
-  // Log some statistics
-  m_logger->info(str(format("Loaded %d objects containing %d vertices and %d faces.") % totalObjectCount % totalVertexCount % totalFaceCount));
-  
   fclose(f);
+  
+  // Perform submesh post-processing and generate storage items
+  postProcessSubmeshObjects(item, objects);
 }
 
 }

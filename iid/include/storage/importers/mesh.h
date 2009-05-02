@@ -11,11 +11,44 @@
 #include "globals.h"
 
 #include <string>
+#include <list>
 
 namespace IID {
 
 class Item;
 class Storage;
+
+/**
+ * A class for holding submesh objects so some post-processing can be
+ * performed after they are loaded. These are used internally by
+ * actual mesh importers.
+ */
+class SubmeshObject {
+public:
+  std::string name;
+  int vertexCount;
+  int faceCount;
+  float *vertices;
+  float *tex;
+  float *normals;
+  unsigned int *indices;
+  Vector3f center;
+  Vector3f dimensions;
+  Vector3f relative;
+  Vector3f mind;
+  Vector3f maxd;
+  
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  
+  SubmeshObject()
+    : vertexCount(0),
+      faceCount(0),
+      vertices(0),
+      tex(0),
+      normals(0),
+      indices(0)
+  {}
+};
 
 /**
  * An abstract mesh importer that defines some convenience functions for
@@ -78,6 +111,14 @@ protected:
      * @return Geometric center
      */
     Vector3f geometricCenter(const Vector3f &mind, const Vector3f &maxd) const;
+    
+    /**
+     * Performs submesh object postprocessing after import.
+     *
+     * @param item Storage item to load into
+     * @param objects A list of imported submesh objects.
+     */
+    void postProcessSubmeshObjects(Item *item, std::list<SubmeshObject*> objects) const;
 };
 
 }
