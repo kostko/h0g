@@ -18,6 +18,8 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
+#define USE_FRUSTUM_CULLING
+
 namespace IID {
 
 Scene::Scene(Context *context)
@@ -58,7 +60,23 @@ void Scene::render()
   
   // Then perform view frustum culling and add all nodes to the state
   // batcher render queue for rendering
+#ifdef USE_FRUSTUM_CULLING
   m_octree->walkAndCull(m_camera, m_stateBatcher);
+#else
+  std::list<SceneNode*> n;
+  n.push_back(m_root);
+  
+  while (!n.empty()) {
+    SceneNode *node = n.front();
+    n.pop_front();
+    node->render(m_stateBatcher);
+  
+    typedef std::pair<std::string, SceneNode*> Child;
+    BOOST_FOREACH(Child child, node->m_children) {
+      n.push_back(child.second);
+    }
+  }
+#endif
 }
 
 void Scene::attachNode(SceneNode *node)
