@@ -243,6 +243,11 @@ public:
     virtual void swap() const = 0;
     
     /**
+     * Clears the buffer.
+     */
+    virtual void clear() const = 0;
+    
+    /**
      * Draws elements from the currently bound index buffer.
      *
      * @param count Number of elements to draw

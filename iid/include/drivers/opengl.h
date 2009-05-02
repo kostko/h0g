@@ -187,6 +187,11 @@ public:
     void swap() const;
     
     /**
+     * Clears the buffer.
+     */
+    void clear() const;
+    
+    /**
      * Draws elements from the currently bound index buffer.
      *
      * @param count Number of elements to draw

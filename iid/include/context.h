@@ -9,6 +9,14 @@
 
 #include <string>
 
+#include <bullet/LinearMath/btQuickprof.h>
+
+class btBroadphaseInterface;
+class btCollisionDispatcher;
+class btConstraintSolver;
+class btDefaultCollisionConfiguration;
+class btDynamicsWorld;
+
 namespace IID {
 
 class Logger;
@@ -46,18 +54,28 @@ public:
     /**
      * Returns the currently used driver.
      */
-    Driver *driver();
+    Driver *driver() const { return m_driver; }
     
     /**
      * Returns the currently used scene instance.
      */
-    Scene *scene();
+    Scene *scene() const { return m_scene; }
+    
+    /**
+     * Returns the currently used storage instance.
+     */
+    Storage *storage() const { return m_storage; }
     
     /**
      * Returns a logger instance for the specified module. Logger must be
      * manually deleted when not needed anymore.
      */
     Logger *logger(const std::string &module);
+    
+    /**
+     * Returns the Bullet Dynamics world associated with this context.
+     */
+    btDynamicsWorld *getDynamicsWorld() const { return m_dynamicsWorld; }
 protected:
     /**
      * Registers basic storage types.
@@ -73,8 +91,21 @@ protected:
      * Registers basic importers.
      */
     void registerBasicImporters();
-public:    
-    void displayCallback();
+    
+    /**
+     * Initializes bullet dynamics engine.
+     */
+    void initPhysics();
+public:
+    /**
+     * Performs world dynamics calculation and then renders the world.
+     */
+    void moveAndDisplay();
+    
+    /**
+     * Renders the world.
+     */
+    void display();
 private:
     // Local logger instance
     Logger *m_logger;
@@ -87,6 +118,16 @@ private:
     
     // Driver
     Driver *m_driver;
+    
+    // Clock
+    btClock m_clock;
+    
+    // Bullet dynamics stuff
+    btBroadphaseInterface *m_broadphase;
+    btCollisionDispatcher *m_dispatcher;
+    btConstraintSolver *m_solver;
+    btDefaultCollisionConfiguration *m_collisionConfiguration;
+    btDynamicsWorld *m_dynamicsWorld;
 };
 
 }

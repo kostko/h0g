@@ -225,6 +225,14 @@ void OpenGLDriver::init()
   glutInitWindowPosition(100, 100);
   glutInitWindowSize(1024, 768);
   glutCreateWindow("Infinite Improbability Drive");
+  
+  glClearColor(0, 0, 0, 0);
+  glClearDepth(1);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+  
+  glViewport(0, 0, 1024, 768);
 }
 
 void OpenGLDriver::processEvents() const
@@ -235,6 +243,11 @@ void OpenGLDriver::processEvents() const
 void OpenGLDriver::swap() const
 {
   glutSwapBuffers();
+}
+
+void OpenGLDriver::clear() const
+{
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void OpenGLDriver::drawElements(int count, unsigned int offset, DrawPrimitive primitive) const

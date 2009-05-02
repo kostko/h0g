@@ -23,15 +23,13 @@
 
 // Scene
 #include "scene/scene.h"
-// FIXME view transform here just for debug
-#include "scene/viewtransform.h"
-#include "scene/node.h"
-#include "scene/rendrable.h"
-#include "scene/camera.h"
 #include "renderer/statebatcher.h"
 
 // Drivers
 #include "drivers/opengl.h"
+
+// Bullet dynamics
+#include <btBulletDynamicsCommon.h>
 
 // XXX FIXME TODO DEBUG
 #include <GL/glut.h>
@@ -64,147 +62,98 @@ Context::Context()
   
   // Create the scene
   m_scene = new Scene(this);
+  
+  // Initialize physics
+  initPhysics();
 }
 
 Context::~Context()
 {
   delete m_driver;
   delete m_logger;
-}
-
-Driver *Context::driver()
-{
-  return m_driver;
-}
-
-Scene *Context::scene()
-{
-  return m_scene;
-}
-
-static void idleCb()
-{
-  usleep(20000);
-  glutPostRedisplay();
-}
-
-static void displayCb()
-{
-  gContext->displayCallback();
-}
-
-void Context::displayCallback()
-{
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
+  // Delete physics stuff
+  delete m_dynamicsWorld;
+  delete m_solver;
+  delete m_broadphase;
+  delete m_dispatcher,
+  delete m_collisionConfiguration;
+}
+
+void Context::initPhysics()
+{
+  m_logger->info("Initializing Bullet Dynamics physics engine...");
+  
+  // Create collision configuration
+  m_collisionConfiguration = new btDefaultCollisionConfiguration();
+  
+  // Use default collision dispatcher
+  m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
+  m_broadphase = new btDbvtBroadphase();
+  
+  // Use default constraint solver
+  btSequentialImpulseConstraintSolver *solver = new btSequentialImpulseConstraintSolver();
+  m_solver = solver;
+  
+  // Create the dynamics world
+  m_dynamicsWorld = new btDiscreteDynamicsWorld(
+    m_dispatcher,
+    m_broadphase,
+    m_solver,
+    m_collisionConfiguration
+  );
+  
+  m_logger->info("Physics initialized.");
+}
+
+void Context::moveAndDisplay()
+{
+  // Get delta time in microseconds and reset timer
+  float dt = m_clock.getTimeMicroseconds();
+  m_clock.reset();
+  
+  // Limit framerate to 120 fps max
+  if (dt < 8333)
+    usleep((useconds_t) (8333 - dt));
+  
+  // Step the world
+  m_dynamicsWorld->stepSimulation(dt, 7);
+  
+  // Render the scene
+  display();
+}
+    
+void Context::display()
+{
+  m_driver->clear();
+  
+  // Propagate scene node updates
   m_scene->update();
+  
+  // Perform culling and fill the render queue
   m_scene->render();
+  
+  // Actually render from the render queue
   m_scene->stateBatcher()->render();
   
   m_driver->swap();
 }
 
+static void idleCb()
+{
+  gContext->moveAndDisplay();
+}
+
+static void displayCb()
+{
+  gContext->display();
+}
+
 void Context::start()
 {
-  glClearColor(0, 0, 0, 0);
-  glClearDepth(1);
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-  
-  glViewport(0, 0, 1024, 768);
-  
-  m_scene->setPerspective(45., 1024. / 768., 0.1, 100.0);
-  
   // XXX FIXME TODO DEBUG
   glutDisplayFunc(displayCb);
   glutIdleFunc(idleCb);
-  
-  // Create a test scene
-  Camera *camera = new Camera(m_scene);
-  m_scene->setCamera(camera);
-  camera->lookAt(
-    Vector3f(0., 0., 6.),
-    Vector3f(0., 0., 0.),
-    Vector3f(0., 1., 0.)
-  );
-  
-  Shader *shader = m_storage->get<Shader>("/Shaders/general");
-  Mesh *mesh = m_storage->get<Mesh>("/Models/spaceship");
-  Texture *texture = m_storage->get<Texture>("/Textures/spaceship");
-  
-  Shader *shader2 = m_storage->get<Shader>("/Shaders/material");
-  Mesh *mesh2 = m_storage->get<Mesh>("/Models/r2-d2");
-  
-  SceneNode *node3 = m_scene->createNodeFromStorage(mesh2);
-  node3->setShader(shader2);
-  node3->setOrientation(
-    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  m_scene->attachNode(node3);
-  
-  SceneNode *node4 = m_scene->createNodeFromStorage(mesh2, "r3-d2");
-  node4->setShader(shader2);
-  node4->setPosition(0.9, 0., 0.);
-  node4->setOrientation(
-    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  m_scene->attachNode(node4);
-  
-  SceneNode *node5 = m_scene->createNodeFromStorage(mesh2, "r4-d2");
-  node5->setShader(shader2);
-  node5->setPosition(-0.9, 0., 0.);
-  node5->setOrientation(
-    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  m_scene->attachNode(node5);
-  
-  SceneNode *node6 = m_scene->createNodeFromStorage(mesh2, "r5-d2");
-  node6->setShader(shader2);
-  node6->setPosition(1.8, 0., 0.);
-  node6->setOrientation(
-    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  m_scene->attachNode(node6);
-  
-  SceneNode *node7 = m_scene->createNodeFromStorage(mesh2, "r6-d2");
-  node7->setShader(shader2);
-  node7->setPosition(-1.8, 0., 0.);
-  node7->setOrientation(
-    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  m_scene->attachNode(node7);
-  
-  /*RendrableNode *node = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
-  node->setTexture(texture);
-  node->setShader(shader);
-  node->setOrientation(
-    AngleAxisf(0.25*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  m_scene->attachNode(node);
-  
-  RendrableNode *node2 = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
-  node2->setTexture(texture);
-  node2->setShader(shader);
-  node2->setPosition(0., 0., 1.);
-  node2->setOrientation(
-    AngleAxisf(0.0*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.5*M_PI, Vector3f::UnitZ())
-  );
-  node->attachChild(node2);*/
   
   m_driver->processEvents();
 }
