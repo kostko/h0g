@@ -43,10 +43,11 @@ public:
       Vector3f side = forward.cross(up).normalized();
       Vector3f upy = side.cross(forward);
       Matrix4f m;
-      m << side[0], upy[0], -forward[0], 0.,
-           side[1], upy[1], -forward[1], 0.,
-           side[2], upy[2], -forward[2], 0.,
-           0.,      0.,     0.,          1.;
+      m << side[0],     side[1],     side[2],     0.,
+           upy[0],      upy[1],      upy[2],      0.,
+           -forward[0], -forward[1], -forward[2], 0.,
+           0.,          0.,          0.,          1.;
+      
       m_transform = m_transform * m;
       m_transform = m_transform.translate(-eye);
     }
