@@ -14,6 +14,34 @@
     <item name="rocketlauncher" type="Texture">
       <load_file path="rocketlauncher.jpg" loader="iid.ImageImporter" />
     </item>
+    
+    <!-- Bricks -->
+    <container id="Brick" path="brick">
+      <item name="rough_dark" type="Texture">
+        <load_file path="rough_dark.png" loader="iid.ImageImporter" />
+      </item>
+    </container>
+    
+    <!-- Carpets -->
+    <container id="Carpet" path="carpet">
+      <item name="plush_forest" type="Texture">
+        <load_file path="plush_forest.png" loader="iid.ImageImporter" />
+      </item>
+    </container>
+    
+    <!-- Metals -->
+    <container id="Metal" path="metal">
+      <item name="rusted" type="Texture">
+        <load_file path="rusted.png" loader="iid.ImageImporter" />
+      </item>
+    </container>
+    
+    <!-- Stones -->
+    <container id="Stone" path="stone">
+      <item name="vein_gray" type="Texture">
+        <load_file path="vein_gray.png" loader="iid.ImageImporter" />
+      </item>
+    </container>
   </container>
   
   <container id="Models" path="data/models">
@@ -29,6 +57,11 @@
       <attribute name="Mesh.ScaleFactor" x="0.025" y="0.025" z="0.025" />
       <attribute name="Mesh.Materials" container="/Materials" />
       <load_file path="r2-d2.3ds" loader="iid.3DSMeshImporter" />
+    </item>
+    
+    <item name="level" type="CompositeMesh">
+      <attribute name="Mesh.Materials" container="/Materials" />
+      <load_file path="level.dae" loader="iid.ColladaMeshImporter" />
     </item>
   </container>
   

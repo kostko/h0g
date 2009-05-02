@@ -9,6 +9,7 @@
 // Storage
 #include "storage/storage.h"
 #include "storage/mesh.h"
+#include "storage/compositemesh.h"
 #include "storage/texture.h"
 #include "storage/shader.h"
 
@@ -33,9 +34,10 @@ int main()
   // Create a test scene
   Camera *camera = new Camera(scene);
   scene->setCamera(camera);
+  float x = -4.25;
   camera->lookAt(
-    Vector3f(0., 0., 6.),
-    Vector3f(0., 0., 0.),
+    Vector3f(0., 0., x),
+    Vector3f(-1., 0., x - 4.),
     Vector3f(0., 1., 0.)
   );
   
@@ -44,9 +46,29 @@ int main()
   Texture *texture = storage->get<Texture>("/Textures/spaceship");
   
   Shader *shader2 = storage->get<Shader>("/Shaders/material");
-  Mesh *mesh2 = storage->get<Mesh>("/Models/r2-d2");
+  CompositeMesh *mesh2 = storage->get<CompositeMesh>("/Models/r2-d2");
   
-  SceneNode *node3 = scene->createNodeFromStorage(mesh2);
+  // Level stuff
+  CompositeMesh *level = storage->get<CompositeMesh>("/Models/level");
+  Texture *brick = storage->get<Texture>("/Textures/Brick/rough_dark");
+  Texture *carpet = storage->get<Texture>("/Textures/Carpet/plush_forest");
+  Texture *stone = storage->get<Texture>("/Textures/Stone/vein_gray");
+  Texture *metal = storage->get<Texture>("/Textures/Metal/rusted");
+  
+  SceneNode *lnode = scene->createNodeFromStorage(level);
+  lnode->setShader(shader);
+  lnode->child("object1")->setTexture(brick);
+  lnode->child("object2")->setTexture(metal);
+  lnode->child("object3")->setTexture(carpet);
+  lnode->child("object4")->setTexture(stone);
+  lnode->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(1.25*M_PI, Vector3f::UnitZ())
+  );
+  scene->attachNode(lnode);
+  
+  /*SceneNode *node3 = scene->createNodeFromStorage(mesh2);
   node3->setShader(shader2);
   node3->setOrientation(
     AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
@@ -93,7 +115,7 @@ int main()
     AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
     AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
   );
-  scene->attachNode(node7);
+  scene->attachNode(node7);*/
   
   /*RendrableNode *node = static_cast<RendrableNode*>(scene->createNodeFromStorage(mesh));
   node->setTexture(texture);

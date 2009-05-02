@@ -1,5 +1,10 @@
 
 add_definitions(-DTIXML_USE_TICPP -DTIXML_USE_STL)
+
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 add_subdirectory(tinyxml)
 add_subdirectory(importers)
 

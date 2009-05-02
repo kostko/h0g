@@ -203,8 +203,8 @@ void ThreeDSMeshImporter::load(Storage *storage, Item *item, const std::string &
     
     obj->normals = normals;
     
-    totalVertexCount += vertexCount;
-    totalFaceCount += faceCount;
+    totalVertexCount += obj->vertexCount;
+    totalFaceCount += obj->faceCount;
     totalObjectCount++;
   }
   

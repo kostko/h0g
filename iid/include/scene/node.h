@@ -71,6 +71,14 @@ public:
     void detachChild(const std::string &name);
     
     /**
+     * Returns the specified child node.
+     *
+     * @param name Child name
+     * @return A valid SceneNode instance or NULL if there is none
+     */
+    SceneNode *child(const std::string &name);
+    
+    /**
      * Sets node's position relative to the parent.
      *
      * @param x X component

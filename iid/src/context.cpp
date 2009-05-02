@@ -19,6 +19,7 @@
 // Importers
 #include "storage/importers/image.h"
 #include "storage/importers/3ds.h"
+#include "storage/importers/collada.h"
 #include "storage/importers/glsl.h"
 
 // Scene
@@ -195,6 +196,7 @@ void Context::registerBasicImporters()
   // Register some basic importers that are implemented inside IID
   m_storage->registerImporter("iid.ImageImporter", new ImageImporter(this));
   m_storage->registerImporter("iid.3DSMeshImporter", new ThreeDSMeshImporter(this));
+  m_storage->registerImporter("iid.ColladaMeshImporter", new ColladaMeshImporter(this));
   m_storage->registerImporter("iid.GLSLImporter", new GLSLImporter(this));
   
   m_logger->info("Importer registration completed.");

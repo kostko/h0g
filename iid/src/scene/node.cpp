@@ -84,6 +84,14 @@ void SceneNode::detachChild(const std::string &name)
   m_children.erase(name);
   needUpdate();
 }
+
+SceneNode *SceneNode::child(const std::string &name)
+{
+  if (m_children.find(name) == m_children.end())
+    return 0;
+  
+  return m_children[name];
+}
     
 void SceneNode::setPosition(float x, float y, float z)
 {
