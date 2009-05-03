@@ -11,6 +11,8 @@
 
 namespace IID {
 
+class AbstractEventDispatcher;
+
 /**
  * An abstract texture handle.
  */
@@ -248,6 +250,13 @@ public:
     virtual void clear() const = 0;
     
     /**
+     * Setup an event dispatcher.
+     *
+     * @param dispatcher A valid event dispatcher
+     */
+    virtual void setEventDispatcher(AbstractEventDispatcher *dispatcher);
+    
+    /**
      * Draws elements from the currently bound index buffer.
      *
      * @param count Number of elements to draw
@@ -333,6 +342,9 @@ public:
                                               DVertexBuffer::Target target) = 0;
 private:
     std::string m_name;
+public:
+    // Do not modify this directly, use setEventDispatcher instead
+    AbstractEventDispatcher *m_dispatcher;
 };
 
 }

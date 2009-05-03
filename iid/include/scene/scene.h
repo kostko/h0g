@@ -117,6 +117,11 @@ public:
      * Returns current perspective properties.
      */
     const ScenePerspective &getPerspective() const;
+    
+    /**
+     * Returns the currently active camera.
+     */
+    Camera *getCamera() const { return m_camera; }
 private:
     Context *m_context;
     

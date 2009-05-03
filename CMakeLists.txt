@@ -8,7 +8,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 SET(Boost_USE_MULTITHREAD ON)
 SET(Boost_USE_STATIC_LIBS OFF)
 
-find_package(Boost 1.37.0 COMPONENTS filesystem REQUIRED)
+find_package(Boost 1.37.0 COMPONENTS filesystem signals REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(SDL REQUIRED)

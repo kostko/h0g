@@ -64,10 +64,32 @@ void Camera::lookAt(const Vector3f &eye, const Vector3f &center, const Vector3f 
   norm = y.cross(aux);
   m_planes[Right] = Plane(norm, nearCenter + x * m_nearWidth);
   
+  // Update local stuff
+  m_eye = eye;
+  m_center = center;
+  m_up = up;
+  
   // Don't forget to update the actual view transformation
   m_scene->viewTransform()->loadIdentity();
   m_scene->viewTransform()->lookAt(eye, center, up);
   m_viewTransform = m_scene->viewTransform()->transform();
+}
+
+void Camera::walk(float distance)
+{
+  Vector3f x = (m_center - m_eye).normalized() * distance;
+  lookAt(m_eye + x, m_center + x, m_up);
+}
+
+void Camera::rotate(float x, float y, float z)
+{
+  Quaternionf rot;
+  Vector3f rad = Vector3f(x, y, z) * M_PI / 180.0;
+  rot = AngleAxisf(rad[0], Vector3f::UnitX()) *
+        AngleAxisf(rad[1], Vector3f::UnitY()) *
+        AngleAxisf(rad[2], Vector3f::UnitZ());
+  
+  lookAt(m_eye, rot * (m_center - m_eye) + m_eye, rot * m_up);
 }
 
 void Camera::render()

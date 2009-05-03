@@ -5,6 +5,7 @@
  * Copyright (C) 2009 by Anze Vavpetic <anze.vavpetic@gmail.com>
  */
 #include "drivers/opengl.h"
+#include "events/base.h"
 #include "exceptions.h"
 
 #include <GL/glext.h>
@@ -15,6 +16,9 @@
 #include <iostream>
 
 namespace IID {
+
+// Global OpenGL driver instance
+static OpenGLDriver *gOpenGLDriver = 0;
 
 OpenGLTexture::OpenGLTexture(Format format)
   : DTexture(format)
@@ -214,6 +218,7 @@ void OpenGLShader::deactivate() const
 OpenGLDriver::OpenGLDriver()
   : Driver("OpenGL")
 {
+  gOpenGLDriver = this;
 }
 
 void OpenGLDriver::init()
@@ -235,8 +240,34 @@ void OpenGLDriver::init()
   glViewport(0, 0, 1024, 768);
 }
 
+static void __glutKeyboardCallback(unsigned char key, int, int)
+{
+  gOpenGLDriver->m_dispatcher->keyboardEvent(false, (int) key);
+}
+
+static void __glutSpecialCallback(int key, int, int)
+{
+  AbstractEventDispatcher::Key rkey;
+  switch (key) {
+    case GLUT_KEY_UP: rkey = AbstractEventDispatcher::Up; break;
+    case GLUT_KEY_DOWN: rkey = AbstractEventDispatcher::Down; break;
+    case GLUT_KEY_LEFT: rkey = AbstractEventDispatcher::Left; break;
+    case GLUT_KEY_RIGHT: rkey = AbstractEventDispatcher::Right; break;
+    default: return;
+  }
+  
+  gOpenGLDriver->m_dispatcher->keyboardEvent(true, rkey);
+}
+
 void OpenGLDriver::processEvents() const
 {
+  // Setup event handlers if a dispatcher has been specified
+  if (m_dispatcher) {
+    glutKeyboardFunc(__glutKeyboardCallback);
+    glutSpecialFunc(__glutSpecialCallback);
+  }
+  
+  // Enter the main loop
   glutMainLoop();
 }
 

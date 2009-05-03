@@ -14,8 +14,14 @@ DTexture::DTexture(Format format)
 }
 
 Driver::Driver(const std::string &name)
-  : m_name(name)
+  : m_name(name),
+    m_dispatcher(0)
 {
+}
+
+void Driver::setEventDispatcher(AbstractEventDispatcher *dispatcher)
+{
+  m_dispatcher = dispatcher;
 }
 
 }

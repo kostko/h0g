@@ -29,6 +29,9 @@
 // Drivers
 #include "drivers/opengl.h"
 
+// Events
+#include "events/dispatcher.h"
+
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 
@@ -52,6 +55,10 @@ Context::Context()
   m_driver = new OpenGLDriver();
   m_driver->init();
   
+  // Initialize the event dispatcher
+  m_eventDispatcher = new EventDispatcher(this);
+  m_driver->setEventDispatcher(m_eventDispatcher);
+  
   // Register basic item types into the storage subsystem
   registerBasicStorageTypes();
   
@@ -71,6 +78,7 @@ Context::Context()
 Context::~Context()
 {
   delete m_driver;
+  delete m_eventDispatcher;
   delete m_logger;
   
   // Delete physics stuff
@@ -126,6 +134,14 @@ void Context::moveAndDisplay()
     
 void Context::display()
 {
+  m_frameCounter++;
+  float dt = m_frameClock.getTimeMilliseconds();
+  if (dt > 10000) {
+    std::cout << "fps = " << (1000.*m_frameCounter / dt) << std::endl;
+    m_frameCounter = 0;
+    m_frameClock.reset();
+  }
+  
   m_driver->clear();
   
   // Propagate scene node updates
@@ -155,6 +171,9 @@ void Context::start()
   // XXX FIXME TODO DEBUG
   glutDisplayFunc(displayCb);
   glutIdleFunc(idleCb);
+  
+  m_frameClock.reset();
+  m_frameCounter = 0;
   
   m_driver->processEvents();
 }

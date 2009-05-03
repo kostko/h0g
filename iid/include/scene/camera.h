@@ -73,6 +73,22 @@ public:
     void lookAt(const Vector3f &eye, const Vector3f &center, const Vector3f &up);
     
     /**
+     * "Walks" the camera forward or backward.
+     *
+     * @param distance Distance to walk
+     */
+    void walk(float distance);
+    
+    /**
+     * Rotate camera for specific angles.
+     *
+     * @param x Rotation around X-axis
+     * @param y Rotation around Y-axis
+     * @param z Rotation around Z-axis
+     */
+    void rotate(float x, float y, float z);
+    
+    /**
      * Returns intersection status of a sphere with the frustum.
      *
      * @param pos Position vector
@@ -101,6 +117,9 @@ private:
     Scene *m_scene;
     
     // Active transform
+    Vector3f m_eye;
+    Vector3f m_center;
+    Vector3f m_up;
     Transform3f m_viewTransform;
     
     // Our frustum planes

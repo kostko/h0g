@@ -23,6 +23,7 @@ class Logger;
 class Storage;
 class Driver;
 class Scene;
+class EventDispatcher;
 
 /**
  * The Infinite Improbability Drive context object links all aspects of
@@ -76,6 +77,11 @@ public:
      * Returns the Bullet Dynamics world associated with this context.
      */
     btDynamicsWorld *getDynamicsWorld() const { return m_dynamicsWorld; }
+    
+    /**
+     * Returns the event dispatcher instance.
+     */
+    EventDispatcher *getEventDispatcher() const { return m_eventDispatcher; }
 protected:
     /**
      * Registers basic storage types.
@@ -121,6 +127,8 @@ private:
     
     // Clock
     btClock m_clock;
+    btClock m_frameClock;
+    int m_frameCounter;
     
     // Bullet dynamics stuff
     btBroadphaseInterface *m_broadphase;
@@ -128,6 +136,9 @@ private:
     btConstraintSolver *m_solver;
     btDefaultCollisionConfiguration *m_collisionConfiguration;
     btDynamicsWorld *m_dynamicsWorld;
+    
+    // Event dispatcher
+    EventDispatcher *m_eventDispatcher;
 };
 
 }
