@@ -29,7 +29,8 @@ SceneNode::SceneNode(const std::string &name, SceneNode *parent, Scene *scene)
     m_inheritOrientation(true),
     m_dirty(false),
     m_octreeNode(0),
-    m_octree(0)
+    m_octree(0),
+    m_static(false)
 {
   if (m_parent) {
     m_parent->attachChild(this);
@@ -234,6 +235,23 @@ void SceneNode::setMaterial(Material *material)
   // Apply material to all child nodes
   BOOST_FOREACH(Child child, m_children) {
     child.second->setMaterial(material);
+  }
+}
+
+void SceneNode::setStaticHint(bool value)
+{
+  m_static = value;
+  
+  // Apply static flag to all child nodes
+  BOOST_FOREACH(Child child, m_children) {
+    child.second->setStaticHint(value);
+  }
+}
+
+void SceneNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
+{
+  BOOST_FOREACH(Child child, m_children) {
+    child.second->batchStaticGeometry(triangles);
   }
 }
 

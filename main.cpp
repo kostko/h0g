@@ -22,6 +22,9 @@
 #include "events/dispatcher.h"
 #include "events/keyboard.h"
 
+// Bullet dynamics
+#include <btBulletDynamicsCommon.h>
+
 #include <boost/bind.hpp>
 
 using namespace IID;
@@ -44,6 +47,11 @@ public:
       
       // Subscribe to events
       m_eventDispatcher->signalKeyboard.connect(boost::bind(&Game::keyboardEvent, this, _1));
+    }
+    
+    ~Game()
+    {
+      delete m_staticGeometry;
     }
     
     /**
@@ -76,6 +84,7 @@ public:
       // Create a test scene
       m_camera = new Camera(m_scene);
       m_scene->setCamera(m_camera);
+      // FIXME this camera position is hacky:-)
       float x = -4.25;
       m_camera->lookAt(
         Vector3f(0., 0., x),
@@ -98,7 +107,9 @@ public:
       Texture *metal = m_storage->get<Texture>("/Textures/Metal/rusted");
       
       SceneNode *lnode = m_scene->createNodeFromStorage(level);
+      lnode->setStaticHint(true);
       lnode->setShader(shader);
+      // FIXME naming of objects must be handled differently
       lnode->child("object1")->setTexture(brick);
       lnode->child("object2")->setTexture(metal);
       lnode->child("object3")->setTexture(carpet);
@@ -110,75 +121,24 @@ public:
       );
       m_scene->attachNode(lnode);
       
-      /*SceneNode *node3 = m_scene->createNodeFromStorage(mesh2);
-      node3->setShader(shader2);
-      node3->setOrientation(
-        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-      );
-      m_scene->attachNode(node3);
+      // Generate static geometry shape
+      btVector3 aabbMin(-100, -100, -100), aabbMax(100, 100, 100);
       
-      SceneNode *node4 = m_scene->createNodeFromStorage(mesh2, "r3-d2");
-      node4->setShader(shader2);
-      node4->setPosition(0.9, 0., 0.);
-      node4->setOrientation(
-        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-      );
-      m_scene->attachNode(node4);
+      m_scene->update();
+      m_staticGeometry = new btTriangleIndexVertexArray();
+      m_scene->getRootNode()->batchStaticGeometry(m_staticGeometry);
+      m_staticShape = new btBvhTriangleMeshShape(m_staticGeometry, true, aabbMin, aabbMax);
       
-      SceneNode *node5 = m_scene->createNodeFromStorage(mesh2, "r4-d2");
-      node5->setShader(shader2);
-      node5->setPosition(-0.9, 0., 0.);
-      node5->setOrientation(
-        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-      );
-      m_scene->attachNode(node5);
+      // Load static geometry into the physics engine
+      btTransform startTransform;
+      startTransform.setIdentity();
+      startTransform.setOrigin(btVector3(0, 0, 0));
       
-      SceneNode *node6 = m_scene->createNodeFromStorage(mesh2, "r5-d2");
-      node6->setShader(shader2);
-      node6->setPosition(1.8, 0., 0.);
-      node6->setOrientation(
-        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-      );
-      m_scene->attachNode(node6);
-      
-      SceneNode *node7 = m_scene->createNodeFromStorage(mesh2, "r6-d2");
-      node7->setShader(shader2);
-      node7->setPosition(-1.8, 0., 0.);
-      node7->setOrientation(
-        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-      );
-      m_scene->attachNode(node7);*/
-      
-      /*RendrableNode *node = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
-      node->setTexture(texture);
-      node->setShader(shader);
-      node->setOrientation(
-        AngleAxisf(0.25*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-      );
-      m_scene->attachNode(node);
-      
-      RendrableNode *node2 = static_cast<RendrableNode*>(m_scene->createNodeFromStorage(mesh));
-      node2->setTexture(texture);
-      node2->setShader(shader);
-      node2->setPosition(0., 0., 1.);
-      node2->setOrientation(
-        AngleAxisf(0.0*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.5*M_PI, Vector3f::UnitZ())
-      );
-      node->attachChild(node2);*/
+      btDefaultMotionState *motionState = new btDefaultMotionState(startTransform);
+      btRigidBody::btRigidBodyConstructionInfo cInfo(0.0, motionState, m_staticShape, btVector3(0, 0, 0));
+      btRigidBody *body = new btRigidBody(cInfo);
+      m_context->getDynamicsWorld()->addRigidBody(body);
+      body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     }
     
     /**
@@ -194,6 +154,10 @@ private:
     Storage *m_storage;
     Camera *m_camera;
     EventDispatcher *m_eventDispatcher;
+    
+    // Phsyics
+    btTriangleIndexVertexArray *m_staticGeometry;
+    btBvhTriangleMeshShape *m_staticShape;
 };
 
 int main()

@@ -67,6 +67,11 @@ public:
     Octree *getOctree() const { return m_octree; }
     
     /**
+     * Returns the root scene node.
+     */
+    SceneNode *getRootNode() const { return m_root; }
+    
+    /**
      * Perform scene graph updates that have been previously queued
      * when nodes were allowed to move. Must be called after dynamics
      * simulation step.

@@ -13,6 +13,9 @@
 #include "storage/material.h"
 #include "drivers/base.h"
 
+// Bullet
+#include <BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h>
+
 namespace IID {
 
 RendrableNode::RendrableNode(const std::string &name, SceneNode *parent)
@@ -21,12 +24,17 @@ RendrableNode::RendrableNode(const std::string &name, SceneNode *parent)
     m_texture(0),
     m_shader(0),
     m_material(0),
-    m_showBoundingBox(false)
+    m_showBoundingBox(false),
+    m_staticGeomMesh(0)
 {
 }
 
 RendrableNode::~RendrableNode()
 {
+  if (m_staticGeomMesh) {
+    delete m_staticGeomMesh->m_vertexBase;
+    delete m_staticGeomMesh;
+  }
 }
 
 void RendrableNode::setMesh(Mesh *mesh)
@@ -56,6 +64,32 @@ void RendrableNode::setMaterial(Material *material)
 void RendrableNode::setShowBoundingBox(bool value)
 {
   m_showBoundingBox = value;
+}
+
+void RendrableNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
+{
+  SceneNode::batchStaticGeometry(triangles);
+  
+  // Add transformed vertices
+  if (m_static && m_mesh) {
+    m_staticGeomMesh = new btIndexedMesh();
+    m_staticGeomMesh->m_numVertices = m_mesh->vertexCount();
+    m_staticGeomMesh->m_numTriangles = m_mesh->indexCount();
+    m_staticGeomMesh->m_triangleIndexBase = (unsigned char*) m_mesh->indices();
+    
+    // Transform original vertices using node's world transformation
+    float *orig = m_mesh->vertices();
+    float *vertices = new float[3 * m_mesh->vertexCount()];
+    for (int i = 0; i < m_mesh->vertexCount(); i++) {
+      Vector3f p = m_worldTransform * Vector3f(orig + 3*i);
+      vertices[3*i] = p[0];
+      vertices[3*i + 1] = p[1];
+      vertices[3*i + 2] = p[2];
+    }
+    
+    m_staticGeomMesh->m_vertexBase = (unsigned char*) vertices;
+    triangles->addIndexedMesh(*m_staticGeomMesh);
+  }
 }
 
 void RendrableNode::render(StateBatcher *batcher)

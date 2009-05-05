@@ -10,6 +10,8 @@
 #include "globals.h"
 #include "scene/node.h"
 
+class btIndexedMesh;
+
 namespace IID {
 
 class Mesh;
@@ -72,6 +74,13 @@ public:
     void setShowBoundingBox(bool value);
     
     /**
+     * Performs batching of static geometry currently on the scene.
+     *
+     * @param triangles An array holding all the vertices
+     */
+    void batchStaticGeometry(btTriangleIndexVertexArray *triangles);
+    
+    /**
      * Renders this node.
      *
      * @param batcher State batcher that holds the render queue
@@ -86,6 +95,9 @@ private:
     
     // Bounding box display
     bool m_showBoundingBox;
+    
+    // Indexed mesh for static geometry batching
+    btIndexedMesh *m_staticGeomMesh;
 };
 
 }

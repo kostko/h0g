@@ -12,6 +12,8 @@
 
 #include <list>
 
+class btTriangleIndexVertexArray;
+
 namespace IID {
 
 class Scene;
@@ -178,6 +180,24 @@ public:
      * @param material Material instance
      */
     virtual void setMaterial(Material *material);
+    
+    /**
+     * Sets the static hint for this scene node. This is just a hint for
+     * some other geometry-baking methods that this node is static and
+     * its position/orientation will never change. Chaning this node's
+     * position/orientation will still work, but will produce undefined
+     * results in dynamics simulation etc.
+     *
+     * @param value True to set static hint, false to unset
+     */
+    void setStaticHint(bool value);
+    
+    /**
+     * Performs batching of static geometry currently on the scene.
+     *
+     * @param triangles An array holding all the vertices
+     */
+    virtual void batchStaticGeometry(btTriangleIndexVertexArray *triangles);
 protected:
     /**
      * Performs transformation updates.
@@ -236,6 +256,7 @@ protected:
     // Flags
     bool m_inheritOrientation;
     bool m_dirty;
+    bool m_static;
 };
 
 }
