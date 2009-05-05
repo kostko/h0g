@@ -21,7 +21,8 @@ namespace IID {
 static OpenGLDriver *gOpenGLDriver = 0;
 
 OpenGLTexture::OpenGLTexture(Format format)
-  : DTexture(format)
+  : DTexture(format),
+    m_oglFormat(formatToOpenGL())
 {
   glGenTextures(1, &m_handle);
   
@@ -37,18 +38,18 @@ OpenGLTexture::~OpenGLTexture()
 
 void OpenGLTexture::setParameter(Parameter param, Value value)
 {
-  glTexParameterf(formatToOpenGL(), paramToOpenGL(param), valueToOpenGL(value));
+  glTexParameterf(m_oglFormat, paramToOpenGL(param), valueToOpenGL(value));
 }
 
 void OpenGLTexture::setParameter(Parameter param, float value)
 {
-  glTexParameterf(formatToOpenGL(), paramToOpenGL(param), value);
+  glTexParameterf(m_oglFormat, paramToOpenGL(param), value);
 }
 
 void OpenGLTexture::bind(int textureUnit)
 {
   glActiveTexture(GL_TEXTURE0 + textureUnit);
-  glBindTexture(formatToOpenGL(), m_handle);
+  glBindTexture(m_oglFormat, m_handle);
   
   // Check for errors
   if (glGetError() != GL_NO_ERROR)
@@ -58,7 +59,7 @@ void OpenGLTexture::bind(int textureUnit)
 void OpenGLTexture::unbind(int textureUnit)
 {
   glActiveTexture(GL_TEXTURE0 + textureUnit);
-  glBindTexture(formatToOpenGL(), 0);
+  glBindTexture(m_oglFormat, 0);
 }
 
 void OpenGLTexture::buildMipMaps2D(int components, int width, int height, PixelFormat format, unsigned char *data)
@@ -69,7 +70,7 @@ void OpenGLTexture::buildMipMaps2D(int components, int width, int height, PixelF
     case RGBA: _format = GL_RGBA; break;
   }
   
-  gluBuild2DMipmaps(formatToOpenGL(), components, width, height, _format, GL_UNSIGNED_BYTE, (void*) data);
+  gluBuild2DMipmaps(m_oglFormat, components, width, height, _format, GL_UNSIGNED_BYTE, (void*) data);
 }
 
 GLenum OpenGLTexture::formatToOpenGL() const

@@ -77,6 +77,9 @@ protected:
 private:
     // OpenGL texture handle
     GLuint m_handle;
+    
+    // Texture format
+    GLenum m_oglFormat;
 };
 
 /**
