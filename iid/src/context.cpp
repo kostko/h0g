@@ -47,7 +47,8 @@ static Context *gContext = 0;
 
 Context::Context()
   : m_logger(new Logger("iid.context")),
-    m_storage(new Storage(this))
+    m_storage(new Storage(this)),
+    m_debug(false)
 {
   gContext = this;
   

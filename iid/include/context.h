@@ -82,6 +82,13 @@ public:
      * Returns the event dispatcher instance.
      */
     EventDispatcher *getEventDispatcher() const { return m_eventDispatcher; }
+    
+    /**
+     * Sets debugging flag.
+     *
+     * @param value True to enable debug mode, false otherwise
+     */
+    void setDebug(bool value) { m_debug = value; }
 protected:
     /**
      * Registers basic storage types.
@@ -139,6 +146,9 @@ private:
     
     // Event dispatcher
     EventDispatcher *m_eventDispatcher;
+    
+    // Debugging mode
+    bool m_debug;
 };
 
 }

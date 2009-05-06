@@ -7,6 +7,7 @@
 #include "storage/importers/3ds.h"
 #include "storage/storage.h"
 #include "storage/mesh.h"
+#include "storage/compositemesh.h"
 #include "logger.h"
 
 #include <boost/format.hpp>
@@ -188,6 +189,10 @@ void MeshImporter::postProcessSubmeshObjects(Item *item, std::list<SubmeshObject
   
   center = geometricCenter(globalMind, globalMaxd);
   dimensions = globalMaxd - globalMind;
+  
+  // Set global mesh bounding box (needed for composites)
+  if (composite)
+    static_cast<CompositeMesh*>(item)->setBounds(globalMind, globalMaxd);
   
   // Move all objects to (0, 0, 0) and update relative hints
   BOOST_FOREACH(SubmeshObject *obj, objects) {

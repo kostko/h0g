@@ -13,6 +13,11 @@ CompositeMesh::CompositeMesh(Storage *storage, const std::string &itemId, Item *
 {
 }
 
+void CompositeMesh::setBounds(const Vector3f &min, const Vector3f &max)
+{
+  m_boundAABB = AxisAlignedBox(min, max);
+}
+
 Item *CompositeMeshFactory::create(Storage *storage, const std::string &itemId, Item *parent)
 {
   return new CompositeMesh(storage, itemId, parent);

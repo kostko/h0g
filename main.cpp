@@ -29,6 +29,92 @@
 
 using namespace IID;
 
+class Robot {
+public:
+    /**
+     * Robot's motion state.
+     */
+    class MotionState : public btMotionState {
+    public:
+        /**
+         * Class constructor.
+         *
+         * @param initial Initial world transformation
+         * @param node Robot's scene node
+         */
+        MotionState(const btTransform &initial, SceneNode *node)
+          : m_sceneNode(node),
+            m_initial(initial)
+        {
+        }
+        
+        /**
+         * Returns the initial world transformation.
+         */
+        void getWorldTransform(btTransform &worldTransform) const
+        {
+          worldTransform = m_initial;
+        }
+        
+        /**
+         * Propagate world transformation to the scene graph.
+         *
+         * @param worldTransform World transformation
+         */
+        void setWorldTransform(const btTransform &worldTransform)
+        {
+          btQuaternion rot = worldTransform.getRotation();
+          btVector3 pos = worldTransform.getOrigin();
+          m_sceneNode->setOrientation(rot.w(), rot.x(), rot.y(), rot.z());
+          m_sceneNode->setPosition(pos.x(), pos.y(), pos.z());
+        }
+    private:
+        SceneNode *m_sceneNode;
+        btTransform m_initial;
+    };
+    
+    /**
+     * Class constructor.
+     */
+    Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
+    {
+      CompositeMesh *robotMesh = storage->get<CompositeMesh>("/Models/r2-d2");
+      Shader *shader = storage->get<Shader>("/Shaders/material");
+      
+      // Create the robot's scene node
+      m_sceneNode = scene->createNodeFromStorage(robotMesh);
+      m_sceneNode->setShader(shader);
+      m_sceneNode->setPosition(-1., 0., -8.25);
+      m_sceneNode->setOrientation(
+        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+      );
+      scene->attachNode(m_sceneNode);
+      scene->update();
+      
+      // Create the robot's physical shape and body
+      Vector3f hs = robotMesh->getAABB().getHalfSize();
+      m_shape = new btCylinderShape(btVector3(hs[0], hs[1], hs[2]));
+      float mass = 20.0;
+      btVector3 localInertia(0, 0, 0);
+      m_shape->calculateLocalInertia(mass, localInertia);
+      
+      btTransform startTransform;
+      startTransform.setFromOpenGLMatrix(m_sceneNode->worldTransform().data());
+      m_motionState = new MotionState(startTransform, m_sceneNode);
+      
+      btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
+      m_body = new btRigidBody(cInfo);
+      world->addRigidBody(m_body);
+    }
+private:
+    SceneNode *m_sceneNode;
+    btCollisionShape *m_shape;
+    btRigidBody *m_body;
+    MotionState *m_motionState;
+};
+
 class Game {
 public:
     /**
@@ -52,6 +138,7 @@ public:
     ~Game()
     {
       delete m_staticGeometry;
+      delete m_robot;
     }
     
     /**
@@ -139,6 +226,9 @@ public:
       btRigidBody *body = new btRigidBody(cInfo);
       m_context->getDynamicsWorld()->addRigidBody(body);
       body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+      
+      // Create the robot
+      m_robot = new Robot(m_context->getDynamicsWorld(), m_scene, m_storage);
     }
     
     /**
@@ -154,6 +244,9 @@ private:
     Storage *m_storage;
     Camera *m_camera;
     EventDispatcher *m_eventDispatcher;
+    
+    // Actors
+    Robot *m_robot;
     
     // Phsyics
     btTriangleIndexVertexArray *m_staticGeometry;

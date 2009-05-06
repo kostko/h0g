@@ -74,8 +74,9 @@ void RendrableNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
   if (m_static && m_mesh) {
     m_staticGeomMesh = new btIndexedMesh();
     m_staticGeomMesh->m_numVertices = m_mesh->vertexCount();
-    m_staticGeomMesh->m_numTriangles = m_mesh->indexCount();
+    m_staticGeomMesh->m_numTriangles = m_mesh->indexCount() / 3;
     m_staticGeomMesh->m_triangleIndexBase = (unsigned char*) m_mesh->indices();
+    m_staticGeomMesh->m_triangleIndexStride = 3*sizeof(unsigned int);
     
     // Transform original vertices using node's world transformation
     float *orig = m_mesh->vertices();
@@ -88,6 +89,7 @@ void RendrableNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
     }
     
     m_staticGeomMesh->m_vertexBase = (unsigned char*) vertices;
+    m_staticGeomMesh->m_vertexStride = 3*sizeof(float);
     triangles->addIndexedMesh(*m_staticGeomMesh);
   }
 }
