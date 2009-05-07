@@ -95,7 +95,7 @@ public:
       
       // Create the robot's physical shape and body
       Vector3f hs = robotMesh->getAABB().getHalfSize();
-      m_shape = new btCylinderShape(btVector3(hs[0], hs[1], hs[2]));
+      m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
       float mass = 20.0;
       btVector3 localInertia(0, 0, 0);
       m_shape->calculateLocalInertia(mass, localInertia);
@@ -195,7 +195,7 @@ public:
       CompositeMesh *mesh2 = m_storage->get<CompositeMesh>("/Models/r2-d2");
       
       // Level stuff
-      CompositeMesh *level = m_storage->get<CompositeMesh>("/Models/level");
+      CompositeMesh *level = m_storage->get<CompositeMesh>("/Levels/first");
       Texture *brick = m_storage->get<Texture>("/Textures/Brick/rough_dark");
       Texture *carpet = m_storage->get<Texture>("/Textures/Carpet/plush_forest");
       Texture *stone = m_storage->get<Texture>("/Textures/Stone/vein_gray");
@@ -205,10 +205,10 @@ public:
       lnode->setStaticHint(true);
       lnode->setShader(shader);
       // FIXME naming of objects must be handled differently
-      lnode->child("object1")->setTexture(brick);
-      lnode->child("object2")->setTexture(metal);
+      lnode->child("object1")->setTexture(metal);
+      lnode->child("object2")->setTexture(brick);
       lnode->child("object3")->setTexture(carpet);
-      lnode->child("object4")->setTexture(stone);
+      //lnode->child("object4")->setTexture(stone);
       lnode->setOrientation(
         AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
         AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *

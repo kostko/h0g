@@ -58,10 +58,12 @@
       <attribute name="Mesh.Materials" container="/Materials" />
       <load_file path="r2-d2.3ds" loader="iid.3DSMeshImporter" />
     </item>
-    
-    <item name="level" type="CompositeMesh">
+  </container>
+  
+  <container id="Levels" path="data/levels">
+    <item name="first" type="CompositeMesh">
       <attribute name="Mesh.Materials" container="/Materials" />
-      <load_file path="level.dae" loader="iid.ColladaMeshImporter" />
+      <load_file path="first.dae" loader="iid.ColladaMeshImporter" />
     </item>
   </container>
   

@@ -128,7 +128,7 @@ void Context::moveAndDisplay()
     usleep((useconds_t) (8333 - dt));
   
   // Step the world
-  m_dynamicsWorld->stepSimulation(dt, 7);
+  m_dynamicsWorld->stepSimulation(dt * 0.000001f, 7);
   
   // Render the scene
   display();
