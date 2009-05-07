@@ -24,6 +24,7 @@
 
 // Scene
 #include "scene/scene.h"
+#include "scene/viewtransform.h"
 #include "renderer/statebatcher.h"
 
 // Drivers
@@ -148,11 +149,16 @@ void Context::display()
   // Propagate scene node updates
   m_scene->update();
   
-  // Perform culling and fill the render queue
-  m_scene->render();
-  
-  // Actually render from the render queue
-  m_scene->stateBatcher()->render();
+  if (m_debug) {
+    m_driver->applyModelViewTransform(m_scene->viewTransform()->transform().data());
+    m_dynamicsWorld->debugDrawWorld();
+  } else {
+    // Perform culling and fill the render queue
+    m_scene->render();
+    
+    // Actually render from the render queue
+    m_scene->stateBatcher()->render();
+  }
   
   m_driver->swap();
 }
@@ -175,6 +181,9 @@ void Context::start()
   
   m_frameClock.reset();
   m_frameCounter = 0;
+  
+  // Setup debug drawer
+  m_dynamicsWorld->setDebugDrawer(m_driver->getDebugBulletDynamicsDrawer());
   
   m_driver->processEvents();
 }

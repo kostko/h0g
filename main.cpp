@@ -154,9 +154,17 @@ public:
           case EventDispatcher::Left: m_camera->rotate(0.0, 2.0, 0.0); break;
           case EventDispatcher::Right: m_camera->rotate(0.0, -2.0, 0.0); break;
         }
-      } else if (ev->key() == 27) {
-        // Escape pressed, let's exit
-        exit(0);
+      } else {
+        switch (ev->key()) {
+          // Toggle debug mode with 'd'
+          case 'd': {
+            m_context->setDebug(!m_context->isDebug());
+            break;
+          }
+          
+          // Exit when escape is pressed
+          case 27: exit(0);
+        }
       }
     }
     

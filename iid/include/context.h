@@ -89,6 +89,11 @@ public:
      * @param value True to enable debug mode, false otherwise
      */
     void setDebug(bool value) { m_debug = value; }
+    
+    /**
+     * Returns true if debug mode is currently set.
+     */
+    bool isDebug() const { return m_debug; }
 protected:
     /**
      * Registers basic storage types.

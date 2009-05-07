@@ -132,6 +132,9 @@ void StateBatcher::render()
     delete n;
   }
   
+  if (currentShader)
+    currentShader->deactivate();
+  
   m_lights.clear();
   m_renderQueue.clear();
 }

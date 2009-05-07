@@ -12,6 +12,8 @@
 
 #include <GL/gl.h>
 
+class btIDebugDraw;
+
 namespace IID {
 
 /**
@@ -175,6 +177,11 @@ public:
     OpenGLDriver();
     
     /**
+     * Class destructor.
+     */
+    ~OpenGLDriver();
+    
+    /**
      * Initializes the driver context.
      */
     void init();
@@ -193,6 +200,12 @@ public:
      * Clears the buffer.
      */
     void clear() const;
+    
+    /**
+     * Returns this driver's debug drawer for bullet dynamics simulation
+     * world.
+     */
+    btIDebugDraw *getDebugBulletDynamicsDrawer();
     
     /**
      * Draws elements from the currently bound index buffer.
@@ -281,6 +294,9 @@ public:
 private:
     // A map of shader programs
     boost::unordered_map<GLuint, OpenGLShader*> m_shaders;
+    
+    // Debug drawer for Bullet dynamics
+    btIDebugDraw *m_debugDrawer;
 };
 
 }

@@ -8,10 +8,14 @@
 #include "events/base.h"
 #include "exceptions.h"
 
+// OpenGL
 #include <GL/glext.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
+
+// Bullet dynamics
+#include <bullet/LinearMath/btIDebugDraw.h>
 
 #include <iostream>
 
@@ -19,6 +23,166 @@ namespace IID {
 
 // Global OpenGL driver instance
 static OpenGLDriver *gOpenGLDriver = 0;
+
+/**
+ * An OpenGL debug drawer for Bullet dynamics physics simulation.
+ */
+class OpenGLDebugDrawer : public btIDebugDraw {
+public:
+    /**
+     * Class constructor.
+     */
+    OpenGLDebugDrawer()
+      : m_debugMode(DBG_DrawWireframe | DBG_DrawAabb)
+    {
+    }
+    
+    /**
+     * Sets debug mode setting.
+     */
+    void setDebugMode(int mode)
+    {
+      m_debugMode = mode;
+    }
+    
+    /**
+     * Returns current debug mode setting.
+     */
+    int getDebugMode() const
+    {
+      return m_debugMode;
+    }
+    
+    /**
+     * Draws a simple line with gradient color.
+     *
+     * @param from Start point
+     * @param to End point
+     * @param fromColor Start color
+     * @param toColor End color
+     */
+    void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &fromColor, const btVector3 &toColor)
+    {
+      glBegin(GL_LINES);
+      glColor3f(fromColor.getX(), fromColor.getY(), fromColor.getZ());
+      glVertex3d(from.getX(), from.getY(), from.getZ());
+      glColor3f(toColor.getX(), toColor.getY(), toColor.getZ());
+      glVertex3d(to.getX(), to.getY(), to.getZ());
+      glEnd();
+    }
+    
+    /**
+     * Draws a simple line.
+     *
+     * @param from Start point
+     * @param to End point
+     * @param color Color
+     */
+    void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color)
+    {
+      glBegin(GL_LINES);
+      glColor4f(color.getX(), color.getY(), color.getZ(), 1.f);
+      glVertex3d(from.getX(), from.getY(), from.getZ());
+      glVertex3d(to.getX(), to.getY(), to.getZ());
+      glEnd();
+    }
+    
+    /**
+     * Draws a simple sphere.
+     *
+     * @param p Center point
+     * @param radius Sphere radius
+     * @param color Color
+     */
+    void drawSphere(const btVector3 &p, btScalar radius, const btVector3 &color)
+    {
+      glColor4f(color.getX(), color.getY(), color.getZ(), btScalar(1.0f));
+      glPushMatrix();
+      glTranslatef(p.getX(), p.getY(), p.getZ());
+      glutSolidSphere(radius, 10, 10);
+      glPopMatrix();
+    }
+    
+    /**
+     * Draws a simple box.
+     *
+     * @param boxMin Minimum point
+     * @param boxMax Maximum point
+     * @param color Color
+     * @param alpha Alpha value
+     */
+    void drawBox(const btVector3 &boxMin, const btVector3 &boxMax, const btVector3 &color, btScalar alpha)
+    {
+      btVector3 halfExtent = (boxMax - boxMin) * btScalar(0.5f);
+      btVector3 center = (boxMax + boxMin) * btScalar(0.5f);
+      //glEnable(GL_BLEND);     // Turn blending On
+      //glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+      glColor4f(color.getX(), color.getY(), color.getZ(), alpha);
+      glPushMatrix();
+      glTranslatef(center.getX(), center.getY(), center.getZ());
+      glScaled(2 * halfExtent[0], 2 * halfExtent[1], 2 * halfExtent[2]);
+      glutSolidCube(1.0);
+      glPopMatrix();
+      //glDisable(GL_BLEND);
+    }
+    
+    /**
+     * Draws a simple triangle.
+     *
+     * @param a First point
+     * @param b Second point
+     * @param c Third point
+     * @param color Color
+     * @param alpha Alpha value
+     */
+    void drawTriangle(const btVector3 &a, const btVector3 &b, const btVector3 &c, const btVector3 &color, btScalar alpha)
+    {
+      const btVector3 n = cross(b-a, c-a).normalized();
+      
+      glBegin(GL_TRIANGLES);
+      glColor4f(color.getX(), color.getY(), color.getZ(), alpha);
+      glNormal3d(n.getX(), n.getY(), n.getZ());
+      glVertex3d(a.getX(), a.getY(), a.getZ());
+      glVertex3d(b.getX(), b.getY(), b.getZ());
+      glVertex3d(c.getX(), c.getY(), c.getZ());
+      glEnd();
+    }
+    
+    /**
+     * Reports an error to the console.
+     */
+    void reportErrorWarning(const char *warningString)
+    {
+      // FIXME should use the logger interface
+      std::cout << warningString;
+    }
+    
+    /**
+     * Draws a contact point.
+     */
+    void drawContactPoint(const btVector3 &pointOnB, const btVector3 &normalOnB, btScalar distance, int lifeTime, const btVector3 &color)
+    {
+      btVector3 to = pointOnB + normalOnB * distance;
+      const btVector3 &from = pointOnB;
+      glColor4f(color.getX(), color.getY(), color.getZ(), 1.f);
+      //glColor4f(0,0,0,1.f);
+
+      glBegin(GL_LINES);
+      glVertex3d(from.getX(), from.getY(), from.getZ());
+      glVertex3d(to.getX(), to.getY(), to.getZ());
+      glEnd();
+    }
+    
+    /**
+     * Draws some text.
+     */
+    void draw3dText(const btVector3 &location, const char *textString)
+    {
+      // Text drawing is not implemented
+    }
+private:
+    int m_debugMode;
+};
 
 OpenGLTexture::OpenGLTexture(Format format)
   : DTexture(format),
@@ -217,9 +381,15 @@ void OpenGLShader::deactivate() const
 }
 
 OpenGLDriver::OpenGLDriver()
-  : Driver("OpenGL")
+  : Driver("OpenGL"),
+    m_debugDrawer(0)
 {
   gOpenGLDriver = this;
+}
+
+OpenGLDriver::~OpenGLDriver()
+{
+  delete m_debugDrawer;
 }
 
 void OpenGLDriver::init()
@@ -280,6 +450,16 @@ void OpenGLDriver::swap() const
 void OpenGLDriver::clear() const
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+btIDebugDraw *OpenGLDriver::getDebugBulletDynamicsDrawer()
+{
+  if (!m_debugDrawer) {
+    // Create a new OpenGL debug drawer
+    m_debugDrawer = new OpenGLDebugDrawer();
+  }
+  
+  return m_debugDrawer;
 }
 
 void OpenGLDriver::drawElements(int count, unsigned int offset, DrawPrimitive primitive) const

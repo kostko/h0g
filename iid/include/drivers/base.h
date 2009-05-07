@@ -9,6 +9,8 @@
 
 #include <string>
 
+class btIDebugDraw;
+
 namespace IID {
 
 class AbstractEventDispatcher;
@@ -225,6 +227,11 @@ public:
     Driver(const std::string &name);
     
     /**
+     * Class destructor.
+     */
+    virtual ~Driver() {}
+    
+    /**
      * Returns driver name.
      */
     std::string getName() const { return m_name; }
@@ -255,6 +262,12 @@ public:
      * @param dispatcher A valid event dispatcher
      */
     virtual void setEventDispatcher(AbstractEventDispatcher *dispatcher);
+    
+    /**
+     * Returns this driver's debug drawer for bullet dynamics simulation
+     * world.
+     */
+    virtual btIDebugDraw *getDebugBulletDynamicsDrawer() = 0;
     
     /**
      * Draws elements from the currently bound index buffer.
