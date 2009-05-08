@@ -193,7 +193,7 @@ bool Octree::isNodeInBox(const AxisAlignedBox &node, const AxisAlignedBox &oc) c
   Vector3f min = oc.getMinimum();
   Vector3f max = oc.getMaximum();
   
-  if ((center.cwise() > max).all() || (center.cwise() < min).all())
+  if (!((max.cwise() > center).all() && (min.cwise() < center).all()))
     return false;
   
   // Check to make sure node's AABB is not large enough to require being moved
