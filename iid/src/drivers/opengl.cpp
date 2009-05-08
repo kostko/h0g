@@ -33,7 +33,7 @@ public:
      * Class constructor.
      */
     OpenGLDebugDrawer()
-      : m_debugMode(DBG_DrawWireframe | DBG_DrawAabb)
+      : m_debugMode(DBG_DrawWireframe)
     {
     }
     
