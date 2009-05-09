@@ -18,9 +18,9 @@ EventDispatcher::~EventDispatcher()
 {
 }
 
-void EventDispatcher::keyboardEvent(bool special, int key)
+void EventDispatcher::keyboardEvent(bool special, int key, bool up)
 {
-  KeyboardEvent event(special, key);
+  KeyboardEvent event(special, key, up);
   signalKeyboard(&event);
 }
 

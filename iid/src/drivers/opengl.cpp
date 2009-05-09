@@ -413,7 +413,26 @@ void OpenGLDriver::init()
 
 static void __glutKeyboardCallback(unsigned char key, int, int)
 {
-  gOpenGLDriver->m_dispatcher->keyboardEvent(false, (int) key);
+  gOpenGLDriver->m_dispatcher->keyboardEvent(false, (int) key, false);
+}
+
+static void __glutKeyboardUpCallback(unsigned char key, int, int)
+{
+  gOpenGLDriver->m_dispatcher->keyboardEvent(false, (int) key, true);
+}
+
+static void __glutSpecialUpCallback(int key, int, int)
+{
+  AbstractEventDispatcher::Key rkey;
+  switch (key) {
+    case GLUT_KEY_UP: rkey = AbstractEventDispatcher::Up; break;
+    case GLUT_KEY_DOWN: rkey = AbstractEventDispatcher::Down; break;
+    case GLUT_KEY_LEFT: rkey = AbstractEventDispatcher::Left; break;
+    case GLUT_KEY_RIGHT: rkey = AbstractEventDispatcher::Right; break;
+    default: return;
+  }
+  
+  gOpenGLDriver->m_dispatcher->keyboardEvent(true, rkey, true);
 }
 
 static void __glutSpecialCallback(int key, int, int)
@@ -427,7 +446,7 @@ static void __glutSpecialCallback(int key, int, int)
     default: return;
   }
   
-  gOpenGLDriver->m_dispatcher->keyboardEvent(true, rkey);
+  gOpenGLDriver->m_dispatcher->keyboardEvent(true, rkey, false);
 }
 
 void OpenGLDriver::processEvents() const
@@ -435,7 +454,9 @@ void OpenGLDriver::processEvents() const
   // Setup event handlers if a dispatcher has been specified
   if (m_dispatcher) {
     glutKeyboardFunc(__glutKeyboardCallback);
+    glutKeyboardUpFunc(__glutKeyboardUpCallback);
     glutSpecialFunc(__glutSpecialCallback);
+    glutSpecialUpFunc(__glutSpecialUpCallback);
   }
   
   // Enter the main loop

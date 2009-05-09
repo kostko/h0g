@@ -31,10 +31,11 @@ public:
     /**
      * Keyboard event handler.
      *
-     * @param special Set to true if a special key has been pressed
+     * @param special Set to true if a special key has been pressed/released
      * @param key Key identifier
+     * @param up Has the key been released
      */
-    virtual void keyboardEvent(bool special, int key) = 0;
+    virtual void keyboardEvent(bool special, int key, bool up) = 0;
 };
 
 }

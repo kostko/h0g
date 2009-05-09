@@ -17,10 +17,11 @@ public:
     /**
      * Class constructor.
      *
-     * @param special True if a special key has been pressed
-     * @param key The key that was pressed
+     * @param special True if a special key has been pressed/released
+     * @param key The key that was pressed/released
+     * @param up Has the key been released
      */
-    KeyboardEvent(bool special, int key);
+    KeyboardEvent(bool special, int key, bool up);
     
     /**
      * Class destructor.
@@ -28,17 +29,23 @@ public:
     ~KeyboardEvent();
     
     /**
-     * Returns true if a special key was pressed.
+     * Returns true if a special key was pressed/released.
      */
     bool isSpecial() const { return m_special; }
     
     /**
-     * Returns the key that was pressed.
+     * Returns the key that was pressed/released.
      */
     int key() const { return m_key; }
+    
+    /**
+     * Returns true if a key has been released.
+     */
+    bool isReleased() const { return m_up; }
 private:
     bool m_special;
     int m_key;
+    bool m_up;
 };
 
 }

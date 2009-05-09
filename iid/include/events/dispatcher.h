@@ -35,8 +35,9 @@ public:
      *
      * @param special Set to true if a special key has been pressed
      * @param key Key identifier
+     * @param up Has the key been released
      */
-    void keyboardEvent(bool special, int key);
+    void keyboardEvent(bool special, int key, bool up);
 public:
     // Signals
     boost::signal<void (KeyboardEvent*)> signalKeyboard;

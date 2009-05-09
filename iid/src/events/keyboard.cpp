@@ -8,10 +8,11 @@
 
 namespace IID {
 
-KeyboardEvent::KeyboardEvent(bool special, int key)
+KeyboardEvent::KeyboardEvent(bool special, int key, bool up)
   : Event(Event::KeyboardEvent),
     m_special(special),
-    m_key(key)
+    m_key(key),
+    m_up(up)
 {
 }
 
