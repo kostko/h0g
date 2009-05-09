@@ -139,6 +139,11 @@ public:
     Transform3f worldTransform() const { return m_worldTransform; }
     
     /**
+     * Returns this node's world orientation.
+     */
+    Quaternionf worldOrientation() const { return m_worldOrientation; }
+    
+    /**
      * Returns this node's bounding box in world coordinates.
      */
     const AxisAlignedBox &getBoundingBox() const { return m_worldBounds; }
