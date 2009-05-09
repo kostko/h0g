@@ -30,7 +30,35 @@
 
 using namespace IID;
 
-class Robot {
+class CharacterState {
+public:
+    enum Movement {
+      FORWARD = 1,
+      BACKWARD = 2,
+      LEFT = 4,
+      RIGHT = 8
+    };
+    
+    // Movement bitfield
+    int movement;
+    
+    // Jump
+    bool jump;
+    
+    // Hover
+    bool hover;
+    
+    /**
+     * Class constructor.
+     */
+    CharacterState()
+      : movement(0),
+        jump(false),
+        hover(false)
+    {}
+};
+
+class Robot : public btActionInterface {
 public:
     /**
      * Robot's motion state.
@@ -105,26 +133,167 @@ public:
       startTransform.setFromOpenGLMatrix(m_sceneNode->worldTransform().data());
       m_motionState = new MotionState(startTransform, m_sceneNode);
       
+      // We have to disable deactivation (so we can control the body when it stops) and set
+      // the angular factor to zero, so our robot can't fall
       btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
       m_body = new btRigidBody(cInfo);
-      m_body->setSleepingThresholds(0.0, 0.0);
+      m_body->setActivationState(DISABLE_DEACTIVATION);
+      m_body->setAngularFactor(0.0);
       world->addRigidBody(m_body);
+      world->addAction(this);
+      
+      // Setup some attributes
+      m_turnAngle = 0.0;
+      m_maxLinearVelocity = 3.0;
+      m_walkVelocity = 8.0;
+      m_turnVelocity = 3.0;
     }
     
-    void push()
+    /**
+     * This method gets called on every step of the simulation and is responsible for
+     * maintaining control over the robot.
+     *
+     * @param world World instance
+     * @param dt Delta time
+     */
+    void updateAction(btCollisionWorld *world, btScalar dt)
     {
-      btTransform xform;
-      m_body->getMotionState()->getWorldTransform(xform);
-      btVector3 up = xform.getBasis()[1];
-      up.normalize();
-      btScalar magnitude = (btScalar(1.0) / m_body->getInvMass()) * btScalar(8.0);
-      m_body->applyCentralImpulse(up * magnitude);
+      btTransform transform = m_body->getCenterOfMassTransform();
+      
+      // Handle rotation
+      if (m_state.movement & CharacterState::LEFT)
+        transform.setRotation(transform.getRotation() * btQuaternion(btVector3(0.0, 0.0, 1.0), dt * m_turnVelocity));
+      
+      if (m_state.movement & CharacterState::RIGHT)
+        transform.setRotation(transform.getRotation() * btQuaternion(btVector3(0.0, 0.0, 1.0), -dt * m_turnVelocity));
+      
+      // Handle walking
+      btVector3 linearVelocity = m_body->getLinearVelocity();
+      float speed = linearVelocity.length();
+      
+      btVector3 forwardVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
+      btVector3 walkDirection(0.0, 0.0, 0.0);
+      float walkSpeed = m_walkVelocity * dt;
+      forwardVec.normalize();
+      
+      if (m_state.movement & CharacterState::FORWARD)
+        walkDirection += forwardVec;
+      if (m_state.movement & CharacterState::BACKWARD)
+        walkDirection -= forwardVec;
+      
+      // Check for hover mode
+      if (m_state.hover) {
+        m_hoverDeltaTime += dt;
+        if (m_hoverDeltaTime > 0.3) {
+          // TODO need to check distance to floor, so we perform height corrections
+          m_hoverDeltaTime = 0;
+          //m_body->applyCentralImpulse(btVector3(0.0, 30.0, 0.0));
+        }
+      }
+      
+      if (!(m_state.movement & (CharacterState::FORWARD | CharacterState::BACKWARD))) {
+        // Not being moved, slow down gradually
+        linearVelocity *= 0.2;
+        m_body->setLinearVelocity(linearVelocity);
+      } else {
+        // We are in transit
+        if (speed < m_maxLinearVelocity) {
+          btVector3 velocity = linearVelocity + walkDirection * walkSpeed;
+          m_body->setLinearVelocity(velocity);
+        }
+      }
+      
+      // Update transformations
+      m_body->getMotionState()->setWorldTransform(transform);
+      m_body->setCenterOfMassTransform(transform);
+    }
+    
+    /**
+     * Returns the distance between the robot and the floor. This is done
+     * via ray tests.
+     */
+    float getFloorDistance()
+    {
+      // TODO
+    }
+    
+    /**
+     * Debug drawer (required by btActionInterface).
+     */
+    void debugDraw(btIDebugDraw *drawer)
+    {}
+    
+    /**
+     * Enables or disables hover mode.
+     */
+    void hover(bool value)
+    {
+      m_state.hover = value;
+      
+      if (value)
+        m_hoverDeltaTime = 0.0;
+    }
+    
+    /**
+     * Enables or disables forward-vector movement.
+     */
+    void forward(bool value)
+    {
+      if (value)
+        m_state.movement |= CharacterState::FORWARD;
+      else
+        m_state.movement &= ~CharacterState::FORWARD;
+    }
+    
+    /**
+     * Enables or disables backward-vector movement.
+     */
+    void backward(bool value)
+    {
+      if (value)
+        m_state.movement |= CharacterState::BACKWARD;
+      else
+        m_state.movement &= ~CharacterState::BACKWARD;
+    }
+    
+    /**
+     * Enables or disables left-vector movement.
+     */
+    void left(bool value)
+    {
+      if (value)
+        m_state.movement |= CharacterState::LEFT;
+      else
+        m_state.movement &= ~CharacterState::LEFT;
+    }
+    
+    /**
+     * Enables or disables right-vector movement.
+     */
+    void right(bool value)
+    {
+      if (value)
+        m_state.movement |= CharacterState::RIGHT;
+      else
+        m_state.movement &= ~CharacterState::RIGHT;
     }
 private:
     SceneNode *m_sceneNode;
     btCollisionShape *m_shape;
     btRigidBody *m_body;
     MotionState *m_motionState;
+    
+    // Hover stuff
+    float m_hoverDeltaTime;
+    
+    // Controller stuff
+    float m_turnAngle;
+    float m_maxLinearVelocity;
+    float m_walkVelocity;
+    float m_turnVelocity;
+    
+    // Character state
+    CharacterState m_state;
 };
 
 /**
@@ -217,20 +386,27 @@ public:
     void keyboardEvent(KeyboardEvent *ev)
     {
       if (ev->isSpecial()) {
-        // Handle camera movements
-        switch (ev->key()) {
-          case EventDispatcher::Up: m_camera->walk(0.2); break;
-          case EventDispatcher::Down: m_camera->walk(-0.2); break;
-          case EventDispatcher::Left: m_camera->rotate(0.0, 2.0, 0.0); break;
-          case EventDispatcher::Right: m_camera->rotate(0.0, -2.0, 0.0); break;
+        if (!ev->isReleased()) {
+          // Handle camera movements
+          switch (ev->key()) {
+            case EventDispatcher::Up: m_camera->walk(0.2); break;
+            case EventDispatcher::Down: m_camera->walk(-0.2); break;
+            case EventDispatcher::Left: m_camera->rotate(0.0, 2.0, 0.0); break;
+            case EventDispatcher::Right: m_camera->rotate(0.0, -2.0, 0.0); break;
+          }
         }
       } else {
         switch (ev->key()) {
-          case ' ': m_robot->push(); break;
+          case 'w': m_robot->forward(!ev->isReleased()); break;
+          case 's': m_robot->backward(!ev->isReleased()); break;
+          case 'a': m_robot->left(!ev->isReleased()); break;
+          case 'd': m_robot->right(!ev->isReleased()); break;
+          case 'h': m_robot->hover(true); break;
           
-          // Toggle debug mode with 'd'
-          case 'd': {
-            m_context->setDebug(!m_context->isDebug());
+          // Toggle debug mode with 'p'
+          case 'p': {
+            if (!ev->isReleased())
+              m_context->setDebug(!m_context->isDebug());
             break;
           }
           
