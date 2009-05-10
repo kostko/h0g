@@ -141,6 +141,7 @@ public:
       m_body->setAngularFactor(0.0);
       world->addRigidBody(m_body);
       world->addAction(this);
+      m_world = world;
       
       // Setup some attributes
       m_turnAngle = 0.0;
@@ -184,19 +185,29 @@ public:
       // Check for hover mode
       if (m_state.hover) {
         m_hoverDeltaTime += dt;
-        if (m_hoverDeltaTime > 0.3) {
-          // TODO need to check distance to floor, so we perform height corrections
+        if (m_hoverDeltaTime > 0.05) {
+          // Check distance to floor, so we can perform height corrections
+          float floorDistance = getFloorDistance();
+          float mdist = 1.2;
           m_hoverDeltaTime = 0;
-          //m_body->applyCentralImpulse(btVector3(0.0, 30.0, 0.0));
+          
+          if (floorDistance < mdist) {
+            linearVelocity += (transform.getBasis() * btVector3(0.0, 0.0, 60.0)) * walkSpeed;
+          }
         }
       }
       
-      if (!(m_state.movement & (CharacterState::FORWARD | CharacterState::BACKWARD))) {
+      if (!(m_state.movement & (CharacterState::FORWARD | CharacterState::BACKWARD)) && !m_state.hover) {
         // Not being moved, slow down gradually
         linearVelocity *= 0.2;
         m_body->setLinearVelocity(linearVelocity);
       } else {
         // We are in transit
+        if (m_state.hover) {
+          linearVelocity *= 0.2;
+          walkSpeed *= 5;
+        }
+        
         if (speed < m_maxLinearVelocity) {
           btVector3 velocity = linearVelocity + walkDirection * walkSpeed;
           m_body->setLinearVelocity(velocity);
@@ -214,7 +225,37 @@ public:
      */
     float getFloorDistance()
     {
-      // TODO
+      class ClosestNotMe : public btCollisionWorld::ClosestRayResultCallback {
+      public:
+          ClosestNotMe(btRigidBody *me)
+            : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
+              m_me(me)
+          {}
+          
+          btScalar addSingleResult(btCollisionWorld::LocalRayResult &rayResult, bool normalInWorldSpace)
+          {
+            if (rayResult.m_collisionObject == m_me)
+              return 1.0;
+            
+            return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+          }
+      private:
+          btRigidBody *m_me;
+      };
+      
+      float distance = 5.0;
+      btTransform transform = m_body->getCenterOfMassTransform();
+      btVector3 source = transform.getOrigin();
+      btVector3 target = source + distance * (transform.getBasis() * btVector3(0.0, 0.0, -1.0)).normalized();
+      
+      ClosestNotMe rayCallback(m_body);
+      rayCallback.m_closestHitFraction = 1.0;
+      m_world->rayTest(source, target, rayCallback);
+      if (rayCallback.hasHit()) {
+        return rayCallback.m_closestHitFraction * distance;
+      } else {
+        return distance;
+      }
     }
     
     /**
@@ -226,11 +267,11 @@ public:
     /**
      * Enables or disables hover mode.
      */
-    void hover(bool value)
+    void hover()
     {
-      m_state.hover = value;
+      m_state.hover = !m_state.hover;
       
-      if (value)
+      if (m_state.hover)
         m_hoverDeltaTime = 0.0;
     }
     
@@ -282,6 +323,7 @@ private:
     btCollisionShape *m_shape;
     btRigidBody *m_body;
     MotionState *m_motionState;
+    btDynamicsWorld *m_world;
     
     // Hover stuff
     float m_hoverDeltaTime;
@@ -401,7 +443,11 @@ public:
           case 's': m_robot->backward(!ev->isReleased()); break;
           case 'a': m_robot->left(!ev->isReleased()); break;
           case 'd': m_robot->right(!ev->isReleased()); break;
-          case 'h': m_robot->hover(true); break;
+          case 'h': {
+            if (!ev->isReleased())
+              m_robot->hover();
+            break;
+          }
           
           // Toggle debug mode with 'p'
           case 'p': {
