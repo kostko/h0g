@@ -14,6 +14,7 @@
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 
+class EntityMotionState;
 class Robot;
 
 /**
@@ -21,6 +22,16 @@ class Robot;
  */
 class Weapon {
 public:
+    /**
+     * Class constructor.
+     */
+    Weapon();
+    
+    /**
+     * Class destructor.
+     */
+    virtual ~Weapon();
+    
     /**
      * Move target vector in upwards direction.
      */
@@ -38,6 +49,7 @@ public:
 protected:
     IID::SceneNode *m_sceneNode;
     btRigidBody *m_body;
+    EntityMotionState *m_motionState;
     btVector3 m_targetVector;
 };
 
