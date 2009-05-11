@@ -67,13 +67,6 @@ public:
     void detachChild(SceneNode *child);
     
     /**
-     * Detaches a child node from this node.
-     *
-     * @param name Child node name
-     */
-    void detachChild(const std::string &name);
-    
-    /**
      * Returns the specified child node.
      *
      * @param name Child name
@@ -242,6 +235,11 @@ protected:
      * Updates scene pointer from parent node.
      */
     void updateSceneFromParent();
+    
+    /**
+     * Removes this node from the scene graph.
+     */
+    void clearConnectionToScene();
 private:
     // Parent node and children list
     SceneNode *m_parent;

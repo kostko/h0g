@@ -67,6 +67,7 @@ void SceneNode::attachChild(SceneNode *child)
 {
   if (m_children.find(child->getName()) != m_children.end())
     return;
+  
   m_children[child->getName()] = child;
   child->m_scene = m_scene;
   child->m_parent = this;
@@ -75,19 +76,24 @@ void SceneNode::attachChild(SceneNode *child)
   child->updateSceneFromParent();
 }
 
-void SceneNode::detachChild(SceneNode *child)
+void SceneNode::clearConnectionToScene()
 {
-  detachChild(child->getName());
-}
-    
-void SceneNode::detachChild(const std::string &name)
-{
-  // Remove this node from octree
   if (m_octree)
     m_octree->removeNode(this);
   
-  m_children.erase(name);
-  needUpdate();
+  m_scene = 0;
+  
+  BOOST_FOREACH(Child child, m_children) {
+    child.second->clearConnectionToScene();
+  }
+}
+
+void SceneNode::detachChild(SceneNode *child)
+{
+  child->clearConnectionToScene();
+  child->m_parent = 0;
+  
+  m_children.erase(child->getName());
 }
 
 SceneNode *SceneNode::child(const std::string &name)

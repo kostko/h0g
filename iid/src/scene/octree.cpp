@@ -236,7 +236,7 @@ void Octree::updateNode(SceneNode *node)
 
 void Octree::removeNode(SceneNode *node)
 {
-  if (m_root)
+  if (!m_root)
     return;
   
   OctreeNode *oc = node->getOctreeNode();
