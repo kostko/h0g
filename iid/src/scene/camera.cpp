@@ -12,7 +12,8 @@
 namespace IID {
 
 Camera::Camera(Scene *scene)
-  : m_scene(scene)
+  : m_scene(scene),
+    m_listener(0)
 {
 }
 
@@ -76,8 +77,10 @@ void Camera::lookAt(const Vector3f &eye, const Vector3f &center, const Vector3f 
   m_viewTransform = m_scene->viewTransform()->transform();
 
   // Update sound listener properties
-  m_listener->setPosition( eye.data() );
-  m_listener->setOrientation( m_center.data(), m_up.data() );
+  if (m_listener) {
+    m_listener->setPosition( eye.data() );
+    m_listener->setOrientation( m_center.data(), m_up.data() );
+  }
 }
 
 void Camera::walk(float distance)

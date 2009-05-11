@@ -138,6 +138,9 @@ private:
     // Driver
     Driver *m_driver;
     
+    // Sound context
+    SoundContext *m_soundContext;
+    
     // Clock
     btClock m_clock;
     btClock m_frameClock;

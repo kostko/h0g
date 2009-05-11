@@ -18,7 +18,6 @@ class ViewTransform;
 class Item;
 class Octree;
 class Camera;
-class SoundContext;
 
 /**
  * A structure used to describe scene perspective.
@@ -130,9 +129,6 @@ public:
     Camera *getCamera() const { return m_camera; }
 private:
     Context *m_context;
-    
-    // Sound context
-    SoundContext *m_soundContext;
     
     // Scene view transformation
     ViewTransform *m_viewTransform;

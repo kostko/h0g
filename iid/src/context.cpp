@@ -60,6 +60,10 @@ Context::Context()
   m_driver = new OpenGLDriver();
   m_driver->init();
   
+  // Init sound support on the default device
+  m_soundContext = new OpenALContext();
+  m_soundContext->init("Default");
+  
   // Initialize the event dispatcher
   m_eventDispatcher = new EventDispatcher(this);
   m_driver->setEventDispatcher(m_eventDispatcher);
@@ -82,6 +86,7 @@ Context::Context()
 
 Context::~Context()
 {
+  delete m_soundContext;
   delete m_driver;
   delete m_eventDispatcher;
   delete m_logger;
