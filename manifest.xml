@@ -58,6 +58,12 @@
       <attribute name="Mesh.Materials" container="/Materials" />
       <load_file path="r2-d2.3ds" loader="iid.3DSMeshImporter" />
     </item>
+    
+    <item name="rocketlauncher" type="CompositeMesh">
+      <attribute name="Mesh.ScaleFactor" x="0.015" y="0.015" z="0.015" />
+      <attribute name="Mesh.Materials" container="/Materials" />
+      <load_file path="rocketlauncher.3ds" loader="iid.3DSMeshImporter" />
+    </item>
   </container>
   
   <container id="Levels" path="data/levels">

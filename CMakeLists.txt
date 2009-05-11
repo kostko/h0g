@@ -41,7 +41,14 @@ include_directories(
 # Infinite Improbability Drive
 add_subdirectory(iid)
 
-add_executable(hog main.cpp)
+set(hog_src
+main.cpp
+motionstate.cpp
+robot.cpp
+weapon.cpp
+)
+
+add_executable(hog ${hog_src})
 target_link_libraries(hog iid)
 
 # External libraries
