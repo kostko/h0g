@@ -24,4 +24,9 @@ void Driver::setEventDispatcher(AbstractEventDispatcher *dispatcher)
   m_dispatcher = dispatcher;
 }
 
+SoundBuffer::SoundBuffer(const std::string &fileName) 
+  : m_fileName(fileName)
+{
+}
+
 }

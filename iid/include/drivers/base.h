@@ -14,6 +14,7 @@ class btIDebugDraw;
 namespace IID {
 
 class AbstractEventDispatcher;
+class Sound;
 
 /**
  * An abstract texture handle.
@@ -358,6 +359,161 @@ private:
 public:
     // Do not modify this directly, use setEventDispatcher instead
     AbstractEventDispatcher *m_dispatcher;
+};
+
+/**
+ * Abstract sound emitter.
+ */
+class Player {
+public:
+    
+    enum PlayMode {
+        Once,
+        Looped
+    };
+    
+    /** 
+     * Class constructor.
+     */
+    Player() {}
+    
+    /** 
+     * Class destructor.
+     */
+    virtual ~Player() {}
+    
+    /**
+     * Queue a sound to be played on the player.
+     * 
+     * @param sound Sound object
+     */
+    virtual void queue(Sound *sound) = 0;
+    
+    /**
+     * Play the queue in the set play mode (Effect PlayMode is the default).
+     */
+    virtual void play() = 0;
+    
+    /**
+     * Stop playing.
+     */
+    virtual void stop() = 0;
+    
+    /**
+     * Returns true if the player is playing anything.
+     */
+    virtual bool isPlaying() = 0;
+    
+    /**
+     * Set the position of the player in space.
+     * 
+     * @param position Vector of the player's coordinates
+     */
+    virtual void setPosition(const float *position) = 0;
+    
+    /**
+     * Set the master gain.
+     * 
+     * @param value Gain value
+     */
+    virtual void setGain(float value) = 0;
+    
+    /**
+     * Set the mode of playing of queued sounds.
+     * 
+     * @param mode Playing mode
+     */
+    virtual void setMode(PlayMode mode) = 0;
+};
+
+/**
+ * Abstract sound buffer.
+ */
+class SoundBuffer {
+public:
+    /**
+     * Class constructor.
+     *
+     * @param filePath Path to the sound file.
+     */
+    SoundBuffer(const std::string &fileName);
+    
+    /**
+     * Class destructor.
+     */
+    virtual ~SoundBuffer() {}
+    
+    /**
+     * Do the actual file read.
+     */
+    virtual void init() = 0;
+
+protected:
+    std::string m_fileName;
+};
+
+/**
+ * Abstract sound listener entity.
+ */
+class Listener {
+public:
+    
+    /**
+     * Class constructor.
+     */
+    Listener() {}
+    
+    /**
+     * Class destructor.
+     */
+    virtual ~Listener() {}
+    
+    /**
+     * Set the position of the listener in space.
+     * 
+     * @param position Vector of the player's coordinates
+     */
+    virtual void setPosition(const float *position) = 0;
+    
+    /**
+     * Set the listener's orientation.
+     * 
+     * @param forward Forward vector
+     * @param up Up vector
+     */
+    virtual void setOrientation(const float *forward, const float *up) = 0;
+    
+    /**
+     * Set the master gain.
+     * 
+     * @param value Gain value
+     */
+    virtual void setGain(float value) = 0;
+};
+
+/**
+ * An abstract sound context which is consisted of a
+ * listener and several players.
+ */
+class SoundContext {
+public:
+    /**
+     * Class constructor.
+     *
+     */
+    SoundContext() {}
+    
+    /**
+     * Class destructor.
+     */
+    virtual ~SoundContext() {}
+    
+    /**
+     * Init context.
+     *
+     * @param deviceName Device name for the sound context
+     */
+    virtual void init(const std::string &deviceName) = 0;
 };
 
 }

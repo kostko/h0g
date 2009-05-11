@@ -16,8 +16,8 @@ compositemesh.cpp
 texture.cpp
 shader.cpp
 material.cpp
+sound.cpp
 )
 
 add_library(storage STATIC ${storage_src})
 target_link_libraries(storage tinyxml importers)
-

@@ -15,12 +15,14 @@
 #include "storage/texture.h"
 #include "storage/shader.h"
 #include "storage/material.h"
+#include "storage/sound.h"
 
 // Importers
 #include "storage/importers/image.h"
 #include "storage/importers/3ds.h"
 #include "storage/importers/collada.h"
 #include "storage/importers/glsl.h"
+#include "storage/importers/audio.h"
 
 // Scene
 #include "scene/scene.h"
@@ -29,6 +31,7 @@
 
 // Drivers
 #include "drivers/opengl.h"
+#include "drivers/openal.h"
 
 // Events
 #include "events/dispatcher.h"
@@ -52,7 +55,7 @@ Context::Context()
     m_debug(false)
 {
   gContext = this;
-  
+
   // Initialize the OpenGL driver
   m_driver = new OpenGLDriver();
   m_driver->init();
@@ -203,6 +206,7 @@ void Context::registerBasicStorageTypes()
   m_storage->registerType("CompositeMesh", new CompositeMeshFactory());
   m_storage->registerType("Shader", new ShaderFactory());
   m_storage->registerType("Material", new MaterialFactory());
+  m_storage->registerType("Sound", new SoundFactory());
   
   m_logger->info("Type registration completed.");
 }
@@ -227,6 +231,7 @@ void Context::registerBasicImporters()
   m_storage->registerImporter("iid.3DSMeshImporter", new ThreeDSMeshImporter(this));
   m_storage->registerImporter("iid.ColladaMeshImporter", new ColladaMeshImporter(this));
   m_storage->registerImporter("iid.GLSLImporter", new GLSLImporter(this));
+  m_storage->registerImporter("iid.SoundImporter", new SoundImporter(this));
   
   m_logger->info("Importer registration completed.");
 }

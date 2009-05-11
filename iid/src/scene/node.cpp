@@ -7,12 +7,14 @@
 #include "scene/node.h"
 #include "scene/scene.h"
 #include "scene/octree.h"
+#include "drivers/openal.h"
 
 #include <boost/foreach.hpp>
 
 namespace IID {
 
 typedef std::pair<std::string, SceneNode*> Child;
+typedef std::pair<std::string, Player*> PlayerPair;
 
 SceneNode::SceneNode(const std::string &name, SceneNode *parent, Scene *scene)
   : m_parent(parent),
@@ -43,6 +45,9 @@ SceneNode::~SceneNode()
   BOOST_FOREACH(Child child, m_children) {
     delete child.second;
   }
+  BOOST_FOREACH(PlayerPair player, m_players) {
+    delete player.second;
+  }
 }
 
 void SceneNode::updateSceneFromParent()
@@ -62,7 +67,6 @@ void SceneNode::attachChild(SceneNode *child)
 {
   if (m_children.find(child->getName()) != m_children.end())
     return;
-  
   m_children[child->getName()] = child;
   child->m_scene = m_scene;
   child->m_parent = this;
@@ -174,6 +178,11 @@ void SceneNode::update(bool updateChildren, bool parentHasChanged)
     
     // Update boundaries
     updateBounds();
+
+    // Update all registered player's position
+    BOOST_FOREACH(PlayerPair player, m_players) {
+        player.second->setPosition( m_worldPosition.data() );
+    }
     
     m_needParentUpdate = false;
     m_dirty = false;
@@ -246,6 +255,16 @@ void SceneNode::setStaticHint(bool value)
   BOOST_FOREACH(Child child, m_children) {
     child.second->setStaticHint(value);
   }
+}
+
+Player *SceneNode::getSoundPlayer(const std::string &playerName)
+{
+    return m_players[playerName];
+}
+
+void SceneNode::registerSoundPlayer(const std::string &playerName, Player *player)
+{
+    m_players[playerName] = player;
 }
 
 void SceneNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)

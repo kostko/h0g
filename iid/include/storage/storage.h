@@ -240,13 +240,13 @@ private:
     // Root item
     Item *m_root;
     
-    // Registred types
+    // Registered types
     boost::unordered_map<std::string, ItemFactory*> m_types;
     
-    // Registred argument handlers
+    // Registered argument handlers
     boost::unordered_map<std::string, StorageArgumentHandler> m_args;
     
-    // Registred importers
+    // Registered importers
     boost::unordered_map<std::string, Importer*> m_importers;
 };
 

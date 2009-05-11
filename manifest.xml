@@ -82,4 +82,24 @@
       <load_file path="material.glsl" loader="iid.GLSLImporter" />
     </item>
   </container>
+  
+  <!-- Warning: these sounds should all be in MONO. -->
+  <container id="Sounds" path="data/audio">
+    <!-- Example of R2's squeaking -->
+    <item name="r2-sound1" type="Sound">
+        <attribute name="Sound.Type" value="Effect"/>
+        <load_file path="R2D2a.wav" loader="iid.SoundImporter"/>
+    </item>
+    <!-- R2's thrusters -->
+    <item name="r2-thrusters" type="Sound">
+        <attribute name="Sound.Type" value="Effect"/>
+        <load_file path="thrusters.wav" loader="iid.SoundImporter"/>
+    </item>
+    
+    <!-- Example of background music -->
+    <!--<item name="bg-music" type="Sound">
+        <attribute name="Sound.Type" value="Ambiental"/>
+        <load_file path="foo.wav" loader="iid.SoundImporter"/>
+    </item> -->
+  </container>
 </manifest>

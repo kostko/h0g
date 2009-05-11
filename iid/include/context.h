@@ -24,6 +24,7 @@ class Storage;
 class Driver;
 class Scene;
 class EventDispatcher;
+class SoundContext;
 
 /**
  * The Infinite Improbability Drive context object links all aspects of

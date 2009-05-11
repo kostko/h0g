@@ -7,6 +7,7 @@
 #include "scene/camera.h"
 #include "scene/scene.h"
 #include "scene/viewtransform.h"
+#include "drivers/base.h"
 
 namespace IID {
 
@@ -73,6 +74,10 @@ void Camera::lookAt(const Vector3f &eye, const Vector3f &center, const Vector3f 
   m_scene->viewTransform()->loadIdentity();
   m_scene->viewTransform()->lookAt(eye, center, up);
   m_viewTransform = m_scene->viewTransform()->transform();
+
+  // Update sound listener properties
+  m_listener->setPosition( eye.data() );
+  m_listener->setOrientation( m_center.data(), m_up.data() );
 }
 
 void Camera::walk(float distance)
@@ -156,6 +161,16 @@ Camera::Position Camera::containsBox(const AxisAlignedBox &box) const
     return Inside;
   
   return Intersect;
+}
+
+void Camera::setListener(Listener *listener)
+{
+    m_listener = listener;
+}
+
+Listener *Camera::getListener()
+{
+    return m_listener;
 }
 
 }

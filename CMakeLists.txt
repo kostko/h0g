@@ -15,6 +15,8 @@ find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(Eigen2 REQUIRED)
 find_package(Bullet REQUIRED)
+find_package(OpenAL REQUIRED)
+find_package(ALUT REQUIRED)
 
 # Uncomment these lines for optimization
 #SET(CMAKE_BUILD_TYPE distribution)
@@ -29,6 +31,8 @@ include_directories(
 	${GLUT_INCLUDE_DIR}
 	${EIGEN2_INCLUDE_DIR}
 	${BULLET_INCLUDE_DIR}
+	${OPENAL_INCLUDE_DIR}
+	${ALUT_INCLUDE_DIR}
 	
 	# Internal includes
 	${CMAKE_CURRENT_SOURCE_DIR}/iid/include
@@ -48,4 +52,7 @@ target_link_libraries(hog
 	${SDL_LIBRARY}
 	${SDLIMAGE_LIBRARY}
 	${BULLET_LIBRARIES}
+	${OPENAL_LIBRARY}
+	${ALUT_LIBRARY}
 )
+

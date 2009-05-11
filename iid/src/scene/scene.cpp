@@ -14,6 +14,7 @@
 #include "storage/storage.h"
 #include "storage/mesh.h"
 #include "context.h"
+#include "drivers/openal.h"
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -28,8 +29,11 @@ Scene::Scene(Context *context)
     m_stateBatcher(new StateBatcher(this)),
     m_viewTransform(new ViewTransform()),
     m_octree(new Octree()),
-    m_camera(0)
+    m_camera(0),
+    m_soundContext(new OpenALContext())
 {
+    // Init sound support on the default device
+    m_soundContext->init("Default");
 }
 
 Scene::~Scene()
@@ -38,6 +42,7 @@ Scene::~Scene()
   delete m_root;
   delete m_viewTransform;
   delete m_stateBatcher;
+  delete m_soundContext;
 }
 
 void Scene::update()

@@ -13,6 +13,7 @@
 namespace IID {
 
 class Scene;
+class Listener;
 
 // Plane is just a simple hyperplane
 typedef Hyperplane<float, 3> Plane;
@@ -112,9 +113,28 @@ public:
      * @return A valid Position
      */
     Position containsPoint(const Vector3f &point) const;
+    
+    /**
+     * Set the listener instance. 
+     *
+     * The place of the sound listener in space is represented 
+     * by the camera's "eye" coordinates.
+     *
+     * @param listener A valid listener instance.
+     */
+    void setListener(Listener *listener);
+    
+    /**
+     * Get the listener instance.
+     */
+    Listener *getListener();
+    
 private:
     // Scene instance
     Scene *m_scene;
+    
+    // Listener instance
+    Listener *m_listener;
     
     // Active transform
     Vector3f m_eye;

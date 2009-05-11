@@ -23,6 +23,7 @@ class StateBatcher;
 class Texture;
 class Shader;
 class Material;
+class Player;
 
 /**
  * A scene node represents an object in the scene graph.
@@ -198,6 +199,21 @@ public:
     void setStaticHint(bool value);
     
     /**
+     * Gets the node's sound player.
+     *
+     * @return Node's requested player object
+     */
+    Player *getSoundPlayer(const std::string &playerName);
+    
+    /**
+     * Register a player.
+     *
+     * @param playerName The name used for retrieving this player
+     * @param player Player instance
+     */
+    void registerSoundPlayer(const std::string &playerName, Player *player);
+    
+    /**
      * Performs batching of static geometry currently on the scene.
      *
      * @param triangles An array holding all the vertices
@@ -257,6 +273,9 @@ protected:
     // Bounding box
     AxisAlignedBox m_localBounds;
     AxisAlignedBox m_worldBounds;
+    
+    // Sound players associated with this node
+    boost::unordered_map<std::string, Player*> m_players;
     
     // Flags
     bool m_inheritOrientation;

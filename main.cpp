@@ -12,6 +12,7 @@
 #include "storage/compositemesh.h"
 #include "storage/texture.h"
 #include "storage/shader.h"
+#include "storage/sound.h"
 
 // Scene
 #include "scene/scene.h"
@@ -21,6 +22,9 @@
 // Events
 #include "events/dispatcher.h"
 #include "events/keyboard.h"
+
+// Audio support
+#include "drivers/openal.h"
 
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
@@ -119,6 +123,10 @@ public:
         AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
         AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
       );
+      
+      
+      m_sceneNode->registerSoundPlayer("TauntPlayer", new OpenALPlayer());
+      m_sceneNode->registerSoundPlayer("ThrustersPlayer", new OpenALPlayer());
       scene->attachNode(m_sceneNode);
       scene->update();
       
@@ -148,6 +156,15 @@ public:
       m_maxLinearVelocity = 3.0;
       m_walkVelocity = 8.0;
       m_turnVelocity = 3.0;
+      
+      // Add some sounds from storage
+      OpenALPlayer *player;
+      sounds["Taunt"] = storage->get<Sound>("/Sounds/r2-sound1");
+      m_sceneNode->getSoundPlayer("TauntPlayer")->queue(sounds["Taunt"]);
+      
+      sounds["Thrusters"] = storage->get<Sound>("/Sounds/r2-thrusters");
+      m_sceneNode->getSoundPlayer("ThrustersPlayer")->setMode(Player::Looped);
+      m_sceneNode->getSoundPlayer("ThrustersPlayer")->queue(sounds["Thrusters"]);
     }
     
     /**
@@ -269,10 +286,16 @@ public:
      */
     void hover()
     {
+      OpenALPlayer *player = static_cast<OpenALPlayer*>( m_sceneNode->getSoundPlayer("ThrustersPlayer") );
       m_state.hover = !m_state.hover;
       
-      if (m_state.hover)
+      if (m_state.hover) {
+        player->play();
         m_hoverDeltaTime = 0.0;
+      }
+      else {
+        player->stop();
+      }
     }
     
     /**
@@ -318,6 +341,13 @@ public:
       else
         m_state.movement &= ~CharacterState::RIGHT;
     }
+    
+    void taunt()
+    {
+        OpenALPlayer *player = static_cast<OpenALPlayer*>( m_sceneNode->getSoundPlayer("TauntPlayer") );
+        player->play();
+    }
+    
 private:
     SceneNode *m_sceneNode;
     btCollisionShape *m_shape;
@@ -333,6 +363,9 @@ private:
     float m_maxLinearVelocity;
     float m_walkVelocity;
     float m_turnVelocity;
+    
+    // Sounds
+    boost::unordered_map<std::string, Sound*> sounds;
     
     // Character state
     CharacterState m_state;
@@ -448,16 +481,25 @@ public:
               m_robot->hover();
             break;
           }
-          
           // Toggle debug mode with 'p'
           case 'p': {
             if (!ev->isReleased())
               m_context->setDebug(!m_context->isDebug());
             break;
           }
+          case 't': {
+            // Taunt the enemy by squeaking
+              m_robot->taunt();
+              break;
+          }
           
           // Exit when escape is pressed
-          case 27: exit(0);
+          case 27: {
+              delete m_context;
+              delete m_scene;
+              delete m_storage;
+              exit(0);
+          }
         }
       }
     }
@@ -472,6 +514,7 @@ public:
       
       // Create a test scene
       m_camera = new Camera(m_scene);
+      m_camera->setListener(new OpenALListener());
       m_scene->setCamera(m_camera);
       // FIXME this camera position is hacky:-)
       float x = -4.25;
@@ -512,7 +555,6 @@ public:
       
       // Generate static geometry shape
       btVector3 aabbMin(-100, -100, -100), aabbMax(100, 100, 100);
-      
       m_scene->update();
       m_staticGeometry = new btTriangleIndexVertexArray();
       m_scene->getRootNode()->batchStaticGeometry(m_staticGeometry);
