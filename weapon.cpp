@@ -17,10 +17,12 @@
 
 using namespace IID;
 
-Weapon::Weapon()
+Weapon::Weapon(Robot *robot, Scene *scene)
   : m_sceneNode(0),
     m_body(0),
-    m_motionState(0)
+    m_motionState(0),
+    m_robot(robot),
+    m_scene(scene)
 {
 }
 
@@ -42,26 +44,37 @@ void Weapon::down()
 }
 
 RocketLauncher::RocketLauncher(Robot *robot, btDynamicsWorld *world, Scene *scene, Storage *storage)
+  : Weapon(robot, scene)
 {
   CompositeMesh *weaponMesh = storage->get<CompositeMesh>("/Models/rocketlauncher");
   Texture *texture = storage->get<Texture>("/Textures/rocketlauncher");
   Shader *shader = storage->get<Shader>("/Shaders/general");
   
   // Get robot's dimensions to properly attach the weapon
-  Vector3f halfSize = robot->getSceneNode()->getBoundingBox().getHalfSize();
+  Vector3f robotHalfSize = robot->getSceneNode()->getBoundingBox().getHalfSize();
+  Vector3f halfSize = weaponMesh->getAABB().getHalfSize();
   
   // Create the robot's scene node
   m_sceneNode = scene->createNodeFromStorage(weaponMesh);
   m_sceneNode->setShader(shader);
   m_sceneNode->setTexture(texture);
-  m_sceneNode->setPosition(-halfSize[0], 0.0, 0.);
+  m_sceneNode->setPosition(-robotHalfSize[0], 0.0, 0.);
   m_sceneNode->setOrientation(
     AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
     AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
     AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
   );
-  robot->getSceneNode()->attachChild(m_sceneNode);
-  scene->update();
+}
+
+void RocketLauncher::equip()
+{
+  m_robot->getSceneNode()->attachChild(m_sceneNode);
+  m_scene->update();
+}
+
+void RocketLauncher::unequip()
+{
+  m_robot->getSceneNode()->detachChild(m_sceneNode);
 }
 
 void RocketLauncher::fire()

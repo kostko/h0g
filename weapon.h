@@ -24,13 +24,26 @@ class Weapon {
 public:
     /**
      * Class constructor.
+     *
+     * @param robot Robot that is assigned this weapon
+     * @param scene A valid scene instance
      */
-    Weapon();
+    Weapon(Robot *robot, IID::Scene *scene);
     
     /**
      * Class destructor.
      */
     virtual ~Weapon();
+    
+    /**
+     * Equips this weapon.
+     */
+    virtual void equip() = 0;
+    
+    /**
+     * Unequips this weapon.
+     */
+    virtual void unequip() = 0;
     
     /**
      * Move target vector in upwards direction.
@@ -51,6 +64,8 @@ protected:
     btRigidBody *m_body;
     EntityMotionState *m_motionState;
     btVector3 m_targetVector;
+    Robot *m_robot;
+    IID::Scene *m_scene;
 };
 
 /**
@@ -67,6 +82,16 @@ public:
      * @param storage Storage
      */
     RocketLauncher(Robot *robot, btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage);
+    
+    /**
+     * Equips this weapon.
+     */
+    void equip();
+    
+    /**
+     * Unequips this weapon.
+     */
+    void unequip();
     
     /**
      * Fires the weapon.

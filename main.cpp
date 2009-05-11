@@ -160,6 +160,13 @@ public:
             break;
           }
           
+          case 9: {
+            // Switch current weapon the weapon
+            if (!ev->isReleased())
+              m_robot->switchWeapon();
+            break;
+          }
+          
           // Exit when escape is pressed
           case 27: {
               delete m_context;

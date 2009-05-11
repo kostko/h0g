@@ -16,6 +16,8 @@
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 
+#include <vector>
+
 class EntityMotionState;
 class Weapon;
 
@@ -119,6 +121,11 @@ public:
      * Produce taunting sound.
      */
     void taunt();
+    
+    /**
+     * Switches currently selected weapon.
+     */
+    void switchWeapon();
 private:
     IID::SceneNode *m_sceneNode;
     btCollisionShape *m_shape;
@@ -142,7 +149,8 @@ private:
     CharacterState m_state;
     
     // Weapon system
-    // FIXME support multiple weapons
+    std::vector<Weapon*> m_weaponInventory;
+    int m_weaponIdx;
     Weapon *m_weapon;
 };
 

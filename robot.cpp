@@ -21,6 +21,8 @@
 using namespace IID;
 
 Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
+  : m_weaponIdx(0),
+    m_weapon(0)
 {
   CompositeMesh *robotMesh = storage->get<CompositeMesh>("/Models/r2-d2");
   Shader *shader = storage->get<Shader>("/Shaders/material");
@@ -67,8 +69,9 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
   m_walkVelocity = 8.0;
   m_turnVelocity = 3.0;
   
-  // Create our weapon
-  m_weapon = new RocketLauncher(this, world, scene, storage);
+  // Create our weapons
+  m_weaponInventory.push_back(0);
+  m_weaponInventory.push_back(new RocketLauncher(this, world, scene, storage));
   
   // Add some sounds from storage
   OpenALPlayer *player;
@@ -241,4 +244,16 @@ void Robot::taunt()
 {
   OpenALPlayer *player = static_cast<OpenALPlayer*>( m_sceneNode->getSoundPlayer("TauntPlayer") );
   player->play();
+}
+
+void Robot::switchWeapon()
+{
+  m_weaponIdx = (m_weaponIdx + 1) % m_weaponInventory.size();
+  
+  if (m_weapon)
+    m_weapon->unequip();
+ 
+  m_weapon = m_weaponInventory[m_weaponIdx];
+  if (m_weapon)
+    m_weapon->equip();
 }
