@@ -13,6 +13,7 @@
 #include "renderer/statebatcher.h"
 #include "storage/storage.h"
 #include "storage/mesh.h"
+#include "storage/compositemesh.h"
 #include "context.h"
 #include "drivers/openal.h"
 
@@ -97,6 +98,7 @@ SceneNode *Scene::createNodeFromStorage(Item *mesh, const std::string &name)
     // A composite mesh will result in creation of a grouping SceneNode
     // that will contain all child nodes with relative position hints
     SceneNode *group = new SceneNode(name.empty() ? mesh->getId() : name);
+    group->m_localBounds = static_cast<CompositeMesh*>(mesh)->getAABB();
     
     typedef std::pair<std::string, Item*> Child;
     BOOST_FOREACH(Child child, *mesh->children()) {
