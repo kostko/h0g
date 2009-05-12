@@ -86,6 +86,11 @@ void Scene::attachNode(SceneNode *node)
   m_root->attachChild(node);
 }
 
+void Scene::detachNode(SceneNode *node)
+{
+  m_root->detachChild(node);
+}
+
 SceneNode *Scene::createNodeFromStorage(Item *mesh, const std::string &name)
 {
   if (mesh->getType() == "Mesh") {

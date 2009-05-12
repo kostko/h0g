@@ -143,6 +143,11 @@ public:
     const AxisAlignedBox &getBoundingBox() const { return m_worldBounds; }
     
     /**
+     * Returns this node's dimensions (= bounding box in local coordinates).
+     */
+    const AxisAlignedBox &getLocalBoundingBox() const { return m_localBounds; }
+    
+    /**
      * Renders this node if it is rendrable.
      *
      * @param batcher State batcher that holds the render queue

@@ -102,6 +102,13 @@ public:
     void attachNode(SceneNode *node);
     
     /**
+     * Detaches a node from the root of the scene graph.
+     *
+     * @param node Node to detach
+     */
+    void detachNode(SceneNode *node);
+    
+    /**
      * Sets scene active camera.
      *
      * @param camera A valid Camera instance
