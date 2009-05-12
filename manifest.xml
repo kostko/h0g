@@ -18,7 +18,7 @@
         <load_file path="gravitygun.jpg" loader="iid.ImageImporter" />
     </item>
     <item name="particle" type="Texture">
-        <load_file path="particle.bmp" loader="iid.ImageImporter" />
+        <load_file path="particle.png" loader="iid.ImageImporter" />
     </item>
     
     <!-- Bricks -->
