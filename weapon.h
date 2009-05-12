@@ -62,10 +62,13 @@ public:
 protected:
     IID::SceneNode *m_sceneNode;
     btRigidBody *m_body;
+    btCollisionShape *m_shape;
+    btHingeConstraint *m_constraint;
     EntityMotionState *m_motionState;
     btVector3 m_targetVector;
     Robot *m_robot;
     IID::Scene *m_scene;
+    btDynamicsWorld *m_world;
 };
 
 /**

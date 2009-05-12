@@ -27,6 +27,20 @@ public:
     EntityMotionState(const btTransform &initial, IID::SceneNode *node);
     
     /**
+     * Class constructor.
+     *
+     * @param node Entity scene node
+     */
+    EntityMotionState(IID::SceneNode *node);
+    
+    /**
+     * Sets the initial world transformation.
+     *
+     * @param initial Initial world transformation
+     */
+    void setInitialTransform(const btTransform &initial);
+    
+    /**
      * Returns the initial world transformation.
      */
     void getWorldTransform(btTransform &worldTransform) const;
@@ -40,6 +54,7 @@ public:
 private:
     IID::SceneNode *m_sceneNode;
     btTransform m_initial;
+    bool m_useInitial;
 };
 
 #endif

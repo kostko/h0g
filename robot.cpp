@@ -44,7 +44,7 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
   
   // Create the robot's physical shape and body
   Vector3f hs = robotMesh->getAABB().getHalfSize();
-  m_shape = new btCylinderShapeZ(btVector3(hs[0], hs[1], hs[2]));
+  m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
   float mass = 80.0;
   btVector3 localInertia(0, 0, 0);
   m_shape->calculateLocalInertia(mass, localInertia);
