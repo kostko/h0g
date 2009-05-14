@@ -74,13 +74,33 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
   m_weaponInventory.push_back(new RocketLauncher(this, world, scene, storage));
   
   // Add some sounds from storage
-  OpenALPlayer *player;
   m_sounds["Taunt"] = storage->get<Sound>("/Sounds/r2-sound1");
   m_sceneNode->getSoundPlayer("TauntPlayer")->queue(m_sounds["Taunt"]);
   
   m_sounds["Thrusters"] = storage->get<Sound>("/Sounds/r2-thrusters");
   m_sceneNode->getSoundPlayer("ThrustersPlayer")->setMode(Player::Looped);
   m_sceneNode->getSoundPlayer("ThrustersPlayer")->queue(m_sounds["Thrusters"]);
+  
+  m_exhaust = new ParticleEmitter("Particle Emitter", 100, m_sceneNode, scene);
+  // emitter->setShader(m_storage->get<Shader>("/Shaders/particles"));
+  m_exhaust->setTexture(storage->get<Texture>("/Textures/particle"));
+  m_exhaust->setPosition(0, 0, -0.5);
+  m_exhaust->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  m_exhaust->setGravity(0.0, -10.0, 0.0);
+  m_exhaust->setBounds(1.0, 1.0, 1.0);
+  
+  std::vector<Vector3f> colors;
+  colors.push_back(Vector3f(1, 0.6, 0));
+  colors.push_back(Vector3f(0.9, 0.55, 0));
+  colors.push_back(Vector3f(1, 0.65, 0));
+  m_exhaust->setColors(colors);
+  
+  m_exhaust->init();
+  m_sceneNode->attachChild(m_exhaust);
 }
 
 void Robot::updateAction(btCollisionWorld *world, btScalar dt)
@@ -191,9 +211,12 @@ void Robot::hover()
   
   if (m_state.hover) {
     player->play();
+    m_exhaust->start();
+    m_exhaust->show(true);
     m_hoverDeltaTime = 0.0;
-  }
-  else {
+  } else {
+    m_exhaust->stop();
+    m_exhaust->show(false);
     player->stop();
   }
 }

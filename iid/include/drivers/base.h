@@ -15,6 +15,7 @@ namespace IID {
 
 class AbstractEventDispatcher;
 class Sound;
+class ParticleEmitter;
 
 /**
  * An abstract texture handle.
@@ -165,6 +166,11 @@ public:
      * Unbinds the vertex buffer.
      */
     virtual void unbind() const = 0;
+    
+    /**
+     * Update the buffer's data.
+     */
+    virtual void update(size_t size, unsigned char *data, UsageHint usage, Target target) = 0;
 };
 
 /**
@@ -196,7 +202,7 @@ public:
     virtual void deactivate() const = 0;
     
     /**
-     * Binds an vertex attribute pointer to a shader. The shader must be currently
+     * Binds a vertex attribute pointer to a shader. The shader must be currently
      * bound.
      *
      * @param variable Attribute variable name
@@ -205,6 +211,24 @@ public:
      * @param offset Offset into the vertex buffer
      */
     virtual void bindAttributePointer(const char *variable, int size, int stride, int offset) = 0;
+    
+    /**
+     * Binds a vertex attribute location to a shader. The shader must be currently
+     * bound.
+     *
+     * @param index The index of the generic vertex attribute to be bound
+     * @param name The name of the vertex shader attribute variable to which index is to be bound.
+     */
+    virtual void bindAttributeLocation(int index, const char *name) = 0;
+    
+    /**
+     * Set uniform value. The variable is set based on the currently bound shader.
+     *
+     * @param name Variable name
+     * @param size Length of the values array (between 1 and 4)
+     * @param values Values to set to the variable
+     */
+    virtual void setUniform(const char *name, int size, float *values) = 0;
 };
 
 /**
@@ -354,6 +378,15 @@ public:
     virtual DVertexBuffer *createVertexBuffer(size_t size, unsigned char *data, 
                                               DVertexBuffer::UsageHint usage,
                                               DVertexBuffer::Target target) = 0;
+    
+    /**
+     * Draws the state of the given particle emitter.
+     *
+     * @param size Size of the vertex and color arrays
+     * @param vertices Array of packed vertex coordinates
+     * @param colors RGBA components for each vertex
+     */
+    virtual void drawParticles(int size, float *vertices, float *colors) = 0;
 private:
     std::string m_name;
 public:

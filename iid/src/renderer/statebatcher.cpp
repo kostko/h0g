@@ -7,6 +7,7 @@
 #include "renderer/statebatcher.h"
 #include "scene/scene.h"
 #include "scene/viewtransform.h"
+#include "scene/particles.h"
 #include "storage/mesh.h"
 #include "storage/texture.h"
 #include "storage/material.h"
@@ -54,8 +55,23 @@ void StateBatcher::addLight(const Vector3f &position, const Vector4f &ambient, c
   l->attLin = attLin;
   l->attQuad = attQuad;
   
-  // Inser the light into lights list
+  // Insert the light into lights list
   m_lights.push_back(l);
+}
+
+void StateBatcher::addParticleEmitter(Shader *shader, Texture *texture, int size, float *vertices, float *colors,
+                                      const Transform3f &transform)
+{
+  RenderQueueParticles *p = new RenderQueueParticles();
+  p->shader = shader;
+  p->texture = texture;
+  p->size = size;
+  p->vertices = vertices;
+  p->colors = colors;
+  p->transform = transform;
+
+  // Insert into the particle emitter list
+  m_emitters.push_back(p);
 }
 
 void StateBatcher::render()
@@ -65,7 +81,7 @@ void StateBatcher::render()
   Material *currentMaterial = 0;
   Mesh *currentMesh = 0;
   Transform3f viewTransform = m_scene->viewTransform()->transform();
-  
+
   // First render all the lights
   int index = 0;
   BOOST_FOREACH(RenderQueueLight *l, m_lights) {
@@ -132,11 +148,39 @@ void StateBatcher::render()
     delete n;
   }
   
+  // Draw particle emitters
+  BOOST_FOREACH(RenderQueueParticles *p, m_emitters) {
+    // Check if shader has changed
+    if (currentShader != p->shader) {
+      if (currentShader)
+        currentShader->deactivate();
+    
+      if(p->shader)
+        p->shader->activate();
+      currentShader = p->shader;
+    }
+
+    // Check if texture has changed
+    if (currentTexture != p->texture) {
+      if (currentTexture)
+        currentTexture->unbind();
+    
+      if (p->texture)
+        p->texture->bind();
+      currentTexture = p->texture;
+    }
+
+    // Draw the particle emitter
+    m_driver->applyModelViewTransform((viewTransform * p->transform).data());
+    m_driver->drawParticles(p->size, p->vertices, p->colors);
+  }
+
   if (currentShader)
     currentShader->deactivate();
-  
+
   m_lights.clear();
   m_renderQueue.clear();
+  m_emitters.clear();
 }
 
 }

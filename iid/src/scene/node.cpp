@@ -36,7 +36,6 @@ SceneNode::SceneNode(const std::string &name, SceneNode *parent, Scene *scene)
 {
   if (m_parent) {
     m_parent->attachChild(this);
-    m_scene = m_parent->m_scene;
   }
 }
 

@@ -7,6 +7,7 @@
 #include "drivers/opengl.h"
 #include "events/base.h"
 #include "exceptions.h"
+#include "renderer/statebatcher.h"
 
 // OpenGL
 #include <GL/glext.h>
@@ -312,6 +313,13 @@ void OpenGLVertexBuffer::unbind() const
   glBindBuffer(m_target, 0);
 }
 
+void OpenGLVertexBuffer::update(size_t size, unsigned char *data, UsageHint usage, Target target)
+{
+    // Update target type
+    m_target = targetToOpenGL(target);
+    glBufferData(m_target, size, data, usageToOpenGL(usage));
+}
+
 OpenGLShader::OpenGLShader(const char *srcVertex, const char *srcFragment)
   : DShader(srcVertex, srcFragment)
 {
@@ -378,6 +386,30 @@ void OpenGLShader::activate() const
 void OpenGLShader::deactivate() const
 {
   glUseProgram(0);
+}
+
+void OpenGLShader::bindAttributeLocation(int index, const char *name)
+{
+  glBindAttribLocation(m_handle, index, name);
+}
+
+void OpenGLShader::setUniform(const char *name, int size, float *values)
+{
+  GLint location = glGetUniformLocation(m_handle, name);
+
+  switch(size) {
+    case 1:
+      glUniform1f(location, values[0]);
+      break;
+    case 2:
+      glUniform2f(location, values[0], values[1]);
+      break;
+    case 3:
+      glUniform3f(location, values[0], values[1], values[2]);
+      break;
+    case 4:
+      glUniform4f(location, values[0], values[1], values[2], values[3]);
+  }
 }
 
 OpenGLDriver::OpenGLDriver()
@@ -551,6 +583,61 @@ DVertexBuffer *OpenGLDriver::createVertexBuffer(size_t size, unsigned char *data
                                                 DVertexBuffer::Target target)
 {
   return new OpenGLVertexBuffer(size, data, usage, target);
+}
+
+void OpenGLDriver::drawParticles(int size, float *vertices, float *colors)
+{
+  float modelview[16];
+
+  glDepthMask(0);
+  glShadeModel(GL_SMOOTH);                            // Enables Smooth Shading
+  glClearColor(0.0f,0.0f,0.0f,0.0f);                  // Black Background
+  glClearDepth(1.0f);                                 // Depth Buffer Setup
+  glEnable(GL_BLEND);                                 // Enable Blending
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE);                   // Type Of Blending To Perform
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);   // Really Nice Perspective Calculations
+  glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);             // Really Nice Point Smoothing
+  glEnable(GL_TEXTURE_2D);
+
+  // Save the current modelview matrix
+  glPushMatrix();
+
+  // Get the current modelview matrix
+  glGetFloatv(GL_MODELVIEW_MATRIX , modelview);
+
+  for(int i=0; i<3; i+=2) {
+    for(int j = 0; j<3; j++) {
+      if ( i==j )
+        modelview[i*4+j] = 1.0;
+      else
+        modelview[i*4+j] = 0.0;
+    }
+  }
+
+  // Set the modelview matrix
+  glLoadMatrixf(modelview);
+
+  for (int i = 0; i < size; i++) 
+  {
+    float x = vertices[3*i];
+    float y = vertices[3*i+1];
+    float z = vertices[3*i+2];
+
+    glColor4f(colors[4*i], colors[4*i+1], colors[4*i+2], colors[4*i+3]);
+    glBegin(GL_TRIANGLE_STRIP);
+      glTexCoord2d(1,1); glVertex3f(x+0.1f,y+0.1f,z); // Top Right
+      glTexCoord2d(0,1); glVertex3f(x-0.1f,y+0.1f,z); // Top Left
+      glTexCoord2d(1,0); glVertex3f(x+0.1f,y-0.1f,z); // Bottom Right
+      glTexCoord2d(0,0); glVertex3f(x-0.1f,y-0.1f,z); // Bottom Left
+    glEnd();
+  }
+  
+  glPopMatrix();
+  // Reset settings
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
+  glDepthMask(1);
 }
 
 }

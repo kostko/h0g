@@ -21,6 +21,7 @@ class Mesh;
 class Texture;
 class Material;
 class Driver;
+class ParticleEmitter;
 
 struct RenderQueueNode {
   Shader *shader;
@@ -42,6 +43,17 @@ struct RenderQueueLight {
   float attQuad;
   
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
+struct RenderQueueParticles {
+    Shader *shader;
+    Texture *texture;
+    int size;
+    float *vertices;
+    float *colors;
+    Transform3f transform;
+  
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 struct RenderQueueCompare {
@@ -102,6 +114,19 @@ public:
                   const Vector4f &specular, float attConst, float attLin, float attQuad);
     
     /**
+     * Adds a particle emitter to the render queue.
+     *
+     * @param shader Shader instance
+     * @param texture Texture instance
+     * @param size Size of the vertex and color arrays
+     * @param vertices Array of vertices
+     * @param colors Array of colors
+     * @param transform Model transformation
+     */
+    void addParticleEmitter(Shader *shader, Texture *texture, int size, float *vertices, float *colors, 
+                            const Transform3f &transform);
+    
+    /**
      * Renders all nodes in the render queue. After this method is called, the
      * render queue is cleared.
      */
@@ -113,6 +138,7 @@ private:
     // Render queue
     std::list<RenderQueueLight*> m_lights;
     std::set<RenderQueueNode*, RenderQueueCompare> m_renderQueue;
+    std::list<RenderQueueParticles*> m_emitters;
     
     // Pointer to the driver to avoid lookups
     Driver *m_driver;

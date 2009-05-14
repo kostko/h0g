@@ -6,6 +6,7 @@ rendrable.cpp
 light.cpp
 octree.cpp
 camera.cpp
+particles.cpp
 )
 
 add_library(scene STATIC ${scene_src})

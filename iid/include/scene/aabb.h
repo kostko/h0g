@@ -67,6 +67,24 @@ public:
     }
     
     /**
+     * Returns true if the point is inside the box.
+     */
+    bool contains(Vector3f p) const
+    {
+      if(p.x() > m_max.x() || 
+         p.y() > m_max.y() ||
+         p.z() > m_max.z() ||
+         p.x() < m_min.x() || 
+         p.y() < m_min.y() ||
+         p.z() < m_min.z()  )
+      {
+        return false;
+      }
+      
+      return true;
+    }
+    
+    /**
      * Sets bounding box bounds.
      *
      * @param min Minimum corner

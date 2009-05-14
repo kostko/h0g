@@ -13,6 +13,9 @@
 #include "storage/storage.h"
 #include "storage/sound.h"
 
+// Particle system
+#include "scene/particles.h"
+
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 
@@ -152,6 +155,9 @@ private:
     std::vector<Weapon*> m_weaponInventory;
     int m_weaponIdx;
     Weapon *m_weapon;
+    
+    // Exhaust
+    IID::ParticleEmitter *m_exhaust;
 };
 
 #endif

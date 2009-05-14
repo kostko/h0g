@@ -16,6 +16,8 @@ class btIDebugDraw;
 
 namespace IID {
 
+class ParticleEmitter;
+    
 /**
  * OpenGL texture handle.
  */
@@ -113,6 +115,11 @@ public:
      * Unbinds the vertex buffer.
      */
     void unbind() const;
+    
+    /**
+     * Update the buffer's data.
+     */
+    void update(size_t size, unsigned char *data, UsageHint usage, Target target);
 protected:
     GLenum usageToOpenGL(UsageHint usage) const;
     GLenum targetToOpenGL(Target target) const;
@@ -160,6 +167,24 @@ public:
      * @param offset Offset into the vertex buffer
      */
     void bindAttributePointer(const char *variable, int size, int stride, int offset);
+    
+    /**
+     * Binds a vertex attribute location to a shader. The shader must be currently
+     * bound.
+     *
+     * @param index The index of the generic vertex attribute to be bound
+     * @param name The name of the vertex shader attribute variable to which index is to be bound.
+     */
+    void bindAttributeLocation(int index, const char *name);
+    
+    /**
+     * Set uniform value. The variable is set based on the currently bound shader.
+     *
+     * @param name Variable name
+     * @param size Length of the values array (between 1 and 4)
+     * @param values Values to set to the variable
+     */
+    void setUniform(const char *name, int size, float *values);
 protected:
     GLuint compileShader(const char *source, GLenum type) const;
 private:
@@ -291,6 +316,15 @@ public:
     DVertexBuffer *createVertexBuffer(size_t size, unsigned char *data, 
                                       DVertexBuffer::UsageHint usage,
                                       DVertexBuffer::Target target);
+    
+    /**
+     * Draws the state of the given particle emitter.
+     *
+     * @param size Size of the vertex and color arrays
+     * @param vertices Array of packed vertex coordinates
+     * @param colors RGBA components for each vertex
+     */
+    void drawParticles(int size, float *vertices, float *colors);
 private:
     // A map of shader programs
     boost::unordered_map<GLuint, OpenGLShader*> m_shaders;
