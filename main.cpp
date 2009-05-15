@@ -159,6 +159,18 @@ public:
             m_robot->taunt();
             break;
           }
+          case 'q': {
+            // Raise weapon
+            if (!ev->isReleased())
+              m_robot->weaponUp();
+            break;
+          }
+          case 'e': {
+            // Lower weapon
+            if (!ev->isReleased())
+              m_robot->weaponDown();
+            break;
+          }
           
           case 9: {
             // Switch current weapon the weapon

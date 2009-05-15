@@ -253,6 +253,18 @@ void Robot::right(bool value)
     m_state.movement &= ~CharacterState::RIGHT;
 }
 
+void Robot::weaponUp()
+{
+  if (m_weapon)
+    m_weapon->up();
+}
+
+void Robot::weaponDown()
+{
+  if (m_weapon)
+    m_weapon->down();
+}
+
 btRigidBody *Robot::getBody() const
 {
   return m_body;

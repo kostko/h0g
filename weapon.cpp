@@ -22,7 +22,8 @@ Weapon::Weapon(Robot *robot, Scene *scene)
     m_body(0),
     m_motionState(0),
     m_robot(robot),
-    m_scene(scene)
+    m_scene(scene),
+    m_targetAngle(0.0)
 {
 }
 
@@ -35,12 +36,20 @@ Weapon::~Weapon()
 
 void Weapon::up()
 {
-  // TODO
+  if (m_targetAngle >= M_PI*0.25)
+    return;
+  
+  m_targetAngle += 0.1;
+  m_constraint->setLimit(m_targetAngle, m_targetAngle + 0.1);
 }
 
 void Weapon::down()
 {
-  // TODO
+  if (m_targetAngle - 0.1 < 0.0)
+    return;
+  
+  m_targetAngle -= 0.1;
+  m_constraint->setLimit(m_targetAngle, m_targetAngle + 0.1);
 }
 
 RocketLauncher::RocketLauncher(Robot *robot, btDynamicsWorld *world, Scene *scene, Storage *storage)
@@ -98,7 +107,7 @@ void RocketLauncher::equip()
   localB.setOrigin(btVector3(0.015, 0.2, 0.0));
   
   m_constraint = new btHingeConstraint(*m_robot->getBody(), *m_body, localA, localB);
-  m_constraint->setLimit(0.0, M_PI*2.0);
+  m_constraint->setLimit(0.0, M_PI);
   
   m_scene->attachNode(m_sceneNode);
   m_scene->update();

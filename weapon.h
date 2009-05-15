@@ -66,6 +66,7 @@ protected:
     btHingeConstraint *m_constraint;
     EntityMotionState *m_motionState;
     btVector3 m_targetVector;
+    float m_targetAngle;
     Robot *m_robot;
     IID::Scene *m_scene;
     btDynamicsWorld *m_world;

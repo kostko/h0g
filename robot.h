@@ -111,6 +111,16 @@ public:
     void right(bool value);
     
     /**
+     * Raise weapon target angle.
+     */
+    void weaponUp();
+    
+    /**
+     * Lower weapon target angle.
+     */
+    void weaponDown();
+    
+    /**
      * Returns the robot's body.
      */
     btRigidBody *getBody() const;
