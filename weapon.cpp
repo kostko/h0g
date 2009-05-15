@@ -83,10 +83,9 @@ RocketLauncher::RocketLauncher(Robot *robot, btDynamicsWorld *world, Scene *scen
   // Create motion state
   m_motionState = new EntityMotionState(m_sceneNode);
   
-  // We have to disable deactivation (so we can control the body when it stops)
+  // Construct the rigid body that holds the weapon
   btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
   m_body = new btRigidBody(cInfo);
-  m_body->setActivationState(DISABLE_DEACTIVATION);
   m_world = world;
 }
 
