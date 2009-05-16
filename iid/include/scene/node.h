@@ -217,6 +217,12 @@ public:
      * @param triangles An array holding all the vertices
      */
     virtual void batchStaticGeometry(btTriangleIndexVertexArray *triangles);
+    
+    /**
+     * Moves this node so it is attached directly to the root scene
+     * node, but preserving world position and orientation.
+     */
+    void separateNodeFromParent();
 protected:
     /**
      * Performs transformation updates.

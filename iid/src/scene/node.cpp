@@ -186,7 +186,7 @@ void SceneNode::update(bool updateChildren, bool parentHasChanged)
 
     // Update all registered player's position
     BOOST_FOREACH(PlayerPair player, m_players) {
-        player.second->setPosition( m_worldPosition.data() );
+      player.second->setPosition(m_worldPosition.data());
     }
     
     m_needParentUpdate = false;
@@ -264,12 +264,12 @@ void SceneNode::setStaticHint(bool value)
 
 Player *SceneNode::getSoundPlayer(const std::string &playerName)
 {
-    return m_players[playerName];
+  return m_players[playerName];
 }
 
 void SceneNode::registerSoundPlayer(const std::string &playerName, Player *player)
 {
-    m_players[playerName] = player;
+  m_players[playerName] = player;
 }
 
 void SceneNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
@@ -277,6 +277,24 @@ void SceneNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
   BOOST_FOREACH(Child child, m_children) {
     child.second->batchStaticGeometry(triangles);
   }
+}
+
+void SceneNode::separateNodeFromParent()
+{
+  if (!m_scene)
+    return;
+  
+  // First ensure that we have up-to-date world transformations
+  m_scene->update();
+  
+  // Now switch local position/orientation with world ones
+  m_localPosition = m_worldPosition;
+  m_localOrientation = m_worldOrientation;
+  
+  // Detach from parent and attach to root
+  Scene *scene = m_scene;
+  m_parent->detachChild(this);
+  scene->attachNode(this);
 }
 
 void SceneNode::render(StateBatcher *batcher)
