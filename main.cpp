@@ -179,6 +179,13 @@ public:
             break;
           }
           
+          case ' ': {
+            // Fire current weapon
+            if (!ev->isReleased())
+              m_robot->weaponFire();
+            break;
+          }
+          
           // Exit when escape is pressed
           case 27: {
               delete m_context;

@@ -15,14 +15,17 @@
 #include "storage/shader.h"
 #include "storage/sound.h"
 
+#include <boost/lexical_cast.hpp>
+
 using namespace IID;
 
-Weapon::Weapon(Robot *robot, Scene *scene)
+Weapon::Weapon(Robot *robot, Scene *scene, Storage *storage)
   : m_sceneNode(0),
     m_body(0),
     m_motionState(0),
     m_robot(robot),
     m_scene(scene),
+    m_storage(storage),
     m_targetAngle(0.0)
 {
 }
@@ -52,8 +55,93 @@ void Weapon::down()
   m_constraint->setLimit(m_targetAngle, m_targetAngle + 0.1);
 }
 
+/**
+ * This class represents a rocket missile fired by the rocket launcher.
+ */
+class Rocket {
+public:
+    /**
+     * Class constructor.
+     */
+    Rocket(RocketLauncher *launcher, btDynamicsWorld *world, Scene *scene, Storage *storage)
+    {
+      // Create a new missile node and body
+      CompositeMesh *missileMesh = storage->get<CompositeMesh>("/Models/rocket");
+      Shader *shader = storage->get<Shader>("/Shaders/material");
+      
+      Vector3f whs = launcher->m_sceneNode->getLocalBoundingBox().getHalfSize();
+      Vector3f hs = missileMesh->getAABB().getHalfSize();
+      
+      // Create the missile's scene node
+      m_sceneNode = scene->createNodeFromStorage(missileMesh, "rocket" + boost::lexical_cast<std::string>(m_rocketId++));
+      m_sceneNode->setShader(shader);
+      m_sceneNode->setPosition(0.0, -whs[1] - 0.010, 0.0);
+      m_sceneNode->setOrientation(
+        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+      );
+      launcher->m_sceneNode->attachChild(m_sceneNode);
+      m_sceneNode->separateNodeFromParent();
+      
+      // TODO Attach a particle emitter for missile's exhaust
+      /*m_exhaust = new ParticleEmitter("Exhaust", 50, m_sceneNode, scene);
+      m_exhaust->setTexture(storage->get<Texture>("/Textures/particle"));
+      m_exhaust->setPosition(0, 0, 0);
+      m_exhaust->setOrientation(
+        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+      );
+      m_exhaust->setGravity(0.0, 10.0, 0.0);
+      m_exhaust->setBounds(1.0, 1.0, 1.0);
+      
+      std::vector<Vector3f> colors;
+      colors.push_back(Vector3f(1, 0.6, 0));
+      colors.push_back(Vector3f(0.9, 0.55, 0));
+      colors.push_back(Vector3f(1, 0.65, 0));
+      m_exhaust->setColors(colors);
+      
+      m_exhaust->init();
+      m_sceneNode->attachChild(m_exhaust);*/
+      
+      // Create the missile's physical shape and body
+      m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
+      float mass = 1.0;
+      btVector3 localInertia(0, 0, 0);
+      m_shape->calculateLocalInertia(mass, localInertia);
+      
+      // Create motion state
+      m_motionState = new EntityMotionState(m_sceneNode);
+      
+      // Construct the rigid body that holds the weapon
+      btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
+      m_body = new btRigidBody(cInfo);
+      world->addRigidBody(m_body);
+    }
+    
+    /**
+     * Launches this rocket.
+     */
+    void launch(const btVector3 &vector)
+    {
+      m_body->applyCentralImpulse(vector * 10.0);
+      //m_exhaust->start();
+      //m_exhaust->show(true);
+    }
+private:
+    static int m_rocketId;
+    SceneNode *m_sceneNode;
+    ParticleEmitter *m_exhaust;
+    btCollisionShape *m_shape;
+    EntityMotionState *m_motionState;
+    btRigidBody *m_body;
+};
+
+int Rocket::m_rocketId = 0;
+
 RocketLauncher::RocketLauncher(Robot *robot, btDynamicsWorld *world, Scene *scene, Storage *storage)
-  : Weapon(robot, scene)
+  : Weapon(robot, scene, storage)
 {
   CompositeMesh *weaponMesh = storage->get<CompositeMesh>("/Models/rocketlauncher");
   Texture *texture = storage->get<Texture>("/Textures/rocketlauncher");
@@ -66,7 +154,7 @@ RocketLauncher::RocketLauncher(Robot *robot, btDynamicsWorld *world, Scene *scen
   // Create the weapon's scene node
   m_sceneNode = scene->createNodeFromStorage(weaponMesh);
   m_sceneNode->setShader(shader);
-  m_sceneNode->setTexture(texture); // 0.023
+  m_sceneNode->setTexture(texture);
   m_sceneNode->setPosition(-robotHalfSize[0] -hs[0] - 0.010, 0.0, 0.);
   m_sceneNode->setOrientation(
     AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
@@ -124,4 +212,12 @@ void RocketLauncher::unequip()
 
 void RocketLauncher::fire()
 {
+  // TODO handle reload time
+  
+  btTransform transform = m_body->getCenterOfMassTransform();
+  btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
+  targetVec.normalize();
+  
+  Rocket *rocket = new Rocket(this, m_world, m_scene, m_storage);
+  rocket->launch(targetVec);
 }

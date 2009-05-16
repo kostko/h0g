@@ -27,8 +27,9 @@ public:
      *
      * @param robot Robot that is assigned this weapon
      * @param scene A valid scene instance
+     * @param storage A valid storage instance
      */
-    Weapon(Robot *robot, IID::Scene *scene);
+    Weapon(Robot *robot, IID::Scene *scene, IID::Storage *storage);
     
     /**
      * Class destructor.
@@ -68,6 +69,7 @@ protected:
     float m_targetAngle;
     Robot *m_robot;
     IID::Scene *m_scene;
+    IID::Storage *m_storage;
     btDynamicsWorld *m_world;
 };
 
@@ -75,6 +77,7 @@ protected:
  * A rocketlauncher weapon.
  */
 class RocketLauncher : public Weapon {
+friend class Rocket;
 public:
     /**
      * Class constructor.

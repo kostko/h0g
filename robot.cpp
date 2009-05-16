@@ -81,8 +81,7 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
   m_sceneNode->getSoundPlayer("ThrustersPlayer")->setMode(Player::Looped);
   m_sceneNode->getSoundPlayer("ThrustersPlayer")->queue(m_sounds["Thrusters"]);
   
-  m_exhaust = new ParticleEmitter("Particle Emitter", 100, m_sceneNode, scene);
-  // emitter->setShader(m_storage->get<Shader>("/Shaders/particles"));
+  m_exhaust = new ParticleEmitter("Exhaust", 100, m_sceneNode, scene);
   m_exhaust->setTexture(storage->get<Texture>("/Textures/particle"));
   m_exhaust->setPosition(0, 0, -0.5);
   m_exhaust->setOrientation(
@@ -263,6 +262,12 @@ void Robot::weaponDown()
 {
   if (m_weapon)
     m_weapon->down();
+}
+
+void Robot::weaponFire()
+{
+  if (m_weapon)
+    m_weapon->fire();
 }
 
 btRigidBody *Robot::getBody() const

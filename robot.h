@@ -121,6 +121,11 @@ public:
     void weaponDown();
     
     /**
+     * Fires the weapon.
+     */
+    void weaponFire();
+    
+    /**
      * Returns the robot's body.
      */
     btRigidBody *getBody() const;
