@@ -35,6 +35,7 @@
 // Hog includes
 #include "motionstate.h"
 #include "robot.h"
+#include "crate.h"
 
 using namespace IID;
 
@@ -217,14 +218,8 @@ public:
         Vector3f(0., 1., 0.)
       );
       
-      Shader *shader = m_storage->get<Shader>("/Shaders/general");
-      Mesh *mesh = m_storage->get<Mesh>("/Models/spaceship");
-      Texture *texture = m_storage->get<Texture>("/Textures/spaceship");
-      
-      Shader *shader2 = m_storage->get<Shader>("/Shaders/material");
-      CompositeMesh *mesh2 = m_storage->get<CompositeMesh>("/Models/r2-d2");
-      
       // Level stuff
+      Shader *shader = m_storage->get<Shader>("/Shaders/general");
       CompositeMesh *level = m_storage->get<CompositeMesh>("/Levels/first");
       Texture *brick = m_storage->get<Texture>("/Textures/Brick/rough_dark");
       Texture *carpet = m_storage->get<Texture>("/Textures/Carpet/plush_forest");
@@ -264,6 +259,10 @@ public:
       m_context->getDynamicsWorld()->addRigidBody(body);
       body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
       body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+      
+      // Create some crates
+      new Crate(Vector3f(1.0697, -1.475, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
+      new Crate(Vector3f(1.0697, -0.725, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
       
       // Create the robot
       m_robot = new Robot(m_context->getDynamicsWorld(), m_scene, m_storage);

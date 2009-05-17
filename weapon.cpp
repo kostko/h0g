@@ -121,6 +121,14 @@ public:
     }
     
     /**
+     * Class destructor.
+     */
+    ~Rocket()
+    {
+      // TODO
+    }
+    
+    /**
      * Launches this rocket.
      */
     void launch(const btVector3 &vector)

@@ -46,6 +46,7 @@ main.cpp
 motionstate.cpp
 robot.cpp
 weapon.cpp
+crate.cpp
 )
 
 add_executable(hog ${hog_src})
