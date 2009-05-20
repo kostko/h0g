@@ -437,6 +437,7 @@ void OpenGLDriver::init()
   glClearColor(0, 0, 0, 0);
   glClearDepth(1);
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
   glDepthFunc(GL_LEQUAL);
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
   
