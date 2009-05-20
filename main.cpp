@@ -9,6 +9,7 @@
 // Storage
 #include "storage/storage.h"
 #include "storage/mesh.h"
+#include "storage/material.h"
 #include "storage/compositemesh.h"
 #include "storage/texture.h"
 #include "storage/shader.h"
@@ -36,6 +37,8 @@
 #include "motionstate.h"
 #include "robot.h"
 #include "crate.h"
+#include "toad.h"
+#include "ai.h"
 
 using namespace IID;
 
@@ -210,11 +213,10 @@ public:
       m_camera = new Camera(m_scene);
       m_camera->setListener(new OpenALListener());
       m_scene->setCamera(m_camera);
-      // FIXME this camera position is hacky:-)
-      float x = -4.25;
+
       m_camera->lookAt(
-        Vector3f(0., 0., x),
-        Vector3f(-1., 0., x - 4.),
+        Vector3f(-14., 0., 14.),
+        Vector3f(-11., 0., 11.),
         Vector3f(0., 1., 0.)
       );
       
@@ -264,8 +266,18 @@ public:
       new Crate(Vector3f(1.0697, -1.475, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
       new Crate(Vector3f(1.0697, -0.725, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
       
+      // AI setup
+      // FIXME proper width & height
+      m_ai = new AIController(100.0, 100.0);
+      
       // Create the robot
-      m_robot = new Robot(m_context->getDynamicsWorld(), m_scene, m_storage);
+      m_robot = new Robot(m_context->getDynamicsWorld(), m_scene, m_storage, m_ai);
+      
+      // Create some enemies
+      new Toad(Vector3f(6.9, -0.55, -14.38), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
+      new Toad(Vector3f(10.4, -0.55, -13.42), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
+      new Toad(Vector3f(12.44, -0.55, -8.981), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
+      new Toad(Vector3f(14.89, -0.55, -7.0), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
     }
     
     /**
@@ -288,6 +300,9 @@ private:
     // Phsyics
     btTriangleIndexVertexArray *m_staticGeometry;
     btBvhTriangleMeshShape *m_staticShape;
+    
+    // AI
+    AIController *m_ai;
 };
 
 int main()

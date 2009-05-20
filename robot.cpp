@@ -7,6 +7,7 @@
 #include "robot.h"
 #include "motionstate.h"
 #include "weapon.h"
+#include "ai.h"
 
 // Storage
 #include "storage/mesh.h"
@@ -20,9 +21,10 @@
 
 using namespace IID;
 
-Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
+Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage, AIController *ai)
   : m_weaponIdx(0),
-    m_weapon(0)
+    m_weapon(0),
+    m_ai(ai)
 {
   CompositeMesh *robotMesh = storage->get<CompositeMesh>("/Models/r2-d2");
   Shader *shader = storage->get<Shader>("/Shaders/material");
@@ -30,7 +32,7 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
   // Create the robot's scene node
   m_sceneNode = scene->createNodeFromStorage(robotMesh);
   m_sceneNode->setShader(shader);
-  m_sceneNode->setPosition(-1., 0., -8.25);
+  m_sceneNode->setPosition(-10.32, 0., 10.4);
   m_sceneNode->setOrientation(
     AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
     AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
@@ -100,6 +102,10 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage)
   
   m_exhaust->init();
   m_sceneNode->attachChild(m_exhaust);
+  
+  // AI setup
+  m_mapBody = new MapBody(m_sceneNode, MapBody::Dynamic);
+ // m_ai->addMapBody(m_mapBody);
 }
 
 void Robot::updateAction(btCollisionWorld *world, btScalar dt)
@@ -140,6 +146,8 @@ void Robot::updateAction(btCollisionWorld *world, btScalar dt)
         linearVelocity += (transform.getBasis() * btVector3(0.0, 0.0, 60.0)) * walkSpeed;
       }
     }
+    
+    std::cout << m_sceneNode->getWorldPosition() << std::endl;
   }
   
   if (!(m_state.movement & (CharacterState::FORWARD | CharacterState::BACKWARD)) && !m_state.hover) {
@@ -278,6 +286,11 @@ btRigidBody *Robot::getBody() const
 SceneNode *Robot::getSceneNode() const
 {
   return m_sceneNode;
+}
+
+MapBody *Robot::getMapBody() const
+{
+  return m_mapBody;
 }
 
 void Robot::taunt()

@@ -20,6 +20,9 @@
     <item name="particle" type="Texture">
         <load_file path="particle.png" loader="iid.ImageImporter" />
     </item>
+    <item name="toad" type="Texture">
+      <load_file path="toad.jpg" loader="iid.ImageImporter" />
+    </item>
     <item name="crate" type="Texture">
       <load_file path="crate.jpg" loader="iid.ImageImporter" />
     </item>
@@ -79,7 +82,11 @@
       <attribute name="Mesh.Materials" container="/Materials" />
       <load_file path="gravitygun.3ds" loader="iid.3DSMeshImporter" />
     </item>
-    
+    <item name="toad" type="CompositeMesh">
+      <attribute name="Mesh.ScaleFactor" x="0.125" y="0.125" z="0.125" />
+      <attribute name="Mesh.Materials" container="/Materials" />
+      <load_file path="toad.3ds" loader="iid.3DSMeshImporter" />
+    </item>
     <item name="crate" type="CompositeMesh">
       <attribute name="Mesh.ScaleFactor" x="0.015" y="0.015" z="0.015" />
       <attribute name="Mesh.Materials" container="/Materials" />

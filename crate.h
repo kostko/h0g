@@ -40,7 +40,7 @@ private:
     IID::SceneNode *m_sceneNode;
     btRigidBody *m_body;
     btCollisionShape *m_shape;
-    EntityMotionState *m_motionState;    
+    EntityMotionState *m_motionState;
 };
 
 #endif

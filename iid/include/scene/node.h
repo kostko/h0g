@@ -115,6 +115,13 @@ public:
     void setInheritOrientation(bool value);
     
     /**
+     * Returns the node's world coordinates.
+     *
+     * @return World coordinates vector
+     */
+    Vector3f getWorldPosition();
+    
+    /**
      * Mark this node and all children as out of date and in need of
      * transformation updates.
      *

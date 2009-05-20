@@ -23,6 +23,8 @@
 
 class EntityMotionState;
 class Weapon;
+class AIController;
+class MapBody;
 
 /**
  * This class describes active character state.
@@ -63,7 +65,7 @@ public:
     /**
      * Class constructor.
      */
-    Robot(btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage);
+    Robot(btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage, AIController *ai);
     
     /**
      * This method gets called on every step of the simulation and is responsible for
@@ -136,6 +138,11 @@ public:
     IID::SceneNode *getSceneNode() const;
     
     /**
+     * Returns the robot's map body object.
+     */
+    MapBody *getMapBody() const;
+    
+    /**
      * Produce taunting sound.
      */
     void taunt();
@@ -173,6 +180,10 @@ private:
     
     // Exhaust
     IID::ParticleEmitter *m_exhaust;
+    
+    // AI stuff
+    AIController *m_ai;
+    MapBody *m_mapBody;
 };
 
 #endif

@@ -125,6 +125,11 @@ void SceneNode::setOrientation(Quaternionf orientation)
   needUpdate();
 }
 
+Vector3f SceneNode::getWorldPosition()
+{
+  return m_worldPosition;
+}
+
 void SceneNode::needUpdate(bool updateParent)
 {
   m_needParentUpdate = true;

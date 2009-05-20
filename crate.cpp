@@ -47,7 +47,7 @@ Crate::Crate(const Vector3f &pos, btDynamicsWorld *world, IID::Scene *scene, IID
   // Create motion state
   m_motionState = new EntityMotionState(m_sceneNode);
   
-  // Construct the rigid body that holds the weapon
+  // Construct the rigid body that holds the crate
   btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
   m_body = new btRigidBody(cInfo);
   world->addRigidBody(m_body);
