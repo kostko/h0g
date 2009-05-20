@@ -76,8 +76,8 @@ void AIController::removeMapBody(MapBody *body)
 
 Vector2i AIController::convert(float x, float y)
 {
-  int i = floor(x / GRID_WIDTH);
-  int j = floor(y / GRID_HEIGHT);
+  int i = (int)floor(x / GRID_WIDTH);
+  int j = (int)floor(y / GRID_HEIGHT);
   
   // Check for proper bounds
   if ( i >= GRID_WIDTH || j >= GRID_HEIGHT )
