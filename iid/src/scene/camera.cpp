@@ -183,7 +183,7 @@ void Camera::setLag(int lag)
   m_lag = lag;
 }
 
-void Camera::setZoom(Vector3f zoom)
+void Camera::setZoom(const Vector3f &zoom)
 {
   m_zoom = zoom;
 }

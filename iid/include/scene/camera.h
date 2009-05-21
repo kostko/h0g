@@ -136,7 +136,7 @@ public:
      *
      * @param zoom The zoom vector
      */
-    void setZoom(Vector3f zoom);
+    void setZoom(const Vector3f &zoom);
     
     /**
      * Set lag. The minimum number of points in the trajectory queue.
