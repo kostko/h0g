@@ -150,7 +150,7 @@ public:
      * 
      * @param trajectoryPoint Vector which is appended to the trajectory queu
      */
-    void appendTrajectoryPoint(Vector3f trajectoryPoint);
+    void appendTrajectoryPoint(const Vector3f &trajectoryPoint);
     
     /**
      * Make the camera look at the next point in the trajectory queue.

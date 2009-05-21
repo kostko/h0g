@@ -188,7 +188,7 @@ void Camera::setZoom(Vector3f zoom)
   m_zoom = zoom;
 }
 
-void Camera::appendTrajectoryPoint(Vector3f trajectoryPoint)
+void Camera::appendTrajectoryPoint(const Vector3f &trajectoryPoint)
 {
   m_trajectory.push(trajectoryPoint);
 }
