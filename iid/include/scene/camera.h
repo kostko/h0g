@@ -10,6 +10,8 @@
 #include "globals.h"
 #include "scene/aabb.h"
 
+#include <queue>
+
 namespace IID {
 
 class Scene;
@@ -129,6 +131,31 @@ public:
      */
     Listener *getListener();
     
+    /**
+     * Set the zoom vector.
+     *
+     * @param zoom The zoom vector
+     */
+    void setZoom(Vector3f zoom);
+    
+    /**
+     * Set lag. The minimum number of points in the trajectory queue.
+     *
+     * @param lag The number of updates the camera lags behind
+     */
+    void setLag(int lag);
+    
+    /**
+     * Appends the given vector to the camera's trajectory.
+     * 
+     * @param trajectoryPoint Vector which is appended to the trajectory queu
+     */
+    void appendTrajectoryPoint(Vector3f trajectoryPoint);
+    
+    /**
+     * Make the camera look at the next point in the trajectory queue.
+     */
+    void nextTrajectoryPoint();
 private:
     // Scene instance
     Scene *m_scene;
@@ -142,12 +169,21 @@ private:
     Vector3f m_up;
     Transform3f m_viewTransform;
     
+    // The vector which is added to the current trajectory point.
+    Vector3f m_zoom;
+    
+    // Number of updates the camera lags behind
+    int m_lag;
+    
     // Our frustum planes
     Plane m_planes[6];
     
     // Camera description
     float m_nearDist, m_farDist, m_ratio, m_angle;
     float m_nearWidth, m_nearHeight, m_farWidth, m_farHeight;
+    
+    // Trajectory which the camera follows
+    std::queue<Vector3f> m_trajectory;
 };
 
 }

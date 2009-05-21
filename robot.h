@@ -65,7 +65,7 @@ public:
     /**
      * Class constructor.
      */
-    Robot(btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage, AIController *ai);
+    Robot(btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage, IID::Camera *camera, AIController *ai);
     
     /**
      * This method gets called on every step of the simulation and is responsible for
@@ -157,6 +157,9 @@ private:
     btRigidBody *m_body;
     EntityMotionState *m_motionState;
     btDynamicsWorld *m_world;
+    
+    // Player view
+    IID::Camera *m_camera;
     
     // Hover stuff
     float m_hoverDeltaTime;

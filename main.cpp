@@ -226,6 +226,8 @@ public:
       
       // Create a test scene
       m_camera = new Camera(m_scene);
+      m_camera->setLag(20);
+      m_camera->setZoom(Vector3f(-3.6, 2., 3.6));
       m_camera->setListener(new OpenALListener());
       m_scene->setCamera(m_camera);
 
@@ -286,7 +288,7 @@ public:
       m_ai = new AIController(100.0, 100.0);
       
       // Create the robot
-      m_robot = new Robot(m_context->getDynamicsWorld(), m_scene, m_storage, m_ai);
+      m_robot = new Robot(m_context->getDynamicsWorld(), m_scene, m_storage, m_camera, m_ai);
       
       // Create some enemies
       new Toad(Vector3f(6.9, -0.55, -14.38), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);

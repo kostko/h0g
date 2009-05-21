@@ -9,6 +9,9 @@
 #include "weapon.h"
 #include "ai.h"
 
+// IID includes
+#include "scene/camera.h"
+
 // Storage
 #include "storage/mesh.h"
 #include "storage/compositemesh.h"
@@ -21,9 +24,10 @@
 
 using namespace IID;
 
-Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage, AIController *ai)
+Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage, Camera *camera, AIController *ai)
   : m_weaponIdx(0),
     m_weapon(0),
+    m_camera(camera),
     m_ai(ai)
 {
   CompositeMesh *robotMesh = storage->get<CompositeMesh>("/Models/r2-d2");
@@ -164,6 +168,10 @@ void Robot::updateAction(btCollisionWorld *world, btScalar dt)
       m_body->setLinearVelocity(velocity);
     }
   }
+  
+  // Correct camera position
+  m_camera->appendTrajectoryPoint(m_sceneNode->getWorldPosition());
+  m_camera->nextTrajectoryPoint();
   
   // Update transformations
   m_body->getMotionState()->setWorldTransform(transform);

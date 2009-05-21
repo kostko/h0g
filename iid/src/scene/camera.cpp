@@ -13,7 +13,9 @@ namespace IID {
 
 Camera::Camera(Scene *scene)
   : m_scene(scene),
-    m_listener(0)
+    m_listener(0),
+    m_lag(20),
+    m_zoom(0.,0.,0.)
 {
 }
 
@@ -174,6 +176,36 @@ void Camera::setListener(Listener *listener)
 Listener *Camera::getListener()
 {
     return m_listener;
+}
+
+void Camera::setLag(int lag)
+{
+  m_lag = lag;
+}
+
+void Camera::setZoom(Vector3f zoom)
+{
+  m_zoom = zoom;
+}
+
+void Camera::appendTrajectoryPoint(Vector3f trajectoryPoint)
+{
+  m_trajectory.push(trajectoryPoint);
+}
+
+void Camera::nextTrajectoryPoint()
+{
+  // Check if the trajectory queue is sufficiently large
+  if (m_trajectory.size() > m_lag) {
+    Vector3f next = m_trajectory.front();
+    lookAt(
+      next + m_zoom,
+      next,
+      m_up
+    );
+    // Get rid of the currently set point
+    m_trajectory.pop();
+  }
 }
 
 }
