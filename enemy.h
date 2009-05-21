@@ -11,6 +11,7 @@
 #include "scene/scene.h"
 #include "scene/node.h"
 #include "storage/storage.h"
+#include "storage/sound.h"
 
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
@@ -91,6 +92,9 @@ protected:
     // AI stuff
     AIController *m_ai;
     MapBody *m_mapBody;
+    
+    // Sounds
+    boost::unordered_map<std::string, IID::Sound*> m_sounds;
 };
 
 #endif

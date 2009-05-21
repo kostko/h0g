@@ -138,10 +138,23 @@
         <load_file path="thrusters.wav" loader="iid.SoundImporter"/>
     </item>
     
+    
+    <item name="r2-thrusters" type="Sound">
+      <attribute name="Sound.Type" value="Effect"/>
+      <load_file path="thrusters.wav" loader="iid.SoundImporter"/>
+    </item>
+    
+    <item name="croak" type="Sound">
+      <attribute name="Sound.Type" value="Effect"/>
+      <load_file path="croak.wav" loader="iid.SoundImporter"/>
+    </item>
+    
     <!-- Example of background music -->
-    <!--<item name="bg-music" type="Sound">
+    <item name="zair" type="Sound">
         <attribute name="Sound.Type" value="Ambiental"/>
-        <load_file path="foo.wav" loader="iid.SoundImporter"/>
-    </item> -->
+        <load_file path="zair.wav" loader="iid.SoundImporter"/>
+        <!--       Song by Aleksandar Pejic         -->
+        <!-- http://www.youtube.com/user/bartillier -->
+    </item> 
   </container>
 </manifest>

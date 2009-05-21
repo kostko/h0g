@@ -65,6 +65,10 @@ private:
     // Number of updates between hops
     double m_hopInterval;
     double m_hopDeltaTime;
+    
+    // Number of updates between croaks
+    double m_croakInterval;
+    double m_croakDeltaTime;
 };
 
 #endif

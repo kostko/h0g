@@ -119,6 +119,9 @@ public:
       
       // Setup on contact added callback
       gContactAddedCallback = bulletContactAddedCallback;
+      
+      // Create a player object
+      m_soundPlayer = new OpenALPlayer();
     }
     
     ~Game()
@@ -188,6 +191,17 @@ public:
             // Fire current weapon
             if (!ev->isReleased())
               m_robot->weaponFire();
+            break;
+          }
+          
+          case 'm': {
+            // Toggle background music on/off
+            if (!ev->isReleased()) {
+              if (m_soundPlayer->isPlaying())
+                m_soundPlayer->stop();
+              else
+                m_soundPlayer->play();
+            }
             break;
           }
           
@@ -280,6 +294,11 @@ public:
       new Toad(Vector3f(12.44, -0.55, -8.981), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
       new Toad(Vector3f(14.89, -0.55, -7.0), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
       
+      // Init some background music
+      m_soundPlayer->setMode(Player::Looped);
+      m_soundPlayer->queue(m_storage->get<Sound>("/Sounds/zair"));
+      m_soundPlayer->play();
+      
       // Let there be light
       Light *light = new Light("light");
       light->setType(Light::PointLight);
@@ -308,6 +327,9 @@ private:
     Storage *m_storage;
     Camera *m_camera;
     EventDispatcher *m_eventDispatcher;
+    
+    // Ambiental player
+    Player *m_soundPlayer;
     
     // Actors
     Robot *m_robot;
