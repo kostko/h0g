@@ -146,8 +146,6 @@ void Robot::updateAction(btCollisionWorld *world, btScalar dt)
         linearVelocity += (transform.getBasis() * btVector3(0.0, 0.0, 60.0)) * walkSpeed;
       }
     }
-    
-    std::cout << m_sceneNode->getWorldPosition() << std::endl;
   }
   
   if (!(m_state.movement & (CharacterState::FORWARD | CharacterState::BACKWARD)) && !m_state.hover) {
