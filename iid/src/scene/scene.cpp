@@ -10,6 +10,7 @@
 #include "scene/viewtransform.h"
 #include "scene/octree.h"
 #include "scene/camera.h"
+#include "scene/lightmanager.h"
 #include "renderer/statebatcher.h"
 #include "storage/storage.h"
 #include "storage/mesh.h"
@@ -26,16 +27,19 @@ namespace IID {
 
 Scene::Scene(Context *context)
   : m_context(context),
-    m_root(new SceneNode("root", 0, this)),
+    m_root(new SceneNode("root", 0)),
     m_stateBatcher(new StateBatcher(this)),
     m_viewTransform(new ViewTransform()),
     m_octree(new Octree()),
-    m_camera(0)
+    m_camera(0),
+    m_lightManager(new LightManager())
 {
+  m_root->m_scene = this;
 }
 
 Scene::~Scene()
 {
+  delete m_lightManager;
   delete m_octree;
   delete m_root;
   delete m_viewTransform;

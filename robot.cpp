@@ -83,7 +83,7 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage, AIControlle
   m_sceneNode->getSoundPlayer("ThrustersPlayer")->setMode(Player::Looped);
   m_sceneNode->getSoundPlayer("ThrustersPlayer")->queue(m_sounds["Thrusters"]);
   
-  m_exhaust = new ParticleEmitter("Exhaust", 100, m_sceneNode, scene);
+  m_exhaust = new ParticleEmitter("Exhaust", 100);
   m_exhaust->setTexture(storage->get<Texture>("/Textures/particle"));
   m_exhaust->setPosition(0, 0, -0.5);
   m_exhaust->setOrientation(

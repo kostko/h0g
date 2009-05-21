@@ -7,6 +7,7 @@
 #include "scene/node.h"
 #include "scene/scene.h"
 #include "scene/octree.h"
+#include "scene/lightmanager.h"
 #include "drivers/openal.h"
 
 #include <boost/foreach.hpp>
@@ -16,10 +17,11 @@ namespace IID {
 typedef std::pair<std::string, SceneNode*> Child;
 typedef std::pair<std::string, Player*> PlayerPair;
 
-SceneNode::SceneNode(const std::string &name, SceneNode *parent, Scene *scene)
+SceneNode::SceneNode(const std::string &name, SceneNode *parent)
   : m_parent(parent),
     m_name(name),
-    m_scene(scene),
+    m_scene(0),
+    m_lightManager(0),
     m_worldTransform(Matrix4f::Identity()),
     m_localPosition(0, 0, 0),
     m_worldPosition(0, 0, 0),
@@ -56,6 +58,7 @@ void SceneNode::updateSceneFromParent()
   
   m_scene = m_parent->m_scene;
   m_octree = m_scene->getOctree();
+  m_lightManager = m_scene->getLightManager();
   
   BOOST_FOREACH(Child child, m_children) {
     child.second->updateSceneFromParent();
@@ -81,6 +84,7 @@ void SceneNode::clearConnectionToScene()
     m_octree->removeNode(this);
   
   m_scene = 0;
+  m_lightManager = 0;
   
   BOOST_FOREACH(Child child, m_children) {
     child.second->clearConnectionToScene();
@@ -186,13 +190,8 @@ void SceneNode::update(bool updateChildren, bool parentHasChanged)
     m_worldTransform.translate(m_worldPosition);
     m_worldTransform.rotate(m_worldOrientation);
     
-    // Update boundaries
-    updateBounds();
-
-    // Update all registered player's position
-    BOOST_FOREACH(PlayerPair player, m_players) {
-      player.second->setPosition(m_worldPosition.data());
-    }
+    // Perform node-specific updates
+    updateNodeSpecific();
     
     m_needParentUpdate = false;
     m_dirty = false;
@@ -214,13 +213,18 @@ void SceneNode::update(bool updateChildren, bool parentHasChanged)
   m_needChildUpdate = false;
 }
 
-void SceneNode::updateBounds()
+void SceneNode::updateNodeSpecific()
 {
   m_worldBounds = m_localBounds;
   m_worldBounds.transformAffine(m_worldTransform);
   
   // Update octree here
   m_octree->updateNode(this);
+  
+  // Update all registered player's position
+  BOOST_FOREACH(PlayerPair player, m_players) {
+    player.second->setPosition(m_worldPosition.data());
+  }
 }
 
 void SceneNode::setOctreeNode(OctreeNode *node)

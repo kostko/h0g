@@ -23,6 +23,11 @@ find_package(ALUT REQUIRED)
 #SET(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3")
 #SET(CMAKE_C_FLAGS_DISTRIBUTION "-O3")
 
+# Uncomment these lines for full debugging
+#SET(CMAKE_BUILD_TYPE debug)
+#SET(CMAKE_CXX_FLAGS_DEBUG "-g3")
+#SET(CMAKE_C_FLAGS_DEBUG "-g3")
+
 include_directories(
 	# External includes
 	${Boost_INCLUDE_DIRS}

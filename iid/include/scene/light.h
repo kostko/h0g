@@ -4,22 +4,33 @@
  * Copyright (C) 2009 by Jernej Kos <kostko@unimatrix-one.org>
  * Copyright (C) 2009 by Anze Vavpetic <anze.vavpetic@gmail.com>
  */
-#ifndef IID_SCENE_LIGHTNODE_H
-#define IID_SCENE_LIGHTNODE_H
+#ifndef IID_SCENE_LIGHT_H
+#define IID_SCENE_LIGHT_H
 
 #include "globals.h"
 #include "scene/node.h"
 
+#include <vector>
+
 namespace IID {
 
 class StateBatcher;
+class LightManager;
 
 /**
  * A light node is a node that represents a scene light.
  */
-class LightNode : public SceneNode {
+class Light : public SceneNode {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    
+    /**
+     * Valid light types.
+     */
+    enum Type {
+      PointLight,
+      SpotLight
+    };
     
     /**
      * Class constructor.
@@ -27,12 +38,24 @@ public:
      * @param name Node name
      * @param parent Parent node
      */
-    LightNode(const std::string &name, SceneNode *parent = 0);
+    Light(const std::string &name, SceneNode *parent = 0);
     
     /**
      * Class destructor.
      */
-    ~LightNode();
+    ~Light();
+    
+    /**
+     * Sets the light type.
+     *
+     * @param type Light type
+     */
+    void setType(Type type);
+    
+    /**
+     * Returns the light type.
+     */
+    Type type() const { return m_type; }
     
     /**
      * Configures light properties.
@@ -46,13 +69,23 @@ public:
      */
     void setProperties(const Vector4f &ambient, const Vector4f &diffuse, const Vector4f &specular,
                        float attConst, float attLin, float attQuad);
+protected:
+    /**
+     * Performs additional updates.
+     */
+    void updateNodeSpecific();
     
     /**
-     * Renders this node.
+     * Updates scene pointer from parent node.
      */
-    void render();
+    void updateSceneFromParent();
+    
+    /**
+     * Removes this node from the scene graph.
+     */
+    void clearConnectionToScene();
 private:
-    // Resources used for rendering this node
+    // Light properties
     Vector4f m_ambient;
     Vector4f m_diffuse;
     Vector4f m_specular;
@@ -60,9 +93,12 @@ private:
     float m_attLin;
     float m_attQuad;
     
-    // Pointer to state batcher to avoid lookups
-    StateBatcher *m_stateBatcher;
+    // Light type
+    Type m_type;
 };
+
+// A list of lights
+typedef std::vector<Light*> LightList;
 
 }
 

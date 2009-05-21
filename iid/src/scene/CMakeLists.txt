@@ -7,6 +7,7 @@ light.cpp
 octree.cpp
 camera.cpp
 particles.cpp
+lightmanager.cpp
 )
 
 add_library(scene STATIC ${scene_src})

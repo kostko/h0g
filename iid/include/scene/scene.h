@@ -18,6 +18,7 @@ class ViewTransform;
 class Item;
 class Octree;
 class Camera;
+class LightManager;
 
 /**
  * A structure used to describe scene perspective.
@@ -134,6 +135,11 @@ public:
      * Returns the currently active camera.
      */
     Camera *getCamera() const { return m_camera; }
+    
+    /**
+     * Returns the light manager instance.
+     */
+    LightManager *getLightManager() const { return m_lightManager; }
 private:
     Context *m_context;
     
@@ -154,6 +160,9 @@ private:
     
     // Current perspective
     ScenePerspective m_perspective;
+    
+    // Light manager
+    LightManager *m_lightManager;
 };
 
 }

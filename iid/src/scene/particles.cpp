@@ -18,8 +18,8 @@
 
 namespace IID {
 
-ParticleEmitter::ParticleEmitter(const std::string &name, int maxParticles, SceneNode *parent, Scene *scene)
-  : SceneNode(name, parent, scene),
+ParticleEmitter::ParticleEmitter(const std::string &name, int maxParticles, SceneNode *parent)
+  : SceneNode(name, parent),
     m_animate(false),
     m_render(false),
     m_maxParticles(maxParticles),

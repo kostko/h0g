@@ -24,6 +24,7 @@ class Texture;
 class Shader;
 class Material;
 class Player;
+class LightManager;
 
 /**
  * A scene node represents an object in the scene graph.
@@ -38,9 +39,8 @@ public:
      *
      * @param name Node name
      * @param parent Parent node
-     * @param scene Scene instance
      */
-    SceneNode(const std::string &name, SceneNode *parent = 0, Scene *scene = 0);
+    SceneNode(const std::string &name, SceneNode *parent = 0);
     
     /**
      * Class destructor.
@@ -137,7 +137,7 @@ public:
     /**
      * Returns this node's world transformation.
      */
-    Transform3f worldTransform() const { return m_worldTransform; }
+    const Transform3f &worldTransform() const { return m_worldTransform; }
     
     /**
      * Returns this node's world orientation.
@@ -245,19 +245,19 @@ protected:
     void requestUpdate(SceneNode *child, bool updateParent);
     
     /**
-     * Performs bound updates.
+     * Performs additional updates.
      */
-    void updateBounds();
+    virtual void updateNodeSpecific();
     
     /**
      * Updates scene pointer from parent node.
      */
-    void updateSceneFromParent();
+    virtual void updateSceneFromParent();
     
     /**
      * Removes this node from the scene graph.
      */
-    void clearConnectionToScene();
+    virtual void clearConnectionToScene();
 private:
     // Parent node and children list
     SceneNode *m_parent;
@@ -278,6 +278,7 @@ private:
 protected:
     // Scene associated with this node
     Scene *m_scene;
+    LightManager *m_lightManager;
     
     // Transformations
     Transform3f m_worldTransform;

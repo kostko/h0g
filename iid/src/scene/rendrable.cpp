@@ -94,15 +94,14 @@ void RendrableNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
   }
 }
 
+void RendrableNode::getLights(LightList &lights) const
+{
+  // TODO
+}
+
 void RendrableNode::render(StateBatcher *batcher)
 {
-  batcher->add(
-    m_shader,
-    m_mesh,
-    m_texture,
-    m_material,
-    m_worldTransform
-  );
+  batcher->addToQueue(this);
   
   // Also add a bounding box if set
   /*if (m_showBoundingBox) {

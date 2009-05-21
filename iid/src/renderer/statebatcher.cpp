@@ -26,37 +26,9 @@ StateBatcher::StateBatcher(Scene *scene)
 {
 }
 
-void StateBatcher::add(Shader *shader, Mesh *mesh, Texture *texture, Material *material, const Transform3f &transform)
+void StateBatcher::addToQueue(Rendrable *rendrable)
 {
-  // TODO to avoid constant allocations and frees, we could use a list of preallocated
-  //      render queue nodes and just use those
-  RenderQueueNode *n = new RenderQueueNode();
-  n->shader = shader;
-  n->mesh = mesh;
-  n->texture = texture;
-  n->material = material;
-  n->transform = transform;
-  
-  // Insert the node into the render queue
-  m_renderQueue.insert(n);
-}
-
-void StateBatcher::addLight(const Vector3f &position, const Vector4f &ambient, const Vector4f &diffuse,
-                            const Vector4f &specular, float attConst, float attLin, float attQuad)
-{
-  // TODO to avoid constant allocations and frees, we could use a list of preallocated
-  //      render queue nodes and just use those
-  RenderQueueLight *l = new RenderQueueLight();
-  l->position = position;
-  l->ambient = ambient;
-  l->diffuse = diffuse;
-  l->specular = specular;
-  l->attConst = attConst;
-  l->attLin = attLin;
-  l->attQuad = attQuad;
-  
-  // Insert the light into lights list
-  m_lights.push_back(l);
+  m_renderQueue.insert(rendrable);
 }
 
 void StateBatcher::addParticleEmitter(Shader *shader, Texture *texture, int size, float *vertices, float *colors,
@@ -81,71 +53,54 @@ void StateBatcher::render()
   Material *currentMaterial = 0;
   Mesh *currentMesh = 0;
   Transform3f viewTransform = m_scene->viewTransform()->transform();
-
-  // First render all the lights
-  int index = 0;
-  BOOST_FOREACH(RenderQueueLight *l, m_lights) {
-    Vector3f pos = viewTransform * l->position;
-    
-    m_driver->createLight(
-      index++,
-      pos.data(),
-      l->ambient.data(),
-      l->diffuse.data(),
-      l->specular.data(),
-      l->attConst,
-      l->attLin,
-      l->attQuad
-    );
-                            
-    delete l;  
-  }
   
-  // Then render everything else
-  BOOST_FOREACH(RenderQueueNode *n, m_renderQueue) {
+  // Render objects in the render queue
+  BOOST_FOREACH(Rendrable *n, m_renderQueue) {
     // Check if shader has changed
-    if (currentShader != n->shader) {
+    Shader *shader = n->getShader();
+    if (currentShader != shader) {
       if (currentShader)
         currentShader->deactivate();
       
-      n->shader->activate();
-      currentShader = n->shader;
+      shader->activate();
+      currentShader = shader;
     }
     
     // Check if texture has changed
-    if (currentTexture != n->texture) {
+    Texture *texture = n->getTexture();
+    if (currentTexture != texture) {
       if (currentTexture)
         currentTexture->unbind();
       
-      if (n->texture)
-        n->texture->bind();
-      currentTexture = n->texture;
+      if (texture)
+        texture->bind();
+      currentTexture = texture;
     }
     
     // Check if material has changed
-    if (currentMaterial != n->material) {
+    Material *material = n->getMaterial();
+    if (currentMaterial != material) {
       if (currentMaterial)
         currentMaterial->unbind();
       
-      if (n->material)
-        n->material->bind();
-      currentMaterial = n->material;
+      if (material)
+        material->bind();
+      currentMaterial = material;
     }
     
     // Check if mesh has changed
-    if (currentMesh != n->mesh) {
+    Mesh *mesh = n->getMesh();
+    if (currentMesh != mesh) {
       if (currentMesh)
         currentMesh->unbind();
       
-      n->mesh->bind();
-      currentMesh = n->mesh;
+      mesh->bind();
+      currentMesh = mesh;
     }
     
     // Apply the transformation and draw the thingie
-    m_driver->applyModelViewTransform((viewTransform * n->transform).data());
+    m_driver->applyModelViewTransform((viewTransform * n->worldTransform()).data());
     currentMesh->draw();
-    
-    delete n;
   }
   
   // Draw particle emitters
@@ -178,7 +133,6 @@ void StateBatcher::render()
   if (currentShader)
     currentShader->deactivate();
 
-  m_lights.clear();
   m_renderQueue.clear();
   m_emitters.clear();
 }

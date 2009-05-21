@@ -9,6 +9,7 @@
 
 #include "globals.h"
 #include "scene/node.h"
+#include "renderer/rendrable.h"
 
 class btIndexedMesh;
 
@@ -23,7 +24,7 @@ class StateBatcher;
 /**
  * A rendrable node is a scene node that can be rendered.
  */
-class RendrableNode : public SceneNode {
+class RendrableNode : public SceneNode, public Rendrable {
 public:
     /**
      * Class constructor.
@@ -67,6 +68,26 @@ public:
     void setMaterial(Material *material);
     
     /**
+     * Returns this rendrable's mesh.
+     */
+    Mesh *getMesh() const { return m_mesh; }
+    
+    /**
+     * Returns this rendrable's texture.
+     */
+    Texture *getTexture() const { return m_texture; }
+    
+    /**
+     * Returns this rendrable's shader.
+     */
+    Shader *getShader() const { return m_shader; }
+    
+    /**
+     * Returns this rendrable's material.
+     */
+    Material *getMaterial() const { return m_material; }
+    
+    /**
      * Sets status of displaying this object's bounding box.
      *
      * @param value AABB display status
@@ -81,6 +102,19 @@ public:
     void batchStaticGeometry(btTriangleIndexVertexArray *triangles);
     
     /**
+     * Returns this node's world transformation. This needs to be here because
+     * the Rendrable interface requires worldTransform to be implemented.
+     */
+    const Transform3f &worldTransform() const { return m_worldTransform; }
+    
+    /**
+     * Populates the light list of affecting lights.
+     *
+     * @param lights Destination light list
+     */
+    void getLights(LightList &lights) const;
+    
+    /**
      * Renders this node.
      *
      * @param batcher State batcher that holds the render queue
@@ -92,7 +126,7 @@ private:
     Texture *m_texture;
     Shader *m_shader;
     Material *m_material;
-    
+
     // Bounding box display
     bool m_showBoundingBox;
     

@@ -36,15 +36,13 @@ struct Particle {
  */
 class ParticleEmitter : public SceneNode {
 public:
-    
     /**
      * Class constructor.
      *
      * @param name Node name
      * @param parent Parent node
-     * @param scene Scene instance
      */
-    ParticleEmitter(const std::string &name, int maxParticles, SceneNode *parent = 0, Scene *scene = 0);
+    ParticleEmitter(const std::string &name, int maxParticles, SceneNode *parent = 0);
     
     /**
      * Class destructor.

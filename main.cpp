@@ -19,6 +19,7 @@
 #include "scene/scene.h"
 #include "scene/node.h"
 #include "scene/camera.h"
+#include "scene/light.h"
 
 // Events
 #include "events/dispatcher.h"
@@ -278,6 +279,20 @@ public:
       new Toad(Vector3f(10.4, -0.55, -13.42), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
       new Toad(Vector3f(12.44, -0.55, -8.981), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
       new Toad(Vector3f(14.89, -0.55, -7.0), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
+      
+      // Let there be light
+      Light *light = new Light("light");
+      light->setType(Light::PointLight);
+      light->setPosition(0., 0., -8.25);
+      light->setProperties(
+        Vector4f(0.2, 0.2, 0.2, 0.0),
+        Vector4f(0.8, 0.8, 0.8, 0.0),
+        Vector4f(1.0, 1.0, 1.0, 0.0),
+        1.0,
+        0.0,
+        0.0
+      );
+      m_scene->attachNode(light);
     }
     
     /**

@@ -8,6 +8,8 @@
 #define IID_RENDERER_STATEBATCHER_H
 
 #include "globals.h"
+#include "scene/light.h"
+#include "renderer/rendrable.h"
 
 #include <set>
 #include <list>
@@ -22,28 +24,7 @@ class Texture;
 class Material;
 class Driver;
 class ParticleEmitter;
-
-struct RenderQueueNode {
-  Shader *shader;
-  Mesh *mesh;
-  Texture *texture;
-  Material *material;
-  Transform3f transform;
-  
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};
-
-struct RenderQueueLight {
-  Vector3f position;
-  Vector4f ambient;
-  Vector4f diffuse;
-  Vector4f specular;
-  float attConst;
-  float attLin;
-  float attQuad;
-  
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};
+class Light;
 
 struct RenderQueueParticles {
     Shader *shader;
@@ -57,21 +38,33 @@ struct RenderQueueParticles {
 };
 
 struct RenderQueueCompare {
-  bool operator()(RenderQueueNode *n1, RenderQueueNode *n2)
+  bool operator()(Rendrable *n1, Rendrable *n2)
   {
-    if (n1->shader != n2->shader)
-      return n1->shader < n2->shader;
+    // Compare shaders first
+    Shader *shader1 = n1->getShader();
+    Shader *shader2 = n2->getShader();
+    if (shader1 != shader2)
+      return shader1 < shader2;
     
-    if (n1->texture != n2->texture)
-      return n1->texture < n2->texture;
+    // Compare textures second
+    Texture *texture1 = n1->getTexture();
+    Texture *texture2 = n2->getTexture();
+    if (texture1 != texture2)
+      return texture1 < texture2;
     
-    if (n1->material != n2->material)
-      return n1->material < n2->material;
+    // Compare materials third
+    Material *mat1 = n1->getMaterial();
+    Material *mat2 = n2->getMaterial();
+    if (mat1 != mat2)
+      return mat1 < mat2;
     
-    if (n1->mesh != n2->mesh)
-      return n1->mesh < n2->mesh;
+    // Compare meshes last
+    Mesh *mesh1 = n1->getMesh();
+    Mesh *mesh2 = n2->getMesh();
+    if (mesh1 != mesh2)
+      return mesh1 < mesh2;
     
-    return &n1->transform < &n2->transform;
+    return true;
   }
 };
 
@@ -89,29 +82,11 @@ public:
     StateBatcher(Scene *scene);
     
     /**
-     * Adds a render request.
+     * Adds a rendrable object to the render queue.
      *
-     * @param shader Shader instance
-     * @param mesh Mesh instance
-     * @param texture Texture instance
-     * @param material Material instance
-     * @param transform Model transformation
+     * @param rendrable A valid rendrable object
      */
-    void add(Shader *shader, Mesh *mesh, Texture *texture, Material *material, const Transform3f &transform);
-    
-    /**
-     * Adds a light to the render queue.
-     *
-     * @param position Light position
-     * @param ambient Ambient component
-     * @param diffuse Diffuse component
-     * @param specular Specular component
-     * @param attConst Constant attenuation
-     * @param attLin Linear attenuation
-     * @param attQuad Quadratic attenuation
-     */
-    void addLight(const Vector3f &position, const Vector4f &ambient, const Vector4f &diffuse,
-                  const Vector4f &specular, float attConst, float attLin, float attQuad);
+    void addToQueue(Rendrable *rendrable);
     
     /**
      * Adds a particle emitter to the render queue.
@@ -136,8 +111,7 @@ private:
     Context *m_context;
     
     // Render queue
-    std::list<RenderQueueLight*> m_lights;
-    std::set<RenderQueueNode*, RenderQueueCompare> m_renderQueue;
+    std::set<Rendrable*, RenderQueueCompare> m_renderQueue;
     std::list<RenderQueueParticles*> m_emitters;
     
     // Pointer to the driver to avoid lookups
