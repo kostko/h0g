@@ -132,18 +132,14 @@
         <attribute name="Sound.Type" value="Effect"/>
         <load_file path="R2D2a.wav" loader="iid.SoundImporter"/>
     </item>
+    
     <!-- R2's thrusters -->
-    <item name="r2-thrusters" type="Sound">
-        <attribute name="Sound.Type" value="Effect"/>
-        <load_file path="thrusters.wav" loader="iid.SoundImporter"/>
-    </item>
-    
-    
     <item name="r2-thrusters" type="Sound">
       <attribute name="Sound.Type" value="Effect"/>
       <load_file path="thrusters.wav" loader="iid.SoundImporter"/>
     </item>
     
+    <!-- Frog croak -->
     <item name="croak" type="Sound">
       <attribute name="Sound.Type" value="Effect"/>
       <load_file path="croak.wav" loader="iid.SoundImporter"/>
