@@ -129,7 +129,7 @@ void SceneNode::setOrientation(Quaternionf orientation)
   needUpdate();
 }
 
-Vector3f SceneNode::getWorldPosition()
+Vector3f SceneNode::getWorldPosition() const
 {
   return m_worldPosition;
 }

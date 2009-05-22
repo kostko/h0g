@@ -544,17 +544,77 @@ void OpenGLDriver::applyMaterial(const float *ambient, const float *diffuse, con
   glMaterialfv(GL_FRONT, GL_EMISSION, emission);
 }
 
-void OpenGLDriver::createLight(int index, const float *position, const float *ambient,
-                               const float *diffuse, const float *specular, float attConst,
-                               float attLin, float attQuad) const
+void OpenGLDriver::setAmbientLight(float r, float g, float b) const
 {
-  glLightfv(GL_LIGHT0 + index, GL_POSITION, position);
-  glLightfv(GL_LIGHT0 + index, GL_AMBIENT, ambient);
-  glLightfv(GL_LIGHT0 + index, GL_DIFFUSE, diffuse);
-  glLightfv(GL_LIGHT0 + index, GL_SPECULAR, specular);
-  glLightf(GL_LIGHT0 + index, GL_CONSTANT_ATTENUATION, attConst);
-  glLightf(GL_LIGHT0 + index, GL_LINEAR_ATTENUATION, attLin);
-  glLightf(GL_LIGHT0 + index, GL_QUADRATIC_ATTENUATION, attQuad);
+  GLfloat ambient[] = {r, g, b, 1.0};
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
+}
+
+void OpenGLDriver::setupLights(const LightList &lights, unsigned short limit)
+{
+  LightList::const_iterator i, iend;
+  iend = lights.end();
+  unsigned short num = 0;
+  
+  // Configure lights
+  for (i = lights.begin(); i != iend && num < limit; ++i, ++num) {
+    setupGLLight(num, *i);
+    m_lights[num] = *i;
+  }
+  
+  // Disable extra lights
+  for (; num < m_currentLights; num++) {
+    setupGLLight(num, 0);
+    m_lights[num] = 0;
+  }
+  
+  m_currentLights = std::min(limit, (unsigned short) lights.size());
+}
+
+void OpenGLDriver::setupGLLight(unsigned short index, Light *light)
+{
+  GLenum glIndex = GL_LIGHT0 + index;
+  
+  if (!light) {
+    glDisable(glIndex);
+  } else {
+    // TODO handle splotlights
+    glLightf(glIndex, GL_SPOT_CUTOFF, 180.0);
+    
+    // Colors
+    Vector3f color = light->getDiffuseColor();
+    GLfloat c[4] = {color[0], color[1], color[2], 1.0};
+    glLightfv(glIndex, GL_DIFFUSE, c);
+    
+    color = light->getSpecularColor();
+    c[0] = color[0];
+    c[1] = color[1];
+    c[2] = color[2];
+    glLightfv(glIndex, GL_SPECULAR, c);
+    
+    // Disable ambient light
+    c[0] = 0;
+    c[1] = 0;
+    c[2] = 0;
+    glLightfv(glIndex, GL_AMBIENT, c);
+    
+    // Setup position and direction
+    setupGLLightPositionDirection(glIndex, light);
+    
+    // Setup attenuation
+    glLightf(glIndex, GL_CONSTANT_ATTENUATION, light->getConstantAttenuation());
+    glLightf(glIndex, GL_LINEAR_ATTENUATION, light->getLinearAttenuation());
+    glLightf(glIndex, GL_QUADRATIC_ATTENUATION, light->getQuadraticAttenuation());
+    
+    glEnable(glIndex);
+  }
+}
+
+void OpenGLDriver::setupGLLightPositionDirection(GLenum index, Light *light)
+{
+  glLightfv(index, GL_POSITION, light->getWorldPosition().data());
+  
+  // TODO handle spotlights
 }
 
 DShader *OpenGLDriver::currentShader()

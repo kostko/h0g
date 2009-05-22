@@ -61,9 +61,9 @@ public:
     ~Camera();
     
     /**
-     * "Renders" the camera by applying a view transform.
+     * Sets up the scene's viewing transformation.
      */
-    void render();
+    void setupViewTransform();
     
     /**
      * Setup camera parameters.

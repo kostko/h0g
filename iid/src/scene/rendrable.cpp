@@ -6,6 +6,7 @@
  */
 #include "scene/rendrable.h"
 #include "scene/scene.h"
+#include "scene/lightmanager.h"
 #include "renderer/statebatcher.h"
 #include "storage/mesh.h"
 #include "storage/texture.h"
@@ -94,59 +95,21 @@ void RendrableNode::batchStaticGeometry(btTriangleIndexVertexArray *triangles)
   }
 }
 
-void RendrableNode::getLights(LightList &lights) const
+const LightList &RendrableNode::getLights() const
 {
-  // TODO
+  if (m_lightManager) {
+    // Check whether our light cache is up to date
+    if (m_lightManager->getLightVersionCounter() != m_lightVersionCounter) {
+      m_lightManager->computeAffectingLights(m_affectingLights, m_worldPosition, m_localBounds.getRadius());
+    }
+  }
+  
+  return m_affectingLights;
 }
 
 void RendrableNode::render(StateBatcher *batcher)
 {
   batcher->addToQueue(this);
-  
-  // Also add a bounding box if set
-  /*if (m_showBoundingBox) {
-    if (!m_bbMesh) {
-      // Generate a bounding box mesh
-      Vector3f corners[8];
-      m_worldBounds.getCorners(corners);
-      
-      float vertices[27] = {
-        corners[0][0], corners[0][1], corners[0][2],
-        corners[1][0], corners[1][1], corners[1][2],
-        corners[2][0], corners[2][1], corners[2][2],
-        corners[3][0], corners[3][1], corners[3][2],
-        corners[4][0], corners[4][1], corners[4][2],
-        corners[5][0], corners[5][1], corners[5][2],
-        corners[6][0], corners[6][1], corners[6][2],
-        corners[7][0], corners[7][1], corners[7][2]
-      };
-      
-      unsigned int indices[24] = {
-        0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6,
-        6, 7, 7, 4, 0, 6, 1, 5, 2, 4, 3, 7
-      };
-      
-      m_bbMesh = new Mesh(m_mesh->storage());
-      m_bbMesh->setMesh(
-        8,
-        24,
-        (unsigned char*) &vertices,
-        0,
-        0,
-        (unsigned char*) &indices,
-        Driver::Lines
-      );
-    }
-    
-    batcher->add(
-      m_mesh->storage()->get<Shader>("/Shaders/debug"),
-      m_bbMesh,
-      0,
-      0,
-      Transform3f(Matrix4f::Identity())
-      //m_worldTransform
-    );
-  }*/
 }
 
 }

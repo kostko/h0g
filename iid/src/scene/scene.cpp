@@ -27,12 +27,14 @@ namespace IID {
 
 Scene::Scene(Context *context)
   : m_context(context),
+    m_driver(context->driver()),
     m_root(new SceneNode("root", 0)),
     m_stateBatcher(new StateBatcher(this)),
     m_viewTransform(new ViewTransform()),
     m_octree(new Octree()),
     m_camera(0),
-    m_lightManager(new LightManager())
+    m_lightManager(new LightManager()),
+    m_ambientLight(0.2, 0.2, 0.2)
 {
   m_root->m_scene = this;
 }
@@ -61,8 +63,11 @@ void Scene::render()
   if (!m_camera)
     return;
   
-  // First render the camera to apply a proper view transform
-  m_camera->render();
+  // Setup the scene viewing transformation
+  m_camera->setupViewTransform();
+  
+  // Find lights affecting the current camera's frustum
+  m_lightManager->findLightsInFrustum(m_camera);
   
   // Then perform view frustum culling and add all nodes to the state
   // batcher render queue for rendering
@@ -83,6 +88,16 @@ void Scene::render()
     }
   }
 #endif
+
+  // Setup ambient light
+  m_driver->setAmbientLight(
+    m_ambientLight[0],
+    m_ambientLight[1],
+    m_ambientLight[2]
+  );
+  
+  // Perform the rendering
+  m_stateBatcher->render();
 }
 
 void Scene::attachNode(SceneNode *node)
@@ -172,6 +187,13 @@ void Scene::setPerspective(float fov, float ratio, float near, float far)
 const ScenePerspective &Scene::getPerspective() const
 {
   return m_perspective;
+}
+
+void Scene::setAmbientLight(float r, float g, float b)
+{
+  m_ambientLight[0] = r;
+  m_ambientLight[1] = g;
+  m_ambientLight[2] = b;
 }
 
 }

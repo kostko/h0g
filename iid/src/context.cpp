@@ -161,11 +161,8 @@ void Context::display()
     m_driver->applyModelViewTransform(m_scene->viewTransform()->transform().data());
     m_dynamicsWorld->debugDrawWorld();
   } else {
-    // Perform culling and fill the render queue
+    // Render the scene
     m_scene->render();
-    
-    // Actually render from the render queue
-    m_scene->stateBatcher()->render();
   }
   
   m_driver->swap();

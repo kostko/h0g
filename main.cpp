@@ -181,7 +181,7 @@ public:
           }
           
           case 9: {
-            // Switch current weapon the weapon
+            // Switch current weapon
             if (!ev->isReleased())
               m_robot->switchWeapon();
             break;
@@ -305,15 +305,12 @@ public:
       Light *light = new Light("light");
       light->setType(Light::PointLight);
       light->setPosition(0., 0., -8.25);
-      light->setProperties(
-        Vector4f(0.2, 0.2, 0.2, 0.0),
-        Vector4f(0.8, 0.8, 0.8, 0.0),
-        Vector4f(1.0, 1.0, 1.0, 0.0),
-        1.0,
-        0.0,
-        0.0
-      );
-      m_scene->attachNode(light);
+      light->setAttenuation(10.0, 1.0, 0.0, 0.0);
+      light->setDiffuseColor(0.8, 0.8, 0.8);
+      light->setSpecularColor(1.0, 0.2, 0.0);
+      // FIXME we need proper shaders before we can use lighting, uncomment this when ready
+      //m_scene->attachNode(light);
+      m_scene->setAmbientLight(0.2, 0.2, 0.2);
     }
     
     /**

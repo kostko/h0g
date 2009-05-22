@@ -9,6 +9,8 @@
 
 #include <string>
 
+#include "scene/light.h"
+
 class btIDebugDraw;
 
 namespace IID {
@@ -329,20 +331,21 @@ public:
                                const float *emission) const = 0;
     
     /**
-     * Creates a light.
+     * Sets the ambient light.
      *
-     * @param index Light index
-     * @param position Light position vector
-     * @param ambient Ambient component
-     * @param diffuse Diffuse component
-     * @param specular Specular component
-     * @param attConst Constant attenuation
-     * @param attLin Linear attenuation
-     * @param attQuad Quadratic attenuation
+     * @param r Red component
+     * @param g Green component
+     * @param b Blue component
      */
-    virtual void createLight(int index, const float *position, const float *ambient,
-                             const float *diffuse, const float *specular, float attConst,
-                             float attLin, float attQuad) const = 0;
+    virtual void setAmbientLight(float r, float g, float b) const = 0;
+    
+    /**
+     * Sets up the lights.
+     *
+     * @param lights A list of lights
+     * @param limit Number of lights to use
+     */
+    virtual void setupLights(const LightList &lights, unsigned short limit) = 0;
     
     /**
      * Returns the currently active shader or NULL if there is no such shader.

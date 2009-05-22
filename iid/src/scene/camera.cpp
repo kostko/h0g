@@ -102,7 +102,7 @@ void Camera::rotate(float x, float y, float z)
   lookAt(m_eye, rot * (m_center - m_eye) + m_eye, rot * m_up);
 }
 
-void Camera::render()
+void Camera::setupViewTransform()
 {
   // Just use the previously cached transformation
   m_scene->viewTransform()->setTransform(m_viewTransform);

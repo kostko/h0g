@@ -19,6 +19,7 @@ class Item;
 class Octree;
 class Camera;
 class LightManager;
+class Driver;
 
 /**
  * A structure used to describe scene perspective.
@@ -127,6 +128,15 @@ public:
     void setPerspective(float fov, float ratio, float near, float far);
     
     /**
+     * Sets ambient light color.
+     *
+     * @param r Red component
+     * @param g Green component
+     * @param b Blue component
+     */
+    void setAmbientLight(float r, float g, float b);
+    
+    /**
      * Returns current perspective properties.
      */
     const ScenePerspective &getPerspective() const;
@@ -142,6 +152,7 @@ public:
     LightManager *getLightManager() const { return m_lightManager; }
 private:
     Context *m_context;
+    Driver *m_driver;
     
     // Scene view transformation
     ViewTransform *m_viewTransform;
@@ -163,6 +174,7 @@ private:
     
     // Light manager
     LightManager *m_lightManager;
+    Vector3f m_ambientLight;
 };
 
 }

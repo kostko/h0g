@@ -119,7 +119,7 @@ public:
      *
      * @return World coordinates vector
      */
-    Vector3f getWorldPosition();
+    Vector3f getWorldPosition() const;
     
     /**
      * Mark this node and all children as out of date and in need of

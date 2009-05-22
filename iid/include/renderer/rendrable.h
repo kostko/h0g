@@ -56,11 +56,9 @@ public:
     virtual const Transform3f &worldTransform() const = 0;
     
     /**
-     * Populates the light list of affecting lights.
-     *
-     * @param lights Destination light list
+     * Returns the light list of affecting lights.
      */
-    virtual void getLights(LightList &lights) const = 0;
+    virtual const LightList &getLights() const = 0;
 };
 
 }

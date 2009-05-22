@@ -98,6 +98,10 @@ void StateBatcher::render()
       currentMesh = mesh;
     }
     
+    // Apply lighting
+    m_driver->applyModelViewTransform(viewTransform.data());
+    m_driver->setupLights(n->getLights(), 3);
+    
     // Apply the transformation and draw the thingie
     m_driver->applyModelViewTransform((viewTransform * n->worldTransform()).data());
     currentMesh->draw();

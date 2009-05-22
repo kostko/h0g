@@ -108,11 +108,9 @@ public:
     const Transform3f &worldTransform() const { return m_worldTransform; }
     
     /**
-     * Populates the light list of affecting lights.
-     *
-     * @param lights Destination light list
+     * Returns the light list of affecting lights.
      */
-    void getLights(LightList &lights) const;
+    const LightList &getLights() const;
     
     /**
      * Renders this node.
@@ -132,6 +130,10 @@ private:
     
     // Indexed mesh for static geometry batching
     btIndexedMesh *m_staticGeomMesh;
+    
+    // Lighting
+    unsigned long m_lightVersionCounter;
+    mutable LightList m_affectingLights;
 };
 
 }

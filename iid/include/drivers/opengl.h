@@ -267,20 +267,21 @@ public:
                        const float *emission) const;
     
     /**
-     * Creates a light.
+     * Sets the ambient light.
      *
-     * @param index Light index
-     * @param position Light position vector
-     * @param ambient Ambient component
-     * @param diffuse Diffuse component
-     * @param specular Specular component
-     * @param attConst Constant attenuation
-     * @param attLin Linear attenuation
-     * @param attQuad Quadratic attenuation
+     * @param r Red component
+     * @param g Green component
+     * @param b Blue component
      */
-    void createLight(int index, const float *position, const float *ambient,
-                     const float *diffuse, const float *specular, float attConst,
-                     float attLin, float attQuad) const;
+    void setAmbientLight(float r, float g, float b) const;
+    
+    /**
+     * Sets up the lights.
+     *
+     * @param lights A list of lights
+     * @param limit Number of lights to use
+     */
+    void setupLights(const LightList &lights, unsigned short limit);
     
     /**
      * Returns the currently active shader or NULL if there is no such shader.
@@ -325,12 +326,26 @@ public:
      * @param colors RGBA components for each vertex
      */
     void drawParticles(int size, float *vertices, float *colors);
+protected:
+    /**
+     * A helper method for setting up OpenGL lights.
+     */
+    void setupGLLight(unsigned short index, Light *light);
+    
+    /**
+     * A helper method for setting up OpenGL light position and direction.
+     */
+    void setupGLLightPositionDirection(GLenum index, Light *light);
 private:
     // A map of shader programs
     boost::unordered_map<GLuint, OpenGLShader*> m_shaders;
     
     // Debug drawer for Bullet dynamics
     btIDebugDraw *m_debugDrawer;
+    
+    // Lighting slots
+    Light *m_lights[8];
+    unsigned short m_currentLights;
 };
 
 }

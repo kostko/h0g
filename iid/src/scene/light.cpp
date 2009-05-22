@@ -13,7 +13,8 @@ namespace IID {
 
 Light::Light(const std::string &name, SceneNode *parent)
   : SceneNode(name, parent),
-    m_type(PointLight)
+    m_type(PointLight),
+    m_visible(true)
 {
 }
 
@@ -21,20 +22,47 @@ Light::~Light()
 {
 }
 
+float Light::getSquaredDistanceTo(const Vector3f &point) const
+{
+  if (m_type == DirectionalLight) {
+    m_lastDistance = 0;
+  } else {
+    m_lastDistance = (point - m_worldPosition).squaredNorm();
+  }
+  
+  return m_lastDistance;
+}
+
 void Light::setType(Type type)
 {
   m_type = type;
 }
 
-void Light::setProperties(const Vector4f &ambient, const Vector4f &diffuse, const Vector4f &specular,
-                          float attConst, float attLin, float attQuad)
+void Light::setVisible(bool value)
 {
-  m_ambient = ambient;
-  m_diffuse = diffuse;
-  m_specular = specular;
-  m_attConst = attConst;
-  m_attLin = attLin;
-  m_attQuad = attQuad;
+  m_visible = value;
+}
+
+void Light::setAttenuation(float range, float constant, float linear, float quadratic)
+{
+  m_range = range;
+  m_attConst = constant;
+  m_attLin = linear;
+  m_attQuad = quadratic;
+}
+
+void Light::setDiffuseColor(float r, float g, float b)
+{
+  m_diffuse[0] = r;
+  m_diffuse[1] = g;
+  m_diffuse[2] = b;
+}
+
+void Light::setSpecularColor(float r, float g, float b)
+{
+  m_specular[0] = r;
+  m_specular[1] = g;
+  m_specular[2] = b;
 }
 
 void Light::updateNodeSpecific()

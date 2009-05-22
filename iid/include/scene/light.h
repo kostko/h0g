@@ -29,6 +29,7 @@ public:
      */
     enum Type {
       PointLight,
+      DirectionalLight,
       SpotLight
     };
     
@@ -55,20 +56,90 @@ public:
     /**
      * Returns the light type.
      */
-    Type type() const { return m_type; }
+    Type getType() const { return m_type; }
     
     /**
-     * Configures light properties.
+     * Sets this light's visibility.
      *
-     * @param ambient Ambient component
-     * @param diffuse Diffuse component
-     * @param specular Specular component
-     * @param attConst Constant attenuation
-     * @param attLin Linear attenuation
-     * @param attQuad Quadratic attenuation
+     * @param value True for visible, false for hidden
      */
-    void setProperties(const Vector4f &ambient, const Vector4f &diffuse, const Vector4f &specular,
-                       float attConst, float attLin, float attQuad);
+    void setVisible(bool value);
+    
+    /**
+     * Returns true if this light is visible.
+     */
+    bool isVisible() const { return m_visible; }
+    
+    /**
+     * Returns the squared distance between the light and the specified
+     * point.
+     *
+     * @param point A vector representing point coordinates
+     */
+    float getSquaredDistanceTo(const Vector3f &point) const;
+    
+    /**
+     * Returns the last computed distance.
+     */
+    float getLastSquaredDistance() const { return m_lastDistance; }
+    
+    /**
+     * Sets the light's diffuse color.
+     *
+     * @param r Red component
+     * @param g Green component
+     * @param b Blue component
+     */
+    void setDiffuseColor(float r, float g, float b);
+    
+    /**
+     * Returns the light's diffuse color.
+     */
+    Vector3f getDiffuseColor() const { return m_diffuse; }
+    
+    /**
+     * Sets the light's specular color.
+     *
+     * @param r Red component
+     * @param g Green component
+     * @param b Blue component
+     */
+    void setSpecularColor(float r, float g, float b);
+    
+    /**
+     * Returns the light's specular color.
+     */
+    Vector3f getSpecularColor() const { return m_specular; }
+    
+    /**
+     * Sets light's attenuation.
+     *
+     * @param range Attenuation range
+     * @param constant Constant attenuation
+     * @param linear Linear attenuation
+     * @param quadratic Quadratic attenuation
+     */
+    void setAttenuation(float range, float constant, float linear, float quadratic);
+    
+    /**
+     * Returns the light's constant attenuation factor.
+     */
+    float getConstantAttenuation() const { return m_attConst; }
+    
+    /**
+     * Returns the light's linear attenuation factor.
+     */
+    float getLinearAttenuation() const { return m_attLin; }
+    
+    /**
+     * Returns the light's quadratic attenuation factor.
+     */
+    float getQuadraticAttenuation() const { return m_attQuad; }
+    
+    /**
+     * Returns this light's attenuation range.
+     */
+    float getAttenuationRange() const { return m_range; }
 protected:
     /**
      * Performs additional updates.
@@ -86,15 +157,21 @@ protected:
     void clearConnectionToScene();
 private:
     // Light properties
-    Vector4f m_ambient;
-    Vector4f m_diffuse;
-    Vector4f m_specular;
+    Vector3f m_diffuse;
+    Vector3f m_specular;
     float m_attConst;
     float m_attLin;
     float m_attQuad;
+    float m_range;
+    
+    // Distance to last object
+    mutable float m_lastDistance;
     
     // Light type
     Type m_type;
+    
+    // Visibility
+    bool m_visible;
 };
 
 // A list of lights
