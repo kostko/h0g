@@ -22,6 +22,14 @@ class Entity {
 friend class TriggerManager;
 public:
     /**
+     * Trigger types.
+     */
+    enum TriggerType {
+      CollisionTrigger,
+      PickTrigger
+    };
+    
+    /**
      * Class constructor.
      *
      * @param context Engine context
@@ -73,8 +81,9 @@ protected:
      *
      * @param entity Entity that has collided with this one (NULL when
      *               collision is with the environment)
+     * @param type Trigger type
      */
-    virtual void trigger(Entity *entity) {};
+    virtual void trigger(Entity *entity, TriggerType type) {};
 private:
     Context *m_context;
     std::string m_type;

@@ -121,11 +121,16 @@ Robot::Robot(Context *context, Camera *camera, AIController *ai)
   setCollisionObject(m_body);
 }
 
-void Robot::trigger(Entity *entity)
+void Robot::trigger(Entity *entity, TriggerType type)
 {
-  if (entity->getType() == "toad") {
+  if (entity->getType() == "toad" && type == CollisionTrigger) {
     // TODO collision with a toad
     std::cout << "hello toady!" << std::endl;
+  }
+  
+  // Check if user clicked on us and produce taunting sound
+  if (entity->getType() == "player_character" && type == PickTrigger) {
+    taunt();
   }
 }
 

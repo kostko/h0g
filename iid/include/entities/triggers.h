@@ -12,18 +12,21 @@
 
 namespace IID {
 
+class Context;
 class Entity;
 
 /**
- * A trigger manager is responsible for dispatching collision
- * events to subscribed entities.
+ * A trigger manager is responsible for dispatching collision and
+ * pick events to subscribed entities.
  */
 class TriggerManager {
 public:
     /**
      * Class constructor.
+     *
+     * @param context Context instance
      */
-    TriggerManager();
+    TriggerManager(Context *context);
     
     /**
      * Dispatches collision events to entities.
@@ -32,6 +35,14 @@ public:
      * @param objectB Second collision object
      */
     void dispatchCollisionEvent(btCollisionObject *objectA, btCollisionObject *objectB);
+    
+    /**
+     * Dispatches pick events to entities.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     */
+    void dispatchPickEvent(int x, int y);
     
     /**
      * Registers an entity.
@@ -46,6 +57,19 @@ public:
      * @param entity Entity instance
      */
     void unregisterEntity(Entity *entity);
+    
+    /**
+     * Sets the entity that "owns" picking events.
+     */
+    void setPickOwner(Entity *entity);
+    
+    /**
+     * Returns the pick owning entity.
+     */
+    Entity *getPickOwner() const { return m_pickOwner; }
+private:
+    Context *m_context;
+    Entity *m_pickOwner;
 };
 
 }

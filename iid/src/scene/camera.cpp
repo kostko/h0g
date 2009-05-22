@@ -23,19 +23,21 @@ Camera::~Camera()
 {
 }
 
-void Camera::setCamInternals(float angle, float ratio, float nearDist, float farDist)
+void Camera::setCamInternals(float angle, float width, float height, float nearDist, float farDist)
 {
+  m_screenWidth = width;
+  m_screenHeight = height;
   m_angle = angle;
-  m_ratio = ratio;
+  m_ratio = width / height;
   m_nearDist = nearDist;
   m_farDist = farDist;
   
   // Recompute plane dimensions
   float tang = (float) std::tan(0.5 * M_PI * angle / 180.0);
   m_nearHeight = nearDist * tang;
-  m_nearWidth = m_nearHeight * ratio;
+  m_nearWidth = m_nearHeight * m_ratio;
   m_farHeight = farDist * tang;
-  m_farWidth = m_farHeight * ratio;
+  m_farWidth = m_farHeight * m_ratio;
 }
 
 void Camera::lookAt(const Vector3f &eye, const Vector3f &center, const Vector3f &up)
@@ -206,6 +208,33 @@ void Camera::nextTrajectoryPoint()
     // Get rid of the currently set point
     m_trajectory.pop();
   }
+}
+
+Vector3f Camera::rayTo(int x, int y)
+{
+  Vector3f rayFrom = m_eye;
+  Vector3f rayForward = (m_center - m_eye).normalized() * m_farDist;
+  Vector3f rightOffset;
+  Vector3f vertical = m_up;
+  Vector3f horizontal = rayForward.cross(vertical).normalized();
+  vertical = horizontal.cross(rayForward).normalized();
+  horizontal *= 2.0 * m_farHeight;
+  vertical *= 2.0 * m_farHeight;
+  
+  if (m_ratio < 1.0)
+    horizontal /= m_ratio;
+  else
+    vertical *= m_ratio;
+  
+  Vector3f rayToCenter = rayFrom + rayForward;
+  Vector3f dHor = horizontal * 1.0/m_screenWidth;
+  Vector3f dVert = vertical * 1.0/m_screenHeight;
+  
+  Vector3f rayToTarget = rayToCenter - 0.5 * horizontal + 0.5 * vertical;
+  rayToTarget += x * dHor;
+  rayToTarget -= y * dVert;
+  
+  return rayToTarget;
 }
 
 }

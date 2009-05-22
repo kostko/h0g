@@ -24,6 +24,10 @@
 // Events
 #include "events/dispatcher.h"
 #include "events/keyboard.h"
+#include "events/mouse.h"
+
+// Entities
+#include "entities/triggers.h"
 
 // Audio support
 #include "drivers/openal.h"
@@ -116,6 +120,7 @@ public:
       
       // Subscribe to events
       m_eventDispatcher->signalKeyboard.connect(boost::bind(&Game::keyboardEvent, this, _1));
+      m_eventDispatcher->signalMousePress.connect(boost::bind(&Game::mousePressEvent, this, _1));
       
       // Setup on contact added callback
       gContactAddedCallback = bulletContactAddedCallback;
@@ -128,6 +133,14 @@ public:
     {
       delete m_staticGeometry;
       delete m_robot;
+    }
+    
+    /**
+     * Mouse event handler.
+     */
+    void mousePressEvent(MousePressEvent *ev)
+    {
+      m_context->getTriggerManager()->dispatchPickEvent(ev->x(), ev->y());
     }
     
     /**
@@ -222,7 +235,7 @@ public:
     void prepare()
     {
       // Prepare the scene
-      m_scene->setPerspective(45., 1024. / 768., 0.1, 100.0);
+      m_scene->setPerspective(45., 1024., 768., 0.1, 100.0);
       
       // Create a test scene
       m_camera = new Camera(m_scene);
@@ -289,6 +302,7 @@ public:
       
       // Create the robot
       m_robot = new Robot(m_context, m_camera, m_ai);
+      m_context->getTriggerManager()->setPickOwner(m_robot);
       
       // Create some enemies
       new Toad(Vector3f(6.9, -0.55, -14.38), m_context, m_robot, m_ai);

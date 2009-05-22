@@ -482,6 +482,19 @@ static void __glutSpecialCallback(int key, int, int)
   gOpenGLDriver->m_dispatcher->keyboardEvent(true, rkey, false);
 }
 
+static void __glutMouseCallback(int button, int state, int x, int y)
+{
+  AbstractEventDispatcher::MouseButton rbutton;
+  switch (button) {
+    case GLUT_LEFT_BUTTON: rbutton = AbstractEventDispatcher::MouseLeft; break;
+    case GLUT_RIGHT_BUTTON: rbutton = AbstractEventDispatcher::MouseLeft; break;
+    default: return;
+  }
+  
+  if (state == GLUT_DOWN)
+    gOpenGLDriver->m_dispatcher->mousePressEvent(x, y, rbutton);
+}
+
 void OpenGLDriver::processEvents() const
 {
   // Setup event handlers if a dispatcher has been specified
@@ -490,6 +503,7 @@ void OpenGLDriver::processEvents() const
     glutKeyboardUpFunc(__glutKeyboardUpCallback);
     glutSpecialFunc(__glutSpecialCallback);
     glutSpecialUpFunc(__glutSpecialUpCallback);
+    glutMouseFunc(__glutMouseCallback);
   }
   
   // Enter the main loop

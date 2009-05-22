@@ -68,7 +68,7 @@ public:
     /**
      * Setup camera parameters.
      */
-    void setCamInternals(float angle, float ratio, float nearDist, float farDist);
+    void setCamInternals(float angle, float width, float height, float nearDist, float farDist);
     
     /**
      * Setup camera viewpoint.
@@ -148,7 +148,7 @@ public:
     /**
      * Appends the given vector to the camera's trajectory.
      * 
-     * @param trajectoryPoint Vector which is appended to the trajectory queu
+     * @param trajectoryPoint Vector which is appended to the trajectory queue
      */
     void appendTrajectoryPoint(const Vector3f &trajectoryPoint);
     
@@ -156,6 +156,20 @@ public:
      * Make the camera look at the next point in the trajectory queue.
      */
     void nextTrajectoryPoint();
+    
+    /**
+     * Returns a ray suitable for picking objects.
+     *
+     * @param x Screen X coordinate
+     * @param y Screen Y coordinate
+     * @return Ray vector
+     */
+    Vector3f rayTo(int x, int y);
+    
+    /**
+     * Returns camera eye position.
+     */
+    Vector3f getEyePosition() const { return m_eye; }
 private:
     // Scene instance
     Scene *m_scene;
@@ -181,6 +195,7 @@ private:
     // Camera description
     float m_nearDist, m_farDist, m_ratio, m_angle;
     float m_nearWidth, m_nearHeight, m_farWidth, m_farHeight;
+    float m_screenWidth, m_screenHeight;
     
     // Trajectory which the camera follows
     std::queue<Vector3f> m_trajectory;

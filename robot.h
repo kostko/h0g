@@ -158,8 +158,9 @@ protected:
      *
      * @param entity Entity that has collided with this one (NULL when
      *               collision is with the environment)
+     * @param type Trigger type
      */
-    void trigger(Entity *entity);
+    void trigger(Entity *entity, TriggerType type);
 private:
     IID::SceneNode *m_sceneNode;
     btCollisionShape *m_shape;

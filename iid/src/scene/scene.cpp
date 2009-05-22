@@ -155,27 +155,30 @@ void Scene::setCamera(Camera *camera)
   // Update camera configuration to match current perspective settings
   m_camera->setCamInternals(
     m_perspective.fov,
-    m_perspective.ratio,
+    m_perspective.width,
+    m_perspective.height,
     m_perspective.near,
     m_perspective.far
   );
 }
 
-void Scene::setPerspective(float fov, float ratio, float near, float far)
+void Scene::setPerspective(float fov, float width, float height, float near, float far)
 {
   m_perspective.fov = fov;
-  m_perspective.ratio = ratio;
+  m_perspective.width = width;
+  m_perspective.height = height;
   m_perspective.near = near;
   m_perspective.far = far;
   
   // If a camera is set, update it as well
   if (m_camera)
-    m_camera->setCamInternals(fov, ratio, near, far);
+    m_camera->setCamInternals(fov, width, height, near, far);
   
   // Update the projection matrix
   Matrix4f m;
   float f = 1. / std::tan(0.5 * M_PI * fov / 180.);
   float nfd = near - far;
+  float ratio = width/height;
   m << f / ratio, 0, 0,                  0,
        0,         f, 0,                  0,
        0,         0, (far + near) / nfd, (2 * far * near) / nfd,

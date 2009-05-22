@@ -26,7 +26,8 @@ class Driver;
  */
 struct ScenePerspective {
     float fov;
-    float ratio;
+    float width;
+    float height;
     float near;
     float far;
 };
@@ -121,11 +122,12 @@ public:
      * Sets scene perspective.
      *
      * @param fov Field of view angle
-     * @param ratio Viewport aspect ratio
+     * @param width Viewport width
+     * @param height Viewport height
      * @param near Distance from the viewer to the near clipping plane
      * @param far Distance from the viewer to the far clipping plane
      */
-    void setPerspective(float fov, float ratio, float near, float far);
+    void setPerspective(float fov, float width, float height, float near, float far);
     
     /**
      * Sets ambient light color.

@@ -6,10 +6,15 @@
  */
 #include "entities/triggers.h"
 #include "entities/entity.h"
+#include "scene/scene.h"
+#include "scene/camera.h"
+#include "context.h"
 
 namespace IID {
 
-TriggerManager::TriggerManager()
+TriggerManager::TriggerManager(Context *context)
+  : m_context(context),
+    m_pickOwner(0)
 {
 }
     
@@ -23,11 +28,38 @@ void TriggerManager::dispatchCollisionEvent(btCollisionObject *objectA, btCollis
     return;
   
   if (entityA && entityA->isEnabled() && (entityB || entityA->wantsEnvironmentCollisions())) {
-    entityA->trigger(entityB);
+    entityA->trigger(entityB, Entity::CollisionTrigger);
   }
   
   if (entityB && entityB->isEnabled() && (entityA || entityB->wantsEnvironmentCollisions())) {
-    entityB->trigger(entityA);
+    entityB->trigger(entityA, Entity::CollisionTrigger);
+  }
+}
+
+void TriggerManager::dispatchPickEvent(int x, int y)
+{
+  if (!m_pickOwner)
+    return;
+  
+  Camera *camera = m_context->scene()->getCamera();
+  
+  if (camera) {
+    Vector3f ray = camera->rayTo(x, y);
+    Vector3f eye = camera->getEyePosition();
+    btCollisionWorld *world = m_context->getDynamicsWorld();
+    btVector3 rayTo(ray.x(), ray.y(), ray.z());
+    btVector3 rayFrom(eye.x(), eye.y(), eye.z());
+    
+    btCollisionWorld::ClosestRayResultCallback rayCallback(rayFrom, rayTo);
+    world->rayTest(rayFrom, rayTo, rayCallback);
+    
+    if (rayCallback.hasHit()) {
+      Entity *entity = static_cast<Entity*>(rayCallback.m_collisionObject->getUserPointer());
+      
+      if (entity) {
+        entity->trigger(m_pickOwner, Entity::PickTrigger);
+      }
+    }
   }
 }
 
@@ -37,6 +69,11 @@ void TriggerManager::registerEntity(Entity *entity)
 
 void TriggerManager::unregisterEntity(Entity *entity)
 {
+}
+
+void TriggerManager::setPickOwner(Entity *entity)
+{
+  m_pickOwner = entity;
 }
 
 }

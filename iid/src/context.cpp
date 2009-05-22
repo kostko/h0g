@@ -72,7 +72,7 @@ Context::Context()
   m_driver->setEventDispatcher(m_eventDispatcher);
   
   // Initialize the trigger manager
-  m_triggerManager = new TriggerManager();
+  m_triggerManager = new TriggerManager(this);
   
   // Register basic item types into the storage subsystem
   registerBasicStorageTypes();

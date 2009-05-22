@@ -15,6 +15,7 @@ namespace IID {
 
 class Context;
 class KeyboardEvent;
+class MousePressEvent;
 
 class EventDispatcher : public AbstractEventDispatcher {
 public:
@@ -38,9 +39,19 @@ public:
      * @param up Has the key been released
      */
     void keyboardEvent(bool special, int key, bool up);
+    
+    /**
+     * Mouse press event handler.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param button Pressed button
+     */
+    void mousePressEvent(int x, int y, int button);
 public:
     // Signals
     boost::signal<void (KeyboardEvent*)> signalKeyboard;
+    boost::signal<void (MousePressEvent*)> signalMousePress;
 private:
     Context *m_context;
 };

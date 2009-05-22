@@ -29,6 +29,15 @@ public:
     };
     
     /**
+     * Valid mouse button identifiers.
+     */
+    enum MouseButton {
+      MouseLeft = 0,
+      MouseMiddle,
+      MouseRight
+    };
+    
+    /**
      * Keyboard event handler.
      *
      * @param special Set to true if a special key has been pressed/released
@@ -36,6 +45,15 @@ public:
      * @param up Has the key been released
      */
     virtual void keyboardEvent(bool special, int key, bool up) = 0;
+    
+    /**
+     * Mouse press event handler.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param button Pressed button
+     */
+    virtual void mousePressEvent(int x, int y, int button) = 0;
 };
 
 }
