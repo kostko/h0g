@@ -11,6 +11,7 @@
 #include "ai.h"
 
 // IID includes
+#include "context.h"
 #include "storage/mesh.h"
 #include "storage/compositemesh.h"
 #include "storage/texture.h"
@@ -21,15 +22,18 @@
 
 using namespace IID;
 
-Toad::Toad(const Vector3f &pos, btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage, 
-           Robot *target, AIController *ai)
-  : Enemy(world, scene, target, ai),
+Toad::Toad(const Vector3f &pos, IID::Context *context, Robot *target, AIController *ai)
+  : Enemy("toad", context, target, ai),
     m_damage(0),
     m_hopInterval(0.8 + rand()/(float)RAND_MAX),
     m_hopDeltaTime(0),
     m_croakInterval(2.0 + rand()/(float)RAND_MAX),
     m_croakDeltaTime(0)
 {
+  btDynamicsWorld *world = context->getDynamicsWorld();
+  Scene *scene = context->scene();
+  Storage *storage = context->storage();
+  
   CompositeMesh *frogMesh = storage->get<CompositeMesh>("/Models/toad");
   //Texture *frogTexture = storage->get<Texture>("/Textures/toad");
   Shader *shader = storage->get<Shader>("/Shaders/material");
@@ -74,6 +78,9 @@ Toad::Toad(const Vector3f &pos, btDynamicsWorld *world, IID::Scene *scene, IID::
   m_sounds["croak"] = storage->get<Sound>("/Sounds/croak");
   m_sceneNode->registerSoundPlayer("CroakPlayer", new OpenALPlayer());
   m_sceneNode->getSoundPlayer("CroakPlayer")->queue(m_sounds["croak"]);
+  
+  // Entity setup
+  setCollisionObject(m_body);
 }
 
 Toad::~Toad()

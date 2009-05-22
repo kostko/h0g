@@ -36,6 +36,9 @@
 // Events
 #include "events/dispatcher.h"
 
+// Entities
+#include "entities/triggers.h"
+
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 
@@ -68,6 +71,9 @@ Context::Context()
   m_eventDispatcher = new EventDispatcher(this);
   m_driver->setEventDispatcher(m_eventDispatcher);
   
+  // Initialize the trigger manager
+  m_triggerManager = new TriggerManager();
+  
   // Register basic item types into the storage subsystem
   registerBasicStorageTypes();
   
@@ -86,6 +92,7 @@ Context::Context()
 
 Context::~Context()
 {
+  delete m_triggerManager;
   delete m_soundContext;
   delete m_driver;
   delete m_eventDispatcher;
@@ -137,6 +144,17 @@ void Context::moveAndDisplay()
   
   // Step the world
   m_dynamicsWorld->stepSimulation(dt * 0.000001f, 7);
+  
+  // Handle collision triggers
+  int manifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
+  for (int i = 0; i < manifolds; i++) {
+    btPersistentManifold *manifold = m_dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+    btCollisionObject *objectA = static_cast<btCollisionObject*>(manifold->getBody0());
+    btCollisionObject *objectB = static_cast<btCollisionObject*>(manifold->getBody1());
+    
+    // Dispatch to trigger manager
+    m_triggerManager->dispatchCollisionEvent(objectA, objectB);
+  }
   
   // Render the scene
   display();

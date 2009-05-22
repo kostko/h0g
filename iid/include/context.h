@@ -25,6 +25,7 @@ class Driver;
 class Scene;
 class EventDispatcher;
 class SoundContext;
+class TriggerManager;
 
 /**
  * The Infinite Improbability Drive context object links all aspects of
@@ -83,6 +84,11 @@ public:
      * Returns the event dispatcher instance.
      */
     EventDispatcher *getEventDispatcher() const { return m_eventDispatcher; }
+    
+    /**
+     * Returns the trigger manager instance.
+     */
+    TriggerManager *getTriggerManager() const { return m_triggerManager; }
     
     /**
      * Sets debugging flag.
@@ -155,6 +161,9 @@ private:
     
     // Event dispatcher
     EventDispatcher *m_eventDispatcher;
+    
+    // Trigger manager
+    TriggerManager *m_triggerManager;
     
     // Debugging mode
     bool m_debug;

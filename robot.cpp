@@ -10,6 +10,7 @@
 #include "ai.h"
 
 // IID includes
+#include "context.h"
 #include "scene/camera.h"
 
 // Storage
@@ -24,12 +25,17 @@
 
 using namespace IID;
 
-Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage, Camera *camera, AIController *ai)
-  : m_weaponIdx(0),
+Robot::Robot(Context *context, Camera *camera, AIController *ai)
+  : Entity(context, "player_character"),
+    m_weaponIdx(0),
     m_weapon(0),
     m_camera(camera),
     m_ai(ai)
 {
+  btDynamicsWorld *world = context->getDynamicsWorld();
+  Scene *scene = context->scene();
+  Storage *storage = context->storage();
+  
   CompositeMesh *robotMesh = storage->get<CompositeMesh>("/Models/r2-d2");
   Shader *shader = storage->get<Shader>("/Shaders/material");
   
@@ -109,7 +115,18 @@ Robot::Robot(btDynamicsWorld *world, Scene *scene, Storage *storage, Camera *cam
   
   // AI setup
   m_mapBody = new MapBody(m_sceneNode, MapBody::Dynamic);
- // m_ai->addMapBody(m_mapBody);
+  // m_ai->addMapBody(m_mapBody);
+  
+  // Entity setup
+  setCollisionObject(m_body);
+}
+
+void Robot::trigger(Entity *entity)
+{
+  if (entity->getType() == "toad") {
+    // TODO collision with a toad
+    std::cout << "hello toady!" << std::endl;
+  }
 }
 
 void Robot::updateAction(btCollisionWorld *world, btScalar dt)

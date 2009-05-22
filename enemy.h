@@ -12,6 +12,7 @@
 #include "scene/node.h"
 #include "storage/storage.h"
 #include "storage/sound.h"
+#include "entities/entity.h"
 
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
@@ -24,12 +25,12 @@ class MapBody;
 /**
  * Represents an abstract enemy.
  */
-class Enemy : public btActionInterface {
+class Enemy : public IID::Entity, public btActionInterface {
 public:
     /**
      * Class constructor.
      */
-    Enemy(btDynamicsWorld *world, IID::Scene *scene, Robot *target, AIController *ai);
+    Enemy(const std::string &type, IID::Context *context, Robot *target, AIController *ai);
     
     /**
      * Class constructor.

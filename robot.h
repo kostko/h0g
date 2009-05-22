@@ -12,6 +12,7 @@
 #include "scene/node.h"
 #include "storage/storage.h"
 #include "storage/sound.h"
+#include "entities/entity.h"
 
 // Particle system
 #include "scene/particles.h"
@@ -60,12 +61,12 @@ public:
 /**
  * The main character controller.
  */
-class Robot : public btActionInterface {
+class Robot : public IID::Entity, public btActionInterface {
 public:
     /**
      * Class constructor.
      */
-    Robot(btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage, IID::Camera *camera, AIController *ai);
+    Robot(IID::Context *context, IID::Camera *camera, AIController *ai);
     
     /**
      * This method gets called on every step of the simulation and is responsible for
@@ -151,6 +152,14 @@ public:
      * Switches currently selected weapon.
      */
     void switchWeapon();
+protected:
+    /**
+     * This method gets called for collision triggers.
+     *
+     * @param entity Entity that has collided with this one (NULL when
+     *               collision is with the environment)
+     */
+    void trigger(Entity *entity);
 private:
     IID::SceneNode *m_sceneNode;
     btCollisionShape *m_shape;

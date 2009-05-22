@@ -8,6 +8,8 @@
 #define HOG_TOAD_H
 
 #include "enemy.h"
+
+// IID includes
 #include "storage/storage.h"
 #include "storage/sound.h"
 
@@ -22,8 +24,7 @@ public:
     /**
     * Class constructor.
     */
-    Toad(const Vector3f &pos, btDynamicsWorld *world, IID::Scene *scene, IID::Storage *storage, 
-         Robot *target, AIController *ai);
+    Toad(const Vector3f &pos, IID::Context *context, Robot *target, AIController *ai);
     
     /**
     * Class destructor.

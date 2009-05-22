@@ -288,13 +288,13 @@ public:
       m_ai = new AIController(100.0, 100.0);
       
       // Create the robot
-      m_robot = new Robot(m_context->getDynamicsWorld(), m_scene, m_storage, m_camera, m_ai);
+      m_robot = new Robot(m_context, m_camera, m_ai);
       
       // Create some enemies
-      new Toad(Vector3f(6.9, -0.55, -14.38), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
-      new Toad(Vector3f(10.4, -0.55, -13.42), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
-      new Toad(Vector3f(12.44, -0.55, -8.981), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
-      new Toad(Vector3f(14.89, -0.55, -7.0), m_context->getDynamicsWorld(), m_scene, m_storage, m_robot, m_ai);
+      new Toad(Vector3f(6.9, -0.55, -14.38), m_context, m_robot, m_ai);
+      new Toad(Vector3f(10.4, -0.55, -13.42), m_context, m_robot, m_ai);
+      new Toad(Vector3f(12.44, -0.55, -8.981), m_context, m_robot, m_ai);
+      new Toad(Vector3f(14.89, -0.55, -7.0), m_context, m_robot, m_ai);
       
       // Init some background music
       m_soundPlayer->setMode(Player::Looped);
