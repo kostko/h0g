@@ -15,7 +15,8 @@ Entity::Entity(Context *context, const std::string &type)
     m_type(type),
     m_enabled(true),
     m_environmentCollisions(false),
-    m_collisionObject(0)
+    m_collisionObject(0),
+    m_triggerFilter(CollisionTrigger | PickTrigger)
 {
 }
 
@@ -40,6 +41,21 @@ void Entity::setEnabled(bool value)
 void Entity::setWantEnvironmentCollisions(bool value)
 {
   m_environmentCollisions = value;
+}
+
+void Entity::setTriggerFilter(unsigned int filter)
+{
+  m_triggerFilter = filter;
+}
+
+bool Entity::acceptsTrigger(TriggerType type)
+{
+  return m_triggerFilter & type;
+}
+
+void Entity::deferredDelete()
+{
+  m_context->getTriggerManager()->deferredDeleteEntity(this);
 }
 
 }

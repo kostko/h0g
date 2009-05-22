@@ -9,6 +9,7 @@
 
 #include <boost/signal.hpp>
 #include <btBulletDynamicsCommon.h>
+#include <list>
 
 namespace IID {
 
@@ -45,6 +46,11 @@ public:
     void dispatchPickEvent(int x, int y);
     
     /**
+     * Performs per-frame processing.
+     */
+    void update();
+    
+    /**
      * Registers an entity.
      *
      * @param entity Entity instance
@@ -59,6 +65,14 @@ public:
     void unregisterEntity(Entity *entity);
     
     /**
+     * Adds the entity to deferred deletion queue. It will be deleted
+     * at end of the current frame.
+     *
+     * @param entity Entity instance
+     */
+    void deferredDeleteEntity(Entity *entity);
+    
+    /**
      * Sets the entity that "owns" picking events.
      */
     void setPickOwner(Entity *entity);
@@ -70,6 +84,7 @@ public:
 private:
     Context *m_context;
     Entity *m_pickOwner;
+    std::list<Entity*> m_deferredDeleteQueue;
 };
 
 }

@@ -10,6 +10,8 @@
 #include "scene/camera.h"
 #include "context.h"
 
+#include <boost/foreach.hpp>
+
 namespace IID {
 
 TriggerManager::TriggerManager(Context *context)
@@ -27,11 +29,13 @@ void TriggerManager::dispatchCollisionEvent(btCollisionObject *objectA, btCollis
   if (!entityA && !entityB)
     return;
   
-  if (entityA && entityA->isEnabled() && (entityB || entityA->wantsEnvironmentCollisions())) {
+  if (entityA && entityA->isEnabled() && entityA->acceptsTrigger(Entity::CollisionTrigger) &&
+      (entityB || entityA->wantsEnvironmentCollisions())) {
     entityA->trigger(entityB, Entity::CollisionTrigger);
   }
   
-  if (entityB && entityB->isEnabled() && (entityA || entityB->wantsEnvironmentCollisions())) {
+  if (entityB && entityB->isEnabled() && entityB->acceptsTrigger(Entity::CollisionTrigger) &&
+      (entityA || entityB->wantsEnvironmentCollisions())) {
     entityB->trigger(entityA, Entity::CollisionTrigger);
   }
 }
@@ -56,11 +60,21 @@ void TriggerManager::dispatchPickEvent(int x, int y)
     if (rayCallback.hasHit()) {
       Entity *entity = static_cast<Entity*>(rayCallback.m_collisionObject->getUserPointer());
       
-      if (entity) {
+      if (entity && entity->isEnabled() && entity->acceptsTrigger(Entity::PickTrigger)) {
         entity->trigger(m_pickOwner, Entity::PickTrigger);
       }
     }
   }
+}
+
+void TriggerManager::update()
+{
+  // Delete any entities pending deletion
+  BOOST_FOREACH(Entity *entity, m_deferredDeleteQueue) {
+    delete entity;
+  }
+  
+  m_deferredDeleteQueue.clear();
 }
 
 void TriggerManager::registerEntity(Entity *entity)
@@ -69,6 +83,11 @@ void TriggerManager::registerEntity(Entity *entity)
 
 void TriggerManager::unregisterEntity(Entity *entity)
 {
+}
+
+void TriggerManager::deferredDeleteEntity(Entity *entity)
+{
+  m_deferredDeleteQueue.push_back(entity);
 }
 
 void TriggerManager::setPickOwner(Entity *entity)

@@ -156,6 +156,8 @@ void Context::moveAndDisplay()
     m_triggerManager->dispatchCollisionEvent(objectA, objectB);
   }
   
+  m_triggerManager->update();
+  
   // Render the scene
   display();
 }

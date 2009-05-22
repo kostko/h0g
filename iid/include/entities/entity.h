@@ -25,8 +25,8 @@ public:
      * Trigger types.
      */
     enum TriggerType {
-      CollisionTrigger,
-      PickTrigger
+      CollisionTrigger = 1,
+      PickTrigger = 2
     };
     
     /**
@@ -41,6 +41,14 @@ public:
      * Returns the entity's identifier.
      */
     std::string getType() const { return m_type; }
+    
+    /**
+     * Returns true if this entity accepts a trigger of the specified
+     * type.
+     *
+     * @param type Trigger type to check
+     */
+    bool acceptsTrigger(TriggerType type);
     
     /**
      * Returns true if this entity is enabled. Disabled entites will not
@@ -68,6 +76,13 @@ protected:
     void setEnabled(bool value);
     
     /**
+     * Sets the trigger filter.
+     *
+     * @param filter Trigger filter bitmask
+     */
+    void setTriggerFilter(unsigned int filter);
+    
+    /**
      * Sets trigger behaviour when entity collides with the environment
      * and not another entity. Default is to ignore environmental
      * collisions.
@@ -84,12 +99,19 @@ protected:
      * @param type Trigger type
      */
     virtual void trigger(Entity *entity, TriggerType type) {};
+    
+    /**
+     * When you wish to delete an entity while it may still be active in
+     * trigger processing, use this method to avoid crashes.
+     */
+    void deferredDelete();
 private:
     Context *m_context;
     std::string m_type;
     bool m_environmentCollisions;
     bool m_enabled;
     btCollisionObject *m_collisionObject;
+    unsigned int m_triggerFilter;
 };
 
 }
