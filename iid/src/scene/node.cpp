@@ -97,6 +97,11 @@ void SceneNode::detachChild(SceneNode *child)
   child->m_parent = 0;
   
   m_children.erase(child->getName());
+  
+  // Erase from update pending list if present to prevent resurecting the item on update
+  std::list<SceneNode*>::iterator it = std::find(m_childrenToUpdate.begin(), m_childrenToUpdate.end(), child);
+  if (it != m_childrenToUpdate.end())
+    m_childrenToUpdate.erase(it);
 }
 
 SceneNode *SceneNode::child(const std::string &name)
