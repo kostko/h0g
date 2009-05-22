@@ -103,4 +103,33 @@ public:
     void fire();
 };
 
+/**
+ * A gravity gun weapon.
+ */
+class GravityGun : public Weapon {
+public:
+    /**
+     * Class constructor.
+     *
+     * @param robot Robot that carries the weapon
+     * @param context Engine context
+     */
+    GravityGun(Robot *robot, IID::Context *context);
+    
+    /**
+     * Equips this weapon.
+     */
+    void equip();
+    
+    /**
+     * Unequips this weapon.
+     */
+    void unequip();
+    
+    /**
+     * Fires the weapon.
+     */
+    void fire();
+};
+
 #endif
