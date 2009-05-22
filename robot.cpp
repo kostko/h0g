@@ -83,7 +83,7 @@ Robot::Robot(Context *context, Camera *camera, AIController *ai)
   
   // Create our weapons
   m_weaponInventory.push_back(0);
-  m_weaponInventory.push_back(new RocketLauncher(this, world, scene, storage));
+  m_weaponInventory.push_back(new RocketLauncher(this, context));
   
   // Add some sounds from storage
   m_sounds["Taunt"] = storage->get<Sound>("/Sounds/r2-sound1");

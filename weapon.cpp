@@ -14,18 +14,21 @@
 #include "storage/texture.h"
 #include "storage/shader.h"
 #include "storage/sound.h"
+#include "entities/entity.h"
+#include "context.h"
 
 #include <boost/lexical_cast.hpp>
 
 using namespace IID;
 
-Weapon::Weapon(Robot *robot, Scene *scene, Storage *storage)
+Weapon::Weapon(Robot *robot, Context *context)
   : m_sceneNode(0),
     m_body(0),
     m_motionState(0),
     m_robot(robot),
-    m_scene(scene),
-    m_storage(storage),
+    m_scene(context->scene()),
+    m_storage(context->storage()),
+    m_context(context),
     m_targetAngle(0.0)
 {
 }
@@ -58,13 +61,18 @@ void Weapon::down()
 /**
  * This class represents a rocket missile fired by the rocket launcher.
  */
-class Rocket {
+class Rocket : public Entity {
 public:
     /**
      * Class constructor.
      */
-    Rocket(RocketLauncher *launcher, btDynamicsWorld *world, Scene *scene, Storage *storage)
+    Rocket(RocketLauncher *launcher, Context *context)
+      : Entity(context, "rocket")
     {
+      m_world = context->getDynamicsWorld();
+      m_scene = context->scene();
+      Storage *storage = context->storage();
+      
       // Create a new missile node and body
       CompositeMesh *missileMesh = storage->get<CompositeMesh>("/Models/rocket");
       Shader *shader = storage->get<Shader>("/Shaders/material");
@@ -73,7 +81,7 @@ public:
       Vector3f hs = missileMesh->getAABB().getHalfSize();
       
       // Create the missile's scene node
-      m_sceneNode = scene->createNodeFromStorage(missileMesh, "rocket" + boost::lexical_cast<std::string>(m_rocketId++));
+      m_sceneNode = m_scene->createNodeFromStorage(missileMesh, "rocket" + boost::lexical_cast<std::string>(m_rocketId++));
       m_sceneNode->setShader(shader);
       m_sceneNode->setPosition(0.0, -whs[1] - 0.010, 0.0);
       m_sceneNode->setOrientation(
@@ -117,7 +125,12 @@ public:
       // Construct the rigid body that holds the weapon
       btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
       m_body = new btRigidBody(cInfo);
-      world->addRigidBody(m_body);
+      m_world->addRigidBody(m_body);
+      
+      // Entity setup
+      setCollisionObject(m_body);
+      setWantEnvironmentCollisions(true);
+      setTriggerFilter(Entity::CollisionTrigger);
     }
     
     /**
@@ -125,7 +138,11 @@ public:
      */
     ~Rocket()
     {
-      // TODO
+      delete m_motionState;
+      delete m_sceneNode;
+      //delete m_exhaust;
+      delete m_body;
+      delete m_shape;
     }
     
     /**
@@ -134,23 +151,54 @@ public:
     void launch(const btVector3 &vector)
     {
       m_body->applyCentralImpulse(vector * 10.0);
+      m_armTimer.reset();
       //m_exhaust->start();
       //m_exhaust->show(true);
     }
+    
+    void trigger(Entity *entity, TriggerType type)
+    {
+      // Check if the weapon is already armed (it arms after 1 second); if it
+      // impacts a toad it arms immediately
+      if (m_armTimer.getTimeMilliseconds() < 1000 && (!entity || entity->getType() != "toad"))
+        return;
+      
+      // If we collide with another rocket even after arming, ignore this
+      if (entity && entity->getType() == "rocket")
+        return;
+      
+      // TODO render explosion
+      
+      // Remove rocket from the scene
+      setCollisionObject(0);
+      m_world->removeRigidBody(m_body);
+      m_scene->detachNode(m_sceneNode);
+      
+      // We must not delete this object here as it could cause crashes in further
+      // trigger processing
+      Entity::deferredDelete();
+    }
 private:
     static int m_rocketId;
+    Scene *m_scene;
     SceneNode *m_sceneNode;
     ParticleEmitter *m_exhaust;
     btCollisionShape *m_shape;
     EntityMotionState *m_motionState;
     btRigidBody *m_body;
+    btDynamicsWorld *m_world;
+    btClock m_armTimer;
 };
 
 int Rocket::m_rocketId = 0;
 
-RocketLauncher::RocketLauncher(Robot *robot, btDynamicsWorld *world, Scene *scene, Storage *storage)
-  : Weapon(robot, scene, storage)
+RocketLauncher::RocketLauncher(Robot *robot, Context *context)
+  : Weapon(robot, context)
 {
+  btDynamicsWorld *world = context->getDynamicsWorld();
+  Scene *scene = context->scene();
+  Storage *storage = context->storage();
+  
   CompositeMesh *weaponMesh = storage->get<CompositeMesh>("/Models/rocketlauncher");
   Texture *texture = storage->get<Texture>("/Textures/rocketlauncher");
   Shader *shader = storage->get<Shader>("/Shaders/general");
@@ -226,6 +274,6 @@ void RocketLauncher::fire()
   btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
   targetVec.normalize();
   
-  Rocket *rocket = new Rocket(this, m_world, m_scene, m_storage);
+  Rocket *rocket = new Rocket(this, m_context);
   rocket->launch(targetVec);
 }
