@@ -46,7 +46,7 @@ Robot::Robot(Context *context, Camera *camera, AIController *ai)
   m_sceneNode->setOrientation(
     AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
     AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+    AngleAxisf(1.75*M_PI, Vector3f::UnitZ())
   );
   
   m_sceneNode->registerSoundPlayer("TauntPlayer", new OpenALPlayer());
@@ -135,6 +135,24 @@ void Robot::trigger(Entity *entity, TriggerType type)
   }
 }
 
+class ClosestNotMe : public btCollisionWorld::ClosestRayResultCallback {
+public:
+    ClosestNotMe(btRigidBody *me)
+      : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
+        m_me(me)
+    {}
+    
+    btScalar addSingleResult(btCollisionWorld::LocalRayResult &rayResult, bool normalInWorldSpace)
+    {
+      if (rayResult.m_collisionObject == m_me)
+        return 1.0;
+      
+      return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+    }
+private:
+    btRigidBody *m_me;
+};
+
 void Robot::updateAction(btCollisionWorld *world, btScalar dt)
 {
   btTransform transform = m_body->getCenterOfMassTransform();
@@ -192,8 +210,31 @@ void Robot::updateAction(btCollisionWorld *world, btScalar dt)
     }
   }
   
-  // Correct camera position
-  m_camera->appendTrajectoryPoint(m_sceneNode->getWorldPosition());
+  // Correct camera position (calculate the position so that the camera is placed
+  // just behind the robot under a slight angle). Note that we have to perform
+  // rotations in local space, so we have to calculate the rotation axis from
+  // forward and up vectors
+  btVector3 upVec = transform.getBasis() * btVector3(0.0, 0.0, 1.0);
+  Vector3f pos = m_sceneNode->getWorldPosition();
+  Vector3f fwd(forwardVec.x(), forwardVec.y(), forwardVec.z());
+  Vector3f up(upVec.x(), upVec.y(), upVec.z());
+  Vector3f rax = fwd.cross(up).normalized();
+  Vector3f eyeDir = (Quaternionf(AngleAxisf(1.90*M_PI, rax)) * -fwd).normalized() * 5.0;
+  Vector3f eye = pos + eyeDir;
+  
+  // Shoot a ray to determine where we can actually place the camera (note that we only check
+  // collisions with static objects so dynamics don't interfere with camera placement)
+  ClosestNotMe rayCallback(m_body);
+  rayCallback.m_closestHitFraction = 1.0;
+  rayCallback.m_collisionFilterMask = btBroadphaseProxy::StaticFilter;
+  m_world->rayTest(btVector3(pos.x(), pos.y(), pos.z()), btVector3(eye.x(), eye.y(), eye.z()), rayCallback);
+  if (rayCallback.hasHit()) {
+    // Adjust position by increasing the zoom level. We should probably move the camera
+    // here as well and not just zoom.
+    eye = pos + eyeDir * (rayCallback.m_closestHitFraction - 0.02);
+  }
+  
+  m_camera->appendTrajectoryPoint(pos, eye);
   m_camera->nextTrajectoryPoint();
   
   // Update transformations
@@ -203,24 +244,6 @@ void Robot::updateAction(btCollisionWorld *world, btScalar dt)
 
 float Robot::getFloorDistance()
 {
-  class ClosestNotMe : public btCollisionWorld::ClosestRayResultCallback {
-  public:
-      ClosestNotMe(btRigidBody *me)
-        : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
-          m_me(me)
-      {}
-      
-      btScalar addSingleResult(btCollisionWorld::LocalRayResult &rayResult, bool normalInWorldSpace)
-      {
-        if (rayResult.m_collisionObject == m_me)
-          return 1.0;
-        
-        return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
-      }
-  private:
-      btRigidBody *m_me;
-  };
-  
   float distance = 5.0;
   btTransform transform = m_body->getCenterOfMassTransform();
   btVector3 source = transform.getOrigin();
