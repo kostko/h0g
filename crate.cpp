@@ -6,6 +6,7 @@
  */
 #include "crate.h"
 #include "motionstate.h"
+#include "collisiongroups.h"
 
 // Storage
 #include "storage/mesh.h"
@@ -50,7 +51,7 @@ Crate::Crate(const Vector3f &pos, btDynamicsWorld *world, IID::Scene *scene, IID
   // Construct the rigid body that holds the crate
   btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
   m_body = new btRigidBody(cInfo);
-  world->addRigidBody(m_body);
+  static_cast<btDiscreteDynamicsWorld*>(world)->addRigidBody(m_body, HogCollisionGroup::MovableObject, btBroadphaseProxy::AllFilter);
 }
     
 Crate::~Crate()

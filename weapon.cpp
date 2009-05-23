@@ -7,6 +7,7 @@
 #include "weapon.h"
 #include "robot.h"
 #include "motionstate.h"
+#include "collisiongroups.h"
 
 // Storage
 #include "storage/mesh.h"
@@ -51,7 +52,7 @@ void Weapon::up()
 
 void Weapon::down()
 {
-  if (m_targetAngle - 0.1 < 0.0)
+  if (m_targetAngle - 0.1 < -0.3)
     return;
   
   m_targetAngle -= 0.1;
@@ -279,7 +280,9 @@ void RocketLauncher::fire()
 }
 
 GravityGun::GravityGun(Robot *robot, Context *context)
-  : Weapon(robot, context)
+  : Weapon(robot, context),
+    m_pickedBody(0),
+    m_pickConstraint(0)
 {
   btDynamicsWorld *world = context->getDynamicsWorld();
   Scene *scene = context->scene();
@@ -342,22 +345,105 @@ void GravityGun::equip()
   m_scene->update();
   m_world->addRigidBody(m_body);
   m_world->addConstraint(m_constraint, true);
+  m_world->addAction(this);
 }
 
 void GravityGun::unequip()
 {
+  if (m_pickedBody) {
+    // Just remove the constraint without firing the body
+    m_world->removeConstraint(m_pickConstraint);
+    delete m_pickConstraint;
+    
+    m_pickConstraint = 0;
+    m_pickedBody->forceActivationState(ACTIVE_TAG);
+    m_pickedBody->setDeactivationTime(0.0);
+    m_pickedBody = 0;
+  }
+  
   m_scene->detachNode(m_sceneNode);
   m_world->removeConstraint(m_constraint);
   m_world->removeRigidBody(m_body);
+  m_world->removeAction(this);
   delete m_constraint;
 }
 
+class ClosestNotMe : public btCollisionWorld::ClosestRayResultCallback {
+public:
+    ClosestNotMe(btRigidBody *me)
+      : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
+        m_me(me)
+    {}
+    
+    btScalar addSingleResult(btCollisionWorld::LocalRayResult &rayResult, bool normalInWorldSpace)
+    {
+      if (rayResult.m_collisionObject == m_me)
+        return 1.0;
+      
+      return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+    }
+private:
+    btRigidBody *m_me;
+};
+
 void GravityGun::fire()
 {
-  btTransform transform = m_body->getCenterOfMassTransform();
-  btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
-  targetVec.normalize();
-  
-  // TODO
+  if (m_pickedBody) {
+    m_world->removeConstraint(m_pickConstraint);
+    delete m_pickConstraint;
+    
+    // Shoot the object in proper direction
+    btTransform transform = m_body->getCenterOfMassTransform();
+    btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
+    targetVec.normalize();
+    m_pickedBody->applyCentralImpulse(targetVec * 50.0);
+    
+    m_pickConstraint = 0;
+    m_pickedBody->forceActivationState(ACTIVE_TAG);
+    m_pickedBody->setDeactivationTime(0.0);
+    m_pickedBody = 0;
+  } else {
+    btTransform transform = m_body->getCenterOfMassTransform();
+    btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
+    targetVec.normalize();
+    
+    // This depends on weapon's range
+    btVector3 rayTo = transform.getOrigin() + targetVec * 2.0;
+    targetVec += transform.getOrigin();
+    
+    // Perform a ray test (only movable objects are affected)
+    btCollisionWorld::ClosestRayResultCallback rayCallback(targetVec, rayTo);
+    rayCallback.m_collisionFilterMask = HogCollisionGroup::MovableObject;
+    
+    m_world->rayTest(targetVec, rayTo, rayCallback);
+    if (rayCallback.hasHit()) {
+      // Got an object to grab
+      m_pickedBody = btRigidBody::upcast(rayCallback.m_collisionObject);
+      if (m_pickedBody) {
+        m_pickedBody->setActivationState(DISABLE_DEACTIVATION);
+        
+        m_pickConstraint = new btPoint2PointConstraint(*m_pickedBody, btVector3(0, 0, 0));
+        m_pickConstraint->m_setting.m_impulseClamp = 30.0;
+        m_pickConstraint->m_setting.m_tau = 0.1;
+        m_world->addConstraint(m_pickConstraint);
+        
+        m_lastPickDist = (rayCallback.m_hitPointWorld - targetVec).length();
+      }
+    }
+  }
+}
+
+void GravityGun::updateAction(btCollisionWorld *world, btScalar dt)
+{
+  if (m_pickedBody) {
+    // Move pick constraint to move the body
+    btTransform transform = m_body->getCenterOfMassTransform();
+    btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
+    targetVec.normalize();
+    
+    m_pickConstraint->setPivotB(transform.getOrigin() + targetVec * m_lastPickDist);
+    if (m_lastPickDist < 3.0)
+      m_lastPickDist += dt * 0.5;
+  }
 }
 

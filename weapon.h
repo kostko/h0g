@@ -106,7 +106,7 @@ public:
 /**
  * A gravity gun weapon.
  */
-class GravityGun : public Weapon {
+class GravityGun : public Weapon, public btActionInterface {
 public:
     /**
      * Class constructor.
@@ -130,6 +130,24 @@ public:
      * Fires the weapon.
      */
     void fire();
+    
+    /**
+     * This method gets called on every step of the simulation.
+     *
+     * @param world World instance
+     * @param dt Delta time
+     */
+    void updateAction(btCollisionWorld *world, btScalar dt);
+    
+    /**
+     * Debug drawer (required by btActionInterface).
+     */
+    void debugDraw(btIDebugDraw *drawer) {}
+private:
+    btRigidBody *m_pickedBody;
+    btPoint2PointConstraint *m_pickConstraint;
+    btVector3 m_lastPickPos;
+    float m_lastPickDist;
 };
 
 #endif
