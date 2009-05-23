@@ -71,6 +71,7 @@ Robot::Robot(Context *context, Camera *camera, AIController *ai)
   m_body = new btRigidBody(cInfo);
   m_body->setActivationState(DISABLE_DEACTIVATION);
   m_body->setAngularFactor(0.0);
+  m_body->setContactProcessingThreshold(0.0);
   world->addRigidBody(m_body);
   world->addAction(this);
   m_world = world;
