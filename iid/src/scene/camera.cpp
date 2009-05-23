@@ -192,19 +192,35 @@ void Camera::setZoom(const Vector3f &zoom)
 
 void Camera::appendTrajectoryPoint(const Vector3f &trajectoryPoint)
 {
-  m_trajectory.push(trajectoryPoint);
+  TrajectoryPoint p;
+  p.point = trajectoryPoint;
+  p.relative = true;
+  
+  m_trajectory.push(p);
+}
+
+void Camera::appendTrajectoryPoint(const Vector3f &trajectoryPoint, const Vector3f &eye)
+{
+  TrajectoryPoint p;
+  p.point = trajectoryPoint;
+  p.eye = eye;
+  p.relative = false;
+  
+  m_trajectory.push(p);
 }
 
 void Camera::nextTrajectoryPoint()
 {
   // Check if the trajectory queue is sufficiently large
   if (m_trajectory.size() > m_lag) {
-    Vector3f next = m_trajectory.front();
-    lookAt(
-      next + m_zoom,
-      next,
-      m_up
-    );
+    TrajectoryPoint next = m_trajectory.front();
+    
+    if (next.relative) {
+      lookAt(next.point + m_zoom, next.point, m_up);
+    } else {
+      lookAt(next.eye, next.point, m_up);
+    }
+    
     // Get rid of the currently set point
     m_trajectory.pop();
   }

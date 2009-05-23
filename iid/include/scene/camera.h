@@ -153,6 +153,14 @@ public:
     void appendTrajectoryPoint(const Vector3f &trajectoryPoint);
     
     /**
+     * Appends the given vector to the camera's trajectory.
+     * 
+     * @param trajectoryPoint Vector which is appended to the trajectory queue
+     * @param eye Position of the eye
+     */
+    void appendTrajectoryPoint(const Vector3f &trajectoryPoint, const Vector3f &eye);
+    
+    /**
      * Make the camera look at the next point in the trajectory queue.
      */
     void nextTrajectoryPoint();
@@ -198,7 +206,15 @@ private:
     float m_screenWidth, m_screenHeight;
     
     // Trajectory which the camera follows
-    std::queue<Vector3f> m_trajectory;
+    struct TrajectoryPoint {
+      Vector3f point;
+      Vector3f eye;
+      bool relative;
+      
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    };
+    
+    std::queue<TrajectoryPoint> m_trajectory;
 };
 
 }
