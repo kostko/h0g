@@ -441,9 +441,22 @@ void GravityGun::updateAction(btCollisionWorld *world, btScalar dt)
     btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
     targetVec.normalize();
     
-    m_pickConstraint->setPivotB(transform.getOrigin() + targetVec * m_lastPickDist);
-    if (m_lastPickDist < 3.0)
+    // Ensure that we don't embed this thing into a wall
+    btVector3 rayTo = transform.getOrigin() + targetVec * m_lastPickDist;
+    targetVec += transform.getOrigin();
+    
+    btCollisionWorld::ClosestRayResultCallback rayCallback(targetVec, rayTo);
+    rayCallback.m_collisionFilterMask = btBroadphaseProxy::StaticFilter;
+    
+    m_world->rayTest(targetVec, rayTo, rayCallback);
+    if (rayCallback.hasHit()) {
+      m_lastPickDist *= (rayCallback.m_closestHitFraction - 0.2);
+      rayTo = transform.getOrigin() + targetVec * m_lastPickDist;
+    } else if (m_lastPickDist < 3.0) {
       m_lastPickDist += dt * 0.5;
+    }
+    
+    m_pickConstraint->setPivotB(rayTo);
   }
 }
 
