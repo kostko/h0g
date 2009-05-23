@@ -36,14 +36,24 @@ public:
     virtual ~Weapon();
     
     /**
+     * Performs basic weapon setup. This should work for standard weapons, if
+     * you need to customize this, just copy the code and use it in your
+     * weapon's constructor.
+     *
+     * @param modelPath Weapon mesh storage path
+     * @param texturePath Weapon texture storage path
+     */
+    void setupWeapon(const std::string &modelPath, const std::string &texturePath);
+    
+    /**
      * Equips this weapon.
      */
-    virtual void equip() = 0;
+    virtual void equip();
     
     /**
      * Unequips this weapon.
      */
-    virtual void unequip() = 0;
+    virtual void unequip();
     
     /**
      * Move target vector in upwards direction.
@@ -86,16 +96,6 @@ public:
      * @param context Engine context
      */
     RocketLauncher(Robot *robot, IID::Context *context);
-    
-    /**
-     * Equips this weapon.
-     */
-    void equip();
-    
-    /**
-     * Unequips this weapon.
-     */
-    void unequip();
     
     /**
      * Fires the weapon.

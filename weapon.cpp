@@ -30,6 +30,7 @@ Weapon::Weapon(Robot *robot, Context *context)
     m_scene(context->scene()),
     m_storage(context->storage()),
     m_context(context),
+    m_world(context->getDynamicsWorld()),
     m_targetAngle(0.0)
 {
 }
@@ -39,6 +40,74 @@ Weapon::~Weapon()
   delete m_body;
   delete m_sceneNode;
   delete m_motionState;
+}
+
+void Weapon::setupWeapon(const std::string &modelPath, const std::string &texturePath)
+{
+  CompositeMesh *weaponMesh = m_storage->get<CompositeMesh>(modelPath);
+  Texture *texture = m_storage->get<Texture>(texturePath);
+  Shader *shader = m_storage->get<Shader>("/Shaders/general");
+  
+  // Get robot's dimensions to properly attach the weapon
+  Vector3f robotHalfSize = m_robot->getSceneNode()->getLocalBoundingBox().getHalfSize();
+  Vector3f hs = weaponMesh->getAABB().getHalfSize();
+  
+  // Create the weapon's scene node
+  m_sceneNode = m_scene->createNodeFromStorage(weaponMesh);
+  m_sceneNode->setShader(shader);
+  m_sceneNode->setTexture(texture);
+  m_sceneNode->setPosition(-robotHalfSize[0] -hs[0] - 0.010, 0.0, 0.);
+  m_sceneNode->setOrientation(
+    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
+    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
+    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+  );
+  
+  // Create the weapon's physical shape and body
+  m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
+  float mass = 30.0;
+  btVector3 localInertia(0, 0, 0);
+  m_shape->calculateLocalInertia(mass, localInertia);
+  
+  // Create motion state
+  m_motionState = new EntityMotionState(m_sceneNode);
+  
+  // Construct the rigid body that holds the weapon
+  btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
+  m_body = new btRigidBody(cInfo);
+}
+
+void Weapon::equip()
+{
+  btTransform transform = m_robot->getBody()->getCenterOfMassTransform();
+  m_body->setCenterOfMassTransform(transform);
+  m_motionState->setWorldTransform(transform);
+  
+  // Create a hinge constraint for weapon rotation
+  Vector3f robotHalfSize = m_robot->getSceneNode()->getLocalBoundingBox().getHalfSize();
+  btTransform localA, localB;
+  localA.setIdentity();
+  localB.setIdentity();
+  localA.getBasis().setEulerZYX(0.0, M_PI_2, 0.0);
+  localA.setOrigin(btVector3(-robotHalfSize[0], 0.0, 0.2));
+  localB.getBasis().setEulerZYX(0.0, M_PI_2, 0.0);
+  localB.setOrigin(btVector3(0.015, 0.2, 0.0));
+  
+  m_constraint = new btHingeConstraint(*m_robot->getBody(), *m_body, localA, localB);
+  m_constraint->setLimit(m_targetAngle, m_targetAngle + 0.1);
+  
+  m_scene->attachNode(m_sceneNode);
+  m_scene->update();
+  m_world->addRigidBody(m_body);
+  m_world->addConstraint(m_constraint, true);
+}
+
+void Weapon::unequip()
+{
+  m_scene->detachNode(m_sceneNode);
+  m_world->removeConstraint(m_constraint);
+  m_world->removeRigidBody(m_body);
+  delete m_constraint;
 }
 
 void Weapon::up()
@@ -196,75 +265,8 @@ int Rocket::m_rocketId = 0;
 RocketLauncher::RocketLauncher(Robot *robot, Context *context)
   : Weapon(robot, context)
 {
-  btDynamicsWorld *world = context->getDynamicsWorld();
-  Scene *scene = context->scene();
-  Storage *storage = context->storage();
-  
-  CompositeMesh *weaponMesh = storage->get<CompositeMesh>("/Models/rocketlauncher");
-  Texture *texture = storage->get<Texture>("/Textures/rocketlauncher");
-  Shader *shader = storage->get<Shader>("/Shaders/general");
-  
-  // Get robot's dimensions to properly attach the weapon
-  Vector3f robotHalfSize = robot->getSceneNode()->getLocalBoundingBox().getHalfSize();
-  Vector3f hs = weaponMesh->getAABB().getHalfSize();
-  
-  // Create the weapon's scene node
-  m_sceneNode = scene->createNodeFromStorage(weaponMesh);
-  m_sceneNode->setShader(shader);
-  m_sceneNode->setTexture(texture);
-  m_sceneNode->setPosition(-robotHalfSize[0] -hs[0] - 0.010, 0.0, 0.);
-  m_sceneNode->setOrientation(
-    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  
-  // Create the weapon's physical shape and body
-  m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
-  float mass = 30.0;
-  btVector3 localInertia(0, 0, 0);
-  m_shape->calculateLocalInertia(mass, localInertia);
-  
-  // Create motion state
-  m_motionState = new EntityMotionState(m_sceneNode);
-  
-  // Construct the rigid body that holds the weapon
-  btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
-  m_body = new btRigidBody(cInfo);
-  m_world = world;
-}
-
-void RocketLauncher::equip()
-{
-  btTransform transform = m_robot->getBody()->getCenterOfMassTransform();
-  m_body->setCenterOfMassTransform(transform);
-  m_motionState->setWorldTransform(transform);
-  
-  // Create a hinge constraint for weapon rotation
-  Vector3f robotHalfSize = m_robot->getSceneNode()->getLocalBoundingBox().getHalfSize();
-  btTransform localA, localB;
-  localA.setIdentity();
-  localB.setIdentity();
-  localA.getBasis().setEulerZYX(0.0, M_PI_2, 0.0);
-  localA.setOrigin(btVector3(-robotHalfSize[0], 0.0, 0.2));
-  localB.getBasis().setEulerZYX(0.0, M_PI_2, 0.0);
-  localB.setOrigin(btVector3(0.015, 0.2, 0.0));
-  
-  m_constraint = new btHingeConstraint(*m_robot->getBody(), *m_body, localA, localB);
-  m_constraint->setLimit(m_targetAngle, m_targetAngle + 0.1);
-  
-  m_scene->attachNode(m_sceneNode);
-  m_scene->update();
-  m_world->addRigidBody(m_body);
-  m_world->addConstraint(m_constraint, true);
-}
-
-void RocketLauncher::unequip()
-{
-  m_scene->detachNode(m_sceneNode);
-  m_world->removeConstraint(m_constraint);
-  m_world->removeRigidBody(m_body);
-  delete m_constraint;
+  // Just use the default setup option
+  setupWeapon("/Models/rocketlauncher", "/Textures/rocketlauncher");
 }
 
 void RocketLauncher::fire()
@@ -284,67 +286,13 @@ GravityGun::GravityGun(Robot *robot, Context *context)
     m_pickedBody(0),
     m_pickConstraint(0)
 {
-  btDynamicsWorld *world = context->getDynamicsWorld();
-  Scene *scene = context->scene();
-  Storage *storage = context->storage();
-  
-  CompositeMesh *weaponMesh = storage->get<CompositeMesh>("/Models/gravitygun");
-  Texture *texture = storage->get<Texture>("/Textures/gravitygun");
-  Shader *shader = storage->get<Shader>("/Shaders/general");
-  
-  // Get robot's dimensions to properly attach the weapon
-  Vector3f robotHalfSize = robot->getSceneNode()->getLocalBoundingBox().getHalfSize();
-  Vector3f hs = weaponMesh->getAABB().getHalfSize();
-  
-  // Create the weapon's scene node
-  m_sceneNode = scene->createNodeFromStorage(weaponMesh);
-  m_sceneNode->setShader(shader);
-  m_sceneNode->setTexture(texture);
-  m_sceneNode->setPosition(-robotHalfSize[0] -hs[0] - 0.010, 0.0, 0.);
-  m_sceneNode->setOrientation(
-    AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-    AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-  );
-  
-  // Create the weapon's physical shape and body
-  m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
-  float mass = 30.0;
-  btVector3 localInertia(0, 0, 0);
-  m_shape->calculateLocalInertia(mass, localInertia);
-  
-  // Create motion state
-  m_motionState = new EntityMotionState(m_sceneNode);
-  
-  // Construct the rigid body that holds the weapon
-  btRigidBody::btRigidBodyConstructionInfo cInfo(mass, m_motionState, m_shape, localInertia);
-  m_body = new btRigidBody(cInfo);
-  m_world = world;
+  // Just use the default setup option
+  setupWeapon("/Models/gravitygun", "/Textures/gravitygun");
 }
 
 void GravityGun::equip()
 {
-  btTransform transform = m_robot->getBody()->getCenterOfMassTransform();
-  m_body->setCenterOfMassTransform(transform);
-  m_motionState->setWorldTransform(transform);
-  
-  // Create a hinge constraint for weapon rotation
-  Vector3f robotHalfSize = m_robot->getSceneNode()->getLocalBoundingBox().getHalfSize();
-  btTransform localA, localB;
-  localA.setIdentity();
-  localB.setIdentity();
-  localA.getBasis().setEulerZYX(0.0, M_PI_2, 0.0);
-  localA.setOrigin(btVector3(-robotHalfSize[0], 0.0, 0.2));
-  localB.getBasis().setEulerZYX(0.0, M_PI_2, 0.0);
-  localB.setOrigin(btVector3(0.015, 0.2, 0.0));
-  
-  m_constraint = new btHingeConstraint(*m_robot->getBody(), *m_body, localA, localB);
-  m_constraint->setLimit(m_targetAngle, m_targetAngle + 0.1);
-  
-  m_scene->attachNode(m_sceneNode);
-  m_scene->update();
-  m_world->addRigidBody(m_body);
-  m_world->addConstraint(m_constraint, true);
+  Weapon::equip();
   m_world->addAction(this);
 }
 
@@ -361,30 +309,8 @@ void GravityGun::unequip()
     m_pickedBody = 0;
   }
   
-  m_scene->detachNode(m_sceneNode);
-  m_world->removeConstraint(m_constraint);
-  m_world->removeRigidBody(m_body);
-  m_world->removeAction(this);
-  delete m_constraint;
+  Weapon::unequip();
 }
-
-class ClosestNotMe : public btCollisionWorld::ClosestRayResultCallback {
-public:
-    ClosestNotMe(btRigidBody *me)
-      : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
-        m_me(me)
-    {}
-    
-    btScalar addSingleResult(btCollisionWorld::LocalRayResult &rayResult, bool normalInWorldSpace)
-    {
-      if (rayResult.m_collisionObject == m_me)
-        return 1.0;
-      
-      return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
-    }
-private:
-    btRigidBody *m_me;
-};
 
 void GravityGun::fire()
 {
