@@ -295,6 +295,7 @@ public:
       // Create some crates
       new Crate(Vector3f(1.0697, -1.475, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
       new Crate(Vector3f(1.0697, -0.725, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
+      new Crate(Vector3f(2.0697, -1.475, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
       
       // AI setup
       // FIXME proper width & height
