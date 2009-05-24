@@ -8,6 +8,7 @@ octree.cpp
 camera.cpp
 particles.cpp
 lightmanager.cpp
+geometrymeta.cpp
 )
 
 add_library(scene STATIC ${scene_src})

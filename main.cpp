@@ -18,8 +18,10 @@
 // Scene
 #include "scene/scene.h"
 #include "scene/node.h"
+#include "scene/rendrable.h"
 #include "scene/camera.h"
 #include "scene/light.h"
+#include "scene/geometrymeta.h"
 
 // Events
 #include "events/dispatcher.h"
@@ -28,6 +30,7 @@
 
 // Entities
 #include "entities/triggers.h"
+#include "entities/entity.h"
 
 // Audio support
 #include "drivers/openal.h"
@@ -35,6 +38,8 @@
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 #include <bullet/BulletCollision/CollisionShapes/btTriangleShape.h>
+#include <bullet/BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.h>
+#include <bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.h>
 
 #include <boost/bind.hpp>
 
@@ -46,6 +51,87 @@
 #include "ai.h"
 
 using namespace IID;
+
+bool isPointOnLine(const btVector3 &point, const btVector3 &a, const btVector3 &b)
+{
+  float u = ((point.x() - a.x()) * (b.x() - a.x()) + (point.y() - a.y()) * (b.y() - a.y()) + (point.z() - a.z()) * (b.z() - a.z())) / (b - a).length2();
+  btVector3 t(a.x() + u*(b.x() - a.x()), a.y() + u*(b.y() - a.y()), a.z() + u*(b.z() - a.z()));
+  return (t - point).length2() == 0.0;
+}
+
+#define POINT_DELTA 0
+#define INTERNAL_ANGLE_THRESHOLD 0.005*M_PI
+
+/**
+ * Fix triangle mesh normals.
+ */
+void bulletContactAddedCallbackObj(btManifoldPoint &cp, const btCollisionObject *colObj, const btCollisionObject *colObjOther, int partId, int index)
+{
+  const btCollisionShape *shape = colObj->getCollisionShape();
+
+  if (shape->getShapeType() != TRIANGLE_SHAPE_PROXYTYPE)
+    return;
+  
+  const btTriangleShape *tshape = static_cast<const btTriangleShape*>(colObj->getCollisionShape());
+  const btCollisionShape *parent = colObj->getRootCollisionShape();
+  
+  if (parent == NULL || parent->getShapeType() != MULTIMATERIAL_TRIANGLE_MESH_PROXYTYPE)
+    return;
+  
+  // Acquire edge angle information as we are going to check if edges are internal based on angles
+  btMultimaterialTriangleMeshShape *pshape = (btMultimaterialTriangleMeshShape*) parent;
+  const GeometryMetadata::FaceInfo *props = static_cast<const GeometryMetadata::FaceInfo*>(pshape->getMaterialProperties(partId, index));
+  
+  btTransform orient = colObj->getWorldTransform();
+  orient.setOrigin(btVector3(0.0f, 0.0f, 0.0f));
+
+  btVector3 v1 = tshape->m_vertices1[0];
+  btVector3 v2 = tshape->m_vertices1[1];
+  btVector3 v3 = tshape->m_vertices1[2];
+  
+  // Check first edge
+  if (isPointOnLine(cp.m_localPointB, v1, v2) && props->edgeAngles[0] > INTERNAL_ANGLE_THRESHOLD)
+    return;
+  
+  // Check second edge
+  if (isPointOnLine(cp.m_localPointB, v2, v3) && props->edgeAngles[1] > INTERNAL_ANGLE_THRESHOLD)
+    return;
+  
+  // Check third edge
+  if (isPointOnLine(cp.m_localPointB, v3, v1) && props->edgeAngles[2] > INTERNAL_ANGLE_THRESHOLD)
+    return;
+  
+  btVector3 normal = (v2-v1).cross(v3-v1);
+
+  normal = orient * normal;
+  normal.normalize();
+
+  btScalar dot = normal.dot(cp.m_normalWorldOnB);
+  btScalar magnitude = cp.m_normalWorldOnB.length();
+  normal *= dot > 0 ? magnitude : -magnitude;
+
+  cp.m_normalWorldOnB = normal;
+}
+
+/**
+ * A contact added callback handler for static geometry mesh. This custom callback
+ * fixes problems with spurious collisions when crossing trimesh boundaries.
+ *
+ * Also see:
+ *   http://code.google.com/p/bullet/issues/detail?id=27
+ */
+bool bulletContactAddedCallback(btManifoldPoint &cp,
+                                const btCollisionObject *colObj0, int partId0, int index0,
+                                const btCollisionObject *colObj1, int partId1, int index1)
+{
+  bulletContactAddedCallbackObj(cp, colObj0, colObj1, partId0, index0);
+  bulletContactAddedCallbackObj(cp, colObj1, colObj0, partId1, index1);
+  
+  return true;
+}
+
+// External declaration for contact added callback
+extern ContactAddedCallback gContactAddedCallback;
 
 class Game {
 public:
@@ -67,12 +153,16 @@ public:
       m_eventDispatcher->signalKeyboard.connect(boost::bind(&Game::keyboardEvent, this, _1));
       m_eventDispatcher->signalMousePress.connect(boost::bind(&Game::mousePressEvent, this, _1));
       
+      // Setup on contact added callback
+      gContactAddedCallback = bulletContactAddedCallback;
+      
       // Create a player object
       m_soundPlayer = new OpenALPlayer();
     }
     
     ~Game()
     {
+      delete m_staticGeometryMeta;
       delete m_staticGeometry;
       delete m_robot;
     }
@@ -217,9 +307,10 @@ public:
       // Generate static geometry shape
       btVector3 aabbMin(-100, -100, -100), aabbMax(100, 100, 100);
       m_scene->update();
-      m_staticGeometry = new btTriangleIndexVertexArray();
+      m_staticGeometry = new btTriangleIndexVertexMaterialArray();
       m_scene->getRootNode()->batchStaticGeometry(m_staticGeometry);
-      m_staticShape = new btBvhTriangleMeshShape(m_staticGeometry, true, aabbMin, aabbMax);
+      m_staticGeometryMeta = new GeometryMetadata(m_staticGeometry);
+      m_staticShape = new btMultimaterialTriangleMeshShape(m_staticGeometry, true, aabbMin, aabbMax);
       
       // Load static geometry into the physics engine
       btTransform startTransform;
@@ -231,6 +322,7 @@ public:
       btRigidBody *body = new btRigidBody(cInfo);
       m_context->getDynamicsWorld()->addRigidBody(body);
       body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+      body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
       
       // Create some crates
       new Crate(Vector3f(1.0697, -1.475, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
@@ -289,7 +381,8 @@ private:
     Robot *m_robot;
     
     // Phsyics
-    btTriangleIndexVertexArray *m_staticGeometry;
+    btTriangleIndexVertexMaterialArray *m_staticGeometry;
+    GeometryMetadata *m_staticGeometryMeta;
     btBvhTriangleMeshShape *m_staticShape;
     
     // AI
