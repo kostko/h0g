@@ -45,10 +45,10 @@ void GeometryMetadata::processConnectivity(btIndexedMesh *mesh)
     Vertex tri[3];
     
     for (int j = 0; j < 3; j++) {
-      int k = triangles[3*i + j];
-      tri[j].push_back(vertices[3*k]);
-      tri[j].push_back(vertices[3*k + 1]);
-      tri[j].push_back(vertices[3*k + 2]);
+      int k = 3*triangles[3*i + j];
+      tri[j].push_back(vertices[k]);
+      tri[j].push_back(vertices[k + 1]);
+      tri[j].push_back(vertices[k + 2]);
     }
     
     // Compute triangle normal
@@ -88,20 +88,20 @@ void GeometryMetadata::processEdgeAngles(btIndexedMesh *mesh)
     Vertex tri[3];
     
     for (int j = 0; j < 3; j++) {
-      int k = triangles[3*i + j];
-      tri[j].push_back(vertices[3*k]);
-      tri[j].push_back(vertices[3*k + 1]);
-      tri[j].push_back(vertices[3*k + 2]);
+      int k = 3*triangles[3*i + j];
+      tri[j].push_back(vertices[k]);
+      tri[j].push_back(vertices[k + 1]);
+      tri[j].push_back(vertices[k + 2]);
     }
     
     // Save normal and map triangle to info descriptor
     Vector3f myNormal = m_normals[t];
     indices[i] = i;
     
-    // Initialize all angles to 45°
-    infos[i].edgeAngles[0] = 0.25 * M_PI;
-    infos[i].edgeAngles[1] = 0.25 * M_PI;
-    infos[i].edgeAngles[2] = 0.25 * M_PI;
+    // Initialize all angles to 360°
+    infos[i].edgeAngles[0] = 2.0 * M_PI;
+    infos[i].edgeAngles[1] = 2.0 * M_PI;
+    infos[i].edgeAngles[2] = 2.0 * M_PI;
     
     for (int j = 0; j < 3; j++) {
       Vertex a = tri[j];

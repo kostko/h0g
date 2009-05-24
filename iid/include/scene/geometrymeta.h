@@ -23,7 +23,7 @@ namespace IID {
  * This class is used to hold static geometry metadata needed for proper
  * collision detection. It provides information about triangle connectivity
  * and edge angles (this can be used to identify internal trimesh edges and
- * process collision contacts accordingly.
+ * process collision contacts accordingly).
  */
 class GeometryMetadata {
 public:
