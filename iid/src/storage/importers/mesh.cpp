@@ -101,6 +101,21 @@ void MeshImporter::translateMesh(const Vector3f &vector, int vertexCount, float 
   }
 }
 
+void MeshImporter::rotateMesh(float x, float y, float z, int vertexCount, float *vertices) const
+{
+  Quaternionf orientation = AngleAxisf(x*M_PI, Vector3f::UnitX()) *
+                            AngleAxisf(y*M_PI, Vector3f::UnitY()) *
+                            AngleAxisf(z*M_PI, Vector3f::UnitZ());
+  
+  for (int i = 0; i < vertexCount; i++) {
+    Vector3f vertex(vertices[3*i], vertices[3*i + 1], vertices[3*i + 2]);
+    vertex = orientation * vertex;
+    vertices[3*i] = vertex.x();
+    vertices[3*i + 1] = vertex.y();
+    vertices[3*i + 2] = vertex.z();
+  }
+}
+
 Vector3f MeshImporter::geometricCenter(const Vector3f &mind, const Vector3f &maxd) const
 {
   return (mind + maxd) * 0.5;
@@ -117,6 +132,19 @@ void MeshImporter::postProcessSubmeshObjects(Item *item, std::list<SubmeshObject
   
   // Compute normals and apply scaling
   BOOST_FOREACH(SubmeshObject *obj, objects) {
+    // Apply rotation when requested
+    if (item->hasAttribute("Mesh.Rotation")) {
+      StringMap angles = item->getAttribute("Mesh.Rotation");
+      
+      rotateMesh(
+        boost::lexical_cast<float>(angles["x"]),
+        boost::lexical_cast<float>(angles["y"]),
+        boost::lexical_cast<float>(angles["z"]),
+        obj->vertexCount,
+        obj->vertices
+      );
+    }
+    
     // Compute mesh normals if not set
     if (!obj->normals)
      obj->normals = computeNormals(obj->vertexCount, obj->faceCount, obj->vertices, obj->indices);
@@ -239,6 +267,18 @@ void MeshImporter::postProcessSubmeshObjects(Item *item, std::list<SubmeshObject
     delete obj->tex;
     delete obj->indices;
     delete obj;
+  }
+  
+  // Save mesh center coordinate when Mesh.PreserveCoordinates attribute is
+  // present. This is extremely useful for placing level static geometry
+  // meshes (together with a proper rotation setup) to align coordinates with
+  // those present in the level editor.
+  if (item->hasAttribute("Mesh.PreserveCoordinates")) {
+    StringMap relative;
+    relative["x"] = boost::lexical_cast<std::string>(center[0]);
+    relative["y"] = boost::lexical_cast<std::string>(center[1]);
+    relative["z"] = boost::lexical_cast<std::string>(center[2]);
+    item->setAttribute("Mesh.Center", relative);
   }
   
   // Log some statistics

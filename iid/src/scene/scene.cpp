@@ -117,6 +117,17 @@ SceneNode *Scene::createNodeFromStorage(Item *mesh, const std::string &name)
     // that will be returned
     RendrableNode *node = new RendrableNode(name.empty() ? mesh->getId() : name);
     node->setMesh(static_cast<Mesh*>(mesh));
+    
+    // When coordinate preservation is selected, just position the node
+    if (mesh->hasAttribute("Mesh.PreserveCoordinates")) {
+      StringMap center = mesh->getAttribute("Mesh.Center");
+      node->setPosition(
+        boost::lexical_cast<float>(center["x"]),
+        boost::lexical_cast<float>(center["y"]),
+        boost::lexical_cast<float>(center["z"])
+      );
+    }
+    
     return node;
   } else if (mesh->getType() == "CompositeMesh") {
     // A composite mesh will result in creation of a grouping SceneNode
@@ -140,6 +151,16 @@ SceneNode *Scene::createNodeFromStorage(Item *mesh, const std::string &name)
           boost::lexical_cast<float>(relative["z"])
         );
       }
+    }
+    
+    // When coordinate preservation is selected, just position the grouping node
+    if (mesh->hasAttribute("Mesh.PreserveCoordinates")) {
+      StringMap center = mesh->getAttribute("Mesh.Center");
+      group->setPosition(
+        boost::lexical_cast<float>(center["x"]),
+        boost::lexical_cast<float>(center["y"]),
+        boost::lexical_cast<float>(center["z"])
+      );
     }
     
     return group;

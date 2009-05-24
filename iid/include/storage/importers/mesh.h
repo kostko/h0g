@@ -104,6 +104,17 @@ protected:
     void translateMesh(const Vector3f &vector, int vertexCount, float *vertices) const;
     
     /**
+     * Rotates vertices around X, Y and Z axes. All passed angles are multiplied by M_PI.
+     *
+     * @param x X-axis rotation angle
+     * @param y Y-axis rotation angle
+     * @param z Z-axis rotation angle
+     * @param vertexCount Vertex count
+     * @param vertices Vertex list
+     */
+    void rotateMesh(float x, float y, float z, int vertexCount, float *vertices) const;
+    
+    /**
      * Calculates mesh geometric center.
      *
      * @param mind Minimum dimensions
