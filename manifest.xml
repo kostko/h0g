@@ -105,6 +105,8 @@
   <container id="Levels" path="data/levels">
     <item name="first" type="CompositeMesh">
       <attribute name="Mesh.Materials" container="/Materials" />
+      <attribute name="Mesh.Rotation" x="1.5" y="0.0" z="1.5" />
+      <attribute name="Mesh.PreserveCoordinates" />
       <load_file path="first.dae" loader="iid.ColladaMeshImporter" />
     </item>
   </container>

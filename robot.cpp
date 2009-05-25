@@ -42,11 +42,11 @@ Robot::Robot(Context *context, Camera *camera, AIController *ai)
   // Create the robot's scene node
   m_sceneNode = scene->createNodeFromStorage(robotMesh);
   m_sceneNode->setShader(shader);
-  m_sceneNode->setPosition(-10.32, 0., 10.4);
+  m_sceneNode->setPosition(3., 2., 0.);
   m_sceneNode->setOrientation(
     AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
     AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-    AngleAxisf(1.75*M_PI, Vector3f::UnitZ())
+    AngleAxisf(1.5*M_PI, Vector3f::UnitZ())
   );
   
   m_sceneNode->registerSoundPlayer("TauntPlayer", new OpenALPlayer());

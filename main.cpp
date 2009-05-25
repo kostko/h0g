@@ -52,15 +52,24 @@
 
 using namespace IID;
 
+// Thresholds for proper normal handling on collisions
+#define POINT_ON_LINE_THRESHOLD 0.00001
+#define INTERNAL_ANGLE_THRESHOLD 0.000001
+
+/**
+ * Checks if a point lies on a line according to POINT_ON_LINE_THRESHOLD.
+ *
+ * @param point Point coordinates
+ * @param a Line start point
+ * @param b Line end point
+ * @return True if point lies on a line, false otherwise
+ */
 bool isPointOnLine(const btVector3 &point, const btVector3 &a, const btVector3 &b)
 {
   float u = ((point.x() - a.x()) * (b.x() - a.x()) + (point.y() - a.y()) * (b.y() - a.y()) + (point.z() - a.z()) * (b.z() - a.z())) / (b - a).length2();
   btVector3 t(a.x() + u*(b.x() - a.x()), a.y() + u*(b.y() - a.y()), a.z() + u*(b.z() - a.z()));
-  return (t - point).length2() == 0.0;
+  return (t - point).length() < POINT_ON_LINE_THRESHOLD;
 }
-
-#define POINT_DELTA 0
-#define INTERNAL_ANGLE_THRESHOLD 0.005*M_PI
 
 /**
  * Fix triangle mesh normals.
@@ -102,7 +111,6 @@ void bulletContactAddedCallbackObj(btManifoldPoint &cp, const btCollisionObject 
     return;
   
   btVector3 normal = (v2-v1).cross(v3-v1);
-
   normal = orient * normal;
   normal.normalize();
 
@@ -294,14 +302,10 @@ public:
       lnode->setStaticHint(true);
       lnode->setShader(shader);
       // FIXME naming of objects must be handled differently
-      lnode->child("object1")->setTexture(metal);
-      lnode->child("object2")->setTexture(brick);
-      lnode->child("object3")->setTexture(carpet);
-      lnode->setOrientation(
-        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(1.25*M_PI, Vector3f::UnitZ())
-      );
+      lnode->child("object0")->setTexture(carpet);
+      lnode->child("object1")->setTexture(brick);
+      lnode->child("object2")->setTexture(stone);
+      lnode->child("object3")->setTexture(metal);
       m_scene->attachNode(lnode);
       
       // Generate static geometry shape
@@ -325,9 +329,9 @@ public:
       body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
       
       // Create some crates
-      new Crate(Vector3f(1.0697, -1.475, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
-      new Crate(Vector3f(1.0697, -0.725, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
-      new Crate(Vector3f(2.0697, -1.475, -8.06514), m_context->getDynamicsWorld(), m_scene, m_storage);
+      new Crate(Vector3f(26.0, 1.475, 0.0), m_context->getDynamicsWorld(), m_scene, m_storage);
+      new Crate(Vector3f(26.0, 2.225, 0.0), m_context->getDynamicsWorld(), m_scene, m_storage);
+      new Crate(Vector3f(26.0, 1.475, 1.0), m_context->getDynamicsWorld(), m_scene, m_storage);
       
       // AI setup
       // FIXME proper width & height
@@ -338,10 +342,11 @@ public:
       m_context->getTriggerManager()->setPickOwner(m_robot);
       
       // Create some enemies
-      new Toad(Vector3f(6.9, -0.55, -14.38), m_context, m_robot, m_ai);
-      new Toad(Vector3f(10.4, -0.55, -13.42), m_context, m_robot, m_ai);
-      new Toad(Vector3f(12.44, -0.55, -8.981), m_context, m_robot, m_ai);
-      new Toad(Vector3f(14.89, -0.55, -7.0), m_context, m_robot, m_ai);
+      new Toad(Vector3f(34.0, 0.55, 6.5), m_context, m_robot, m_ai);
+      new Toad(Vector3f(34.0, 0.55, 3.0), m_context, m_robot, m_ai);
+      new Toad(Vector3f(34.0, 0.55, 0.0), m_context, m_robot, m_ai);
+      new Toad(Vector3f(34.0, 0.55, -3.0), m_context, m_robot, m_ai);
+      new Toad(Vector3f(34.0, 0.55, -6.5), m_context, m_robot, m_ai);
       
       // Init some background music
       m_soundPlayer->setMode(Player::Looped);
