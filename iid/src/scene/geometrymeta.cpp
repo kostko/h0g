@@ -112,6 +112,11 @@ void GeometryMetadata::processEdgeAngles(btIndexedMesh *mesh)
         if (n != t) {
           // Compute angle between triangle normals bordering this edge
           infos[i].edgeAngles[j] = std::acos(myNormal.dot(m_normals[n]) / (myNormal.norm() * m_normals[n].norm()));
+          
+          if (infos[i].edgeAngles[j] >= M_PI) {
+            // Angle is greater than or equal to 180°, this probably means that the normals are inverted
+            infos[i].edgeAngles[j] -= M_PI;
+          }
         }
       }
     }
