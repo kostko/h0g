@@ -10,6 +10,8 @@
 #include "storage.h"
 #include "scene/aabb.h"
 
+class btConvexHullShape;
+
 namespace IID {
 
 /**
@@ -41,6 +43,13 @@ public:
      * Returns the axis aligned bounding box of this 3D mesh.
      */
     AxisAlignedBox getAABB() const { return m_boundAABB; }
+    
+    /**
+     * Builds a convex hull shape out of this composite mesh.
+     *
+     * @param shape Destination hull shape
+     */
+    void getConvexHullShape(btConvexHullShape *shape);
 private:
     // Boundaries
     AxisAlignedBox m_boundAABB;

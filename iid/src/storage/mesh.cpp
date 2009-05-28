@@ -8,6 +8,9 @@
 #include "drivers/base.h"
 #include "context.h"
 
+#include <bullet/BulletCollision/CollisionShapes/btConvexHullShape.h>
+#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
+
 #include <iostream>
 #define RECORD_SIZE 32
 
@@ -104,6 +107,16 @@ void Mesh::unbind() const
 void Mesh::draw() const
 {
   m_driver->drawElements(m_indexCount, 0, m_primitive);
+}
+
+void Mesh::getConvexHullShape(btConvexHullShape *shape) const
+{
+  for (int i = 0; i < m_vertexCount; i++) {
+    float a = m_rawVertices[3*i];
+    float b = m_rawVertices[3*i + 1];
+    float c = m_rawVertices[3*i + 2];
+    shape->addPoint(btVector3(a, b, c));
+  }
 }
 
 Item *MeshFactory::create(Storage *storage, const std::string &itemId, Item *parent)

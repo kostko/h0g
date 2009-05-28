@@ -11,6 +11,8 @@
 #include "scene/aabb.h"
 #include "drivers/base.h"
 
+class btConvexHullShape;
+
 namespace IID {
 
 class DVertexBuffer;
@@ -99,6 +101,13 @@ public:
      * Returns an index list associated with this mesh.
      */
     unsigned int *indices() const { return m_rawIndices; }
+    
+    /**
+     * Builds a convex hull shape out of this mesh.
+     *
+     * @param shape Destination hull shape
+     */
+    void getConvexHullShape(btConvexHullShape *shape) const;
 private:
     // Vertex buffers
     DVertexBuffer *m_attributes;
