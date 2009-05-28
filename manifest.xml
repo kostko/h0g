@@ -147,6 +147,16 @@
       <load_file path="croak.wav" loader="iid.SoundImporter"/>
     </item>
     
+    <item name="launch" type="Sound">
+      <attribute name="Sound.Type" value="Effect"/>
+      <load_file path="launch.wav" loader="iid.SoundImporter"/>
+    </item>
+    
+    <item name="explosion" type="Sound">
+      <attribute name="Sound.Type" value="Effect"/>
+      <load_file path="explosion.wav" loader="iid.SoundImporter"/>
+    </item>
+    
     <!-- Example of background music -->
     <item name="zair" type="Sound">
         <attribute name="Sound.Type" value="Ambiental"/>

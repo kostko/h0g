@@ -10,6 +10,7 @@
 // IID includes
 #include "scene/node.h"
 #include "storage/storage.h"
+#include "storage/sound.h"
 
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
@@ -81,6 +82,9 @@ protected:
     IID::Storage *m_storage;
     IID::Context *m_context;
     btDynamicsWorld *m_world;
+    
+    // Sounds
+    boost::unordered_map<std::string, IID::Sound*> m_sounds;
 };
 
 /**

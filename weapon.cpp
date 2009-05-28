@@ -19,6 +19,7 @@
 #include "context.h"
 
 // IID includes
+#include "drivers/openal.h"
 #include "scene/particles.h"
 
 #include <boost/lexical_cast.hpp>
@@ -227,6 +228,14 @@ public:
       
       m_boom->init();
       m_scene->attachNode(m_boom);
+      
+      // Prepare an explosion sound
+      m_boom->registerSoundPlayer("ExplPlayer", new OpenALPlayer());
+      m_boom->getSoundPlayer("ExplPlayer")->queue(storage->get<Sound>("/Sounds/explosion"));
+      
+      // Prepare a launch sound
+      m_sceneNode->registerSoundPlayer("LaunchPlayer", new OpenALPlayer());
+      m_sceneNode->getSoundPlayer("LaunchPlayer")->queue(storage->get<Sound>("/Sounds/launch"));
     }
     
     /**
@@ -251,6 +260,9 @@ public:
       m_armTimer.reset();
       m_exhaust->start();
       m_exhaust->show(true);
+      
+      // Play launch sound
+      m_sceneNode->getSoundPlayer("LaunchPlayer")->play();
     }
     
     void trigger(Entity *entity, TriggerType type)
@@ -268,6 +280,7 @@ public:
       m_boom->setPosition(m_sceneNode->getWorldPosition());
       m_boom->start();
       m_boom->show(true);
+      m_boom->getSoundPlayer("ExplPlayer")->play();
       
       // Remove rocket from the scene
       setCollisionObject(0);
