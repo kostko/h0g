@@ -152,8 +152,15 @@ void Context::moveAndDisplay()
     btCollisionObject *objectA = static_cast<btCollisionObject*>(manifold->getBody0());
     btCollisionObject *objectB = static_cast<btCollisionObject*>(manifold->getBody1());
     
-    // Dispatch to trigger manager
-    m_triggerManager->dispatchCollisionEvent(objectA, objectB);
+    int numContacts = manifold->getNumContacts();
+    for (int j = 0; j < numContacts; j++) {
+      btManifoldPoint &pt = manifold->getContactPoint(j);
+      if (pt.getDistance() < 0.0) {
+        // Dispatch to trigger manager
+        m_triggerManager->dispatchCollisionEvent(objectA, objectB);
+        break;
+      }
+    }
   }
   
   m_triggerManager->update();
