@@ -255,6 +255,10 @@ void Explosion::animate()
   if (allDead) {
     m_render = false;
     m_animate = false;
+    
+    // Detach this node and remove it
+    getParent()->detachChild(this);
+    delete this;
   }
 }
 

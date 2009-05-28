@@ -186,7 +186,7 @@ public:
       setTriggerFilter(Entity::CollisionTrigger);
       
       // Some eye-candy for when a rocket launches
-      m_exhaust = new Explosion("Exhaust " + boost::lexical_cast<std::string>(m_rocketId), 20, m_sceneNode);
+      m_exhaust = new Explosion("Exhaust " + boost::lexical_cast<std::string>(m_rocketId), 20);
       m_exhaust->setTexture(storage->get<Texture>("/Textures/particle"));
       m_exhaust->setPosition(0, 0, 0);
       m_exhaust->setOrientation(
@@ -208,7 +208,7 @@ public:
       m_sceneNode->attachChild(m_exhaust);
       
       // Prepare the explosion instance
-      m_boom = new Explosion("Explosion "+ boost::lexical_cast<std::string>(m_rocketId), 200, m_sceneNode);
+      m_boom = new Explosion("Explosion "+ boost::lexical_cast<std::string>(m_rocketId), 200);
       m_boom->setTexture(storage->get<Texture>("/Textures/particle"));
       m_boom->setPosition(0, 0, 0);
       m_boom->setOrientation(
@@ -245,8 +245,6 @@ public:
     {
       delete m_motionState;
       delete m_sceneNode;
-      delete m_exhaust;
-      delete m_boom;
       delete m_body;
       delete m_shape;
     }

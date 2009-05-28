@@ -38,6 +38,11 @@ public:
     Entity(Context *context, const std::string &type);
     
     /**
+     * Class destructor.
+     */
+    virtual ~Entity() {}
+    
+    /**
      * Returns the entity's identifier.
      */
     std::string getType() const { return m_type; }

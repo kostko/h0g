@@ -75,6 +75,11 @@ public:
     SceneNode *child(const std::string &name);
     
     /**
+     * Returns this node's parent node (if any).
+     */
+    SceneNode *getParent() const { return m_parent; }
+    
+    /**
      * Sets node's position relative to the parent.
      *
      * @param x X component
