@@ -19,6 +19,9 @@
 #include "drivers/openal.h"
 
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
+
+#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
 
 using namespace IID;
 
@@ -53,7 +56,32 @@ Toad::Toad(const Vector3f &pos, IID::Context *context, Robot *target, AIControll
   
   // Create the toad's physical shape and body
   Vector3f hs = frogMesh->getAABB().getHalfSize();
-  m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
+  
+  btConvexHullShape *tmp = new btConvexHullShape();
+  boost::unordered_map<std::string, Item*> *children = frogMesh->children();
+  typedef std::pair<std::string, Item*> Child;
+  BOOST_FOREACH(Child it, *children) {
+    Mesh *submesh = static_cast<Mesh*>(it.second);
+    
+    for (int i = 0; i < submesh->vertexCount(); i++) {
+      float a = submesh->vertices()[3*i];
+      float b = submesh->vertices()[3*i + 1];
+      float c = submesh->vertices()[3*i + 2];
+      tmp->addPoint(btVector3(a, b, c));
+    }
+  }
+  
+  btShapeHull *hull = new btShapeHull(tmp);
+  hull->buildHull(tmp->getMargin());
+  btConvexHullShape *shape = new btConvexHullShape();
+  for (int i = 0; i < hull->numVertices(); i++) {
+    shape->addPoint(hull->getVertexPointer()[i]);
+  }
+  
+  delete hull;
+  delete tmp;
+  m_shape = shape;
+
   float mass = 10.0;
   btVector3 localInertia(0, 0, 0);
   m_shape->calculateLocalInertia(mass, localInertia);
