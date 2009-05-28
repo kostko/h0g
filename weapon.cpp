@@ -306,6 +306,7 @@ int Rocket::m_rocketId = 0;
 
 RocketLauncher::RocketLauncher(Robot *robot, Context *context)
   : Weapon(robot, context)
+    
 {
   // Just use the default setup option
   setupWeapon("/Models/rocketlauncher", "/Textures/rocketlauncher");
@@ -313,7 +314,9 @@ RocketLauncher::RocketLauncher(Robot *robot, Context *context)
 
 void RocketLauncher::fire()
 {
-  // TODO handle reload time
+  // Wait for reload
+  if (m_reloadTime.getTimeMilliseconds() < RELOAD_TIME)
+    return;
   
   btTransform transform = m_body->getCenterOfMassTransform();
   btVector3 targetVec = transform.getBasis() * btVector3(0.0, -1.0, 0.0);
@@ -321,6 +324,9 @@ void RocketLauncher::fire()
   
   Rocket *rocket = new Rocket(this, m_context);
   rocket->launch(targetVec);
+  
+  // Restart arm timer
+  m_reloadTime.reset();
 }
 
 GravityGun::GravityGun(Robot *robot, Context *context)

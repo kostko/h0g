@@ -15,6 +15,8 @@
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 
+#define RELOAD_TIME 500
+
 class EntityMotionState;
 class Robot;
 
@@ -105,6 +107,8 @@ public:
      * Fires the weapon.
      */
     void fire();
+private:
+  btClock m_reloadTime;
 };
 
 /**
