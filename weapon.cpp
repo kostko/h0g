@@ -6,6 +6,7 @@
  */
 #include "weapon.h"
 #include "robot.h"
+#include "toad.h"
 #include "motionstate.h"
 #include "collisiongroups.h"
 
@@ -273,6 +274,14 @@ public:
       // If we collide with another rocket even after arming, ignore this
       if (entity && entity->getType() == "rocket")
         return;
+      
+      if (entity && entity->getType() == "toad") {
+        // HA-HA! We have hit a toad. Damage it.
+        Toad *toad = dynamic_cast<Toad*>(entity);
+        
+        if (toad->isAlive())
+          toad->takeDamage(100.0);
+      }
       
       // Render explosion
       m_boom->setPosition(m_sceneNode->getWorldPosition());

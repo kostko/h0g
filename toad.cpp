@@ -28,7 +28,8 @@ Toad::Toad(const Vector3f &pos, IID::Context *context, Robot *target, AIControll
     m_hopInterval(0.8 + rand()/(float)RAND_MAX),
     m_hopDeltaTime(0),
     m_croakInterval(2.0 + rand()/(float)RAND_MAX),
-    m_croakDeltaTime(0)
+    m_croakDeltaTime(0),
+    m_death(false)
 {
   btDynamicsWorld *world = context->getDynamicsWorld();
   Scene *scene = context->scene();
@@ -90,10 +91,21 @@ Toad::~Toad()
 void Toad::updateAction(btCollisionWorld *world, btScalar dt)
 {
   btTransform transform = m_body->getCenterOfMassTransform();
+  
+  if (m_death) {
+    // The toad has croaked
+    transform.setRotation(transform.getRotation() * btQuaternion(btVector3(0.0, 1.0, 0.0), M_PI));
+    m_body->applyImpulse(btVector3(0, 70, 0), btVector3(0,0,0));
+    
+    // Do this "animation" only once
+    m_death = false;
+  }
+  
   m_hopDeltaTime += dt;
   m_croakDeltaTime += dt;
   
-  if (m_hopDeltaTime > m_hopInterval) 
+  // Animate only live toads
+  if (m_hopDeltaTime > m_hopInterval && isAlive()) 
   {
     // Correct the toad's direction
     Vector3f d = m_ai->getDirection(m_mapBody, m_target->getMapBody());
@@ -141,8 +153,8 @@ void Toad::setPosition(Vector3f position)
 void Toad::takeDamage(double dmg)
 {
   m_life -= dmg;
-  if (m_life < 0) {
+  if (m_life <= 0) {
     // The toad is dead. 
-    // Do the proper action(s).
+    m_death = true;
   }
 }

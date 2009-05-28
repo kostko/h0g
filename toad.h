@@ -60,6 +60,9 @@ private:
     // How much damage the toad deals
     double m_damage;
     
+    // Animate death flag
+    bool m_death;
+    
     // Sounds
     boost::unordered_map<std::string, IID::Sound*> m_sounds;
     
