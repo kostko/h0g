@@ -115,9 +115,11 @@ public:
     void setBounds(float width, float breadth, float height);
     
     /**
-     * Returns all the particles to (0,0,0)
+     * Boost the speed of the particles by this factor.
+     *
+     * @param vfactor The factor by which the speed is boosted
      */
-    void explode();
+    void boostSpeed(float sfactor);
     
     /**
      * Renders this node.
@@ -132,7 +134,7 @@ public:
      * @param colors A list of available colors
      */
     void setColors(std::vector<Vector3f> colors);
-private:
+protected:
     /**
      * Reset's all the particles' parameters.
      */
@@ -144,6 +146,7 @@ private:
     
     // Size of the vertex array
     int m_maxParticles;
+    float m_speedFactor;
     float m_slowdown;
     float m_zoom;
     Vector3f m_gravity;
@@ -164,6 +167,36 @@ private:
     
     // Bounding box display
     bool m_showBoundingBox;
+};
+
+
+/**
+ * This class represents an explosion instance.
+ */
+class Explosion : public ParticleEmitter {
+public:
+  /**
+   * Class constructor.
+   *
+   * @param name Node name
+   * @param parent Parent node
+   */
+  Explosion(const std::string &name, int maxParticles, SceneNode *parent = 0);
+  
+  /**
+   * Move one step forward in the simulation of particles.
+   *
+   * This calculates the new parameters (position, color, speed, ...) of 
+   * all the particles in the system.
+   */
+  void animate();
+  
+  /**
+   * Renders this node.
+   *
+   * @param batcher State batcher that holds the render queue
+   */
+  void render(StateBatcher *batcher);
 };
 
 }

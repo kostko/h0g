@@ -23,6 +23,7 @@ ParticleEmitter::ParticleEmitter(const std::string &name, int maxParticles, Scen
     m_animate(false),
     m_render(false),
     m_maxParticles(maxParticles),
+    m_speedFactor(1.0),
     m_slowdown(2.0f),
     m_zoom(-40.0f),
     m_gravity(Vector3f(0.0,-0.8,0.0)),
@@ -164,13 +165,9 @@ void ParticleEmitter::setColors(std::vector<Vector3f> colors)
   m_colorList = colors;
 }
 
-void ParticleEmitter::explode()
+void ParticleEmitter::boostSpeed(float sfactor)
 {
-  //Just reset all particles
-  for (int i = 0; i < m_maxParticles; i++) 
-  {
-    reset(&m_particles[i]);
-  }
+  m_speedFactor = sfactor;
 }
 
 void ParticleEmitter::render(StateBatcher *batcher)
@@ -205,11 +202,77 @@ void ParticleEmitter::reset(Particle *p)
   p->m_rgba[1] = color[1];
   p->m_rgba[2] = color[2];
   
-  p->m_velocity[0] = RANDOM_SPEED();
-  p->m_velocity[1] = RANDOM_SPEED();
-  p->m_velocity[2] = RANDOM_SPEED();
+  p->m_velocity[0] = RANDOM_SPEED() * m_speedFactor;
+  p->m_velocity[1] = RANDOM_SPEED() * m_speedFactor;
+  p->m_velocity[2] = RANDOM_SPEED() * m_speedFactor;
   
   p->m_rgba[3] = p->m_life;
+}
+
+Explosion::Explosion(const std::string &name, int maxParticles, SceneNode *parent)
+  : ParticleEmitter(name, maxParticles, parent)
+{
+}
+
+void Explosion::animate() 
+{
+  if (!m_animate)
+    return;
+  
+  bool allDead = true;
+  
+    // Update the parameters
+  for (int i = 0; i < m_maxParticles; i++) 
+  {
+    Particle *p = &m_particles[i];
+
+    // Skip dead particles
+    if (!p->m_active)
+      continue;
+
+    allDead = false;
+    
+    p->m_position[0] += p->m_velocity[0] / (m_slowdown * 1000);
+    p->m_position[1] += p->m_velocity[1] / (m_slowdown * 1000);
+    p->m_position[2] += p->m_velocity[2] / (m_slowdown * 1000);
+    
+    Vector3f point = Vector3f(p->m_position[0], p->m_position[1], p->m_position[2]);
+    
+    // Check for bounds
+    if(!m_localBounds.contains(point))
+    {
+      // Kill the particle
+      p->m_life = 0;
+    }
+    
+    p->m_velocity += p->m_gravity;
+    
+    // Reduce life by fade (alpha component of the color)
+    p->m_life -= p->m_fade;
+    p->m_rgba[3] = p->m_life;
+  }
+  
+  if (allDead) {
+    m_render = false;
+    m_animate = false;
+  }
+}
+
+void Explosion::render(StateBatcher *batcher)
+{
+  // Step in the simulation
+  animate();
+  
+  if (m_render) {
+    batcher->addParticleEmitter(
+      m_shader,
+      m_texture,
+      m_maxParticles,
+      m_vertices,
+      m_colors,
+      m_worldTransform
+    );
+  }
 }
 
 }

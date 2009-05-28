@@ -18,6 +18,9 @@
 #include "entities/entity.h"
 #include "context.h"
 
+// IID includes
+#include "scene/particles.h"
+
 #include <boost/lexical_cast.hpp>
 
 using namespace IID;
@@ -162,27 +165,6 @@ public:
       launcher->m_sceneNode->attachChild(m_sceneNode);
       m_sceneNode->separateNodeFromParent();
       
-      // TODO Attach a particle emitter for missile's exhaust
-      /*m_exhaust = new ParticleEmitter("Exhaust", 50, m_sceneNode, scene);
-      m_exhaust->setTexture(storage->get<Texture>("/Textures/particle"));
-      m_exhaust->setPosition(0, 0, 0);
-      m_exhaust->setOrientation(
-        AngleAxisf(0.5*M_PI, Vector3f::UnitX()) *
-        AngleAxisf(1.0*M_PI, Vector3f::UnitY()) *
-        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
-      );
-      m_exhaust->setGravity(0.0, 10.0, 0.0);
-      m_exhaust->setBounds(1.0, 1.0, 1.0);
-      
-      std::vector<Vector3f> colors;
-      colors.push_back(Vector3f(1, 0.6, 0));
-      colors.push_back(Vector3f(0.9, 0.55, 0));
-      colors.push_back(Vector3f(1, 0.65, 0));
-      m_exhaust->setColors(colors);
-      
-      m_exhaust->init();
-      m_sceneNode->attachChild(m_exhaust);*/
-      
       // Create the missile's physical shape and body
       m_shape = new btBoxShape(btVector3(hs[0], hs[1], hs[2]));
       float mass = 1.0;
@@ -201,6 +183,50 @@ public:
       setCollisionObject(m_body);
       setWantEnvironmentCollisions(true);
       setTriggerFilter(Entity::CollisionTrigger);
+      
+      // Some eye-candy for when a rocket launches
+      m_exhaust = new Explosion("Exhaust " + boost::lexical_cast<std::string>(m_rocketId), 20, m_sceneNode);
+      m_exhaust->setTexture(storage->get<Texture>("/Textures/particle"));
+      m_exhaust->setPosition(0, 0, 0);
+      m_exhaust->setOrientation(
+        AngleAxisf(0.0*M_PI, Vector3f::UnitX()) *
+        AngleAxisf(0.5*M_PI, Vector3f::UnitY()) *
+        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+      );
+      m_exhaust->setGravity(0.0, 0.0, 0.0);
+      m_exhaust->setBounds(0.3, 0.3, 0.3);
+      
+      std::vector<Vector3f> colors;
+      colors.push_back(Vector3f(1, 0.9, 0));
+      colors.push_back(Vector3f(0.9, 0.7, 0));
+      colors.push_back(Vector3f(1, 0.9, 0));
+      m_exhaust->setColors(colors);
+      m_exhaust->boostSpeed(5.0);
+      
+      m_exhaust->init();
+      m_sceneNode->attachChild(m_exhaust);
+      
+      // Prepare the explosion instance
+      m_boom = new Explosion("Explosion "+ boost::lexical_cast<std::string>(m_rocketId), 200, m_sceneNode);
+      m_boom->setTexture(storage->get<Texture>("/Textures/particle"));
+      m_boom->setPosition(0, 0, 0);
+      m_boom->setOrientation(
+        AngleAxisf(0.0*M_PI, Vector3f::UnitX()) *
+        AngleAxisf(0.0*M_PI, Vector3f::UnitY()) *
+        AngleAxisf(0.0*M_PI, Vector3f::UnitZ())
+      );
+      m_boom->setGravity(0.0, -0.3, 0.0);
+      m_boom->setBounds(3.0, 3.0, 3.0);
+      
+      colors.clear();
+      colors.push_back(Vector3f(0.9, 0.1, 0));
+      colors.push_back(Vector3f(0.9, 0.15, 0));
+      colors.push_back(Vector3f(1, 0.2, 0));
+      m_boom->setColors(colors);
+      m_exhaust->boostSpeed(1000.0);
+      
+      m_boom->init();
+      m_scene->attachNode(m_boom);
     }
     
     /**
@@ -210,7 +236,8 @@ public:
     {
       delete m_motionState;
       delete m_sceneNode;
-      //delete m_exhaust;
+      delete m_exhaust;
+      delete m_boom;
       delete m_body;
       delete m_shape;
     }
@@ -222,8 +249,8 @@ public:
     {
       m_body->applyCentralImpulse(vector * 10.0);
       m_armTimer.reset();
-      //m_exhaust->start();
-      //m_exhaust->show(true);
+      m_exhaust->start();
+      m_exhaust->show(true);
     }
     
     void trigger(Entity *entity, TriggerType type)
@@ -237,7 +264,10 @@ public:
       if (entity && entity->getType() == "rocket")
         return;
       
-      // TODO render explosion
+      // Render explosion
+      m_boom->setPosition(m_sceneNode->getWorldPosition());
+      m_boom->start();
+      m_boom->show(true);
       
       // Remove rocket from the scene
       setCollisionObject(0);
@@ -252,7 +282,8 @@ private:
     static int m_rocketId;
     Scene *m_scene;
     SceneNode *m_sceneNode;
-    ParticleEmitter *m_exhaust;
+    Explosion *m_exhaust;
+    Explosion *m_boom;
     btCollisionShape *m_shape;
     EntityMotionState *m_motionState;
     btRigidBody *m_body;
