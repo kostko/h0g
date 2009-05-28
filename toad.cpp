@@ -129,7 +129,7 @@ void Toad::updateAction(btCollisionWorld *world, btScalar dt)
   }
   
   // See it is time to make an annoying croak
-  if (m_croakDeltaTime > m_croakInterval)
+  if (m_croakDeltaTime > m_croakInterval && isAlive())
   {
     m_sceneNode->getSoundPlayer("CroakPlayer")->play();
     m_croakDeltaTime = 0;
