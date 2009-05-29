@@ -39,6 +39,12 @@
 // Entities
 #include "entities/triggers.h"
 
+// GUI
+#include "gui/manager.h"
+
+// Gamestates
+#include "gamestate.h"
+
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 
@@ -55,7 +61,8 @@ static Context *gContext = 0;
 Context::Context()
   : m_logger(new Logger("iid.context")),
     m_storage(new Storage(this)),
-    m_debug(false)
+    m_debug(false),
+    m_viewportDimensions(1024, 768)
 {
   gContext = this;
 
@@ -73,6 +80,12 @@ Context::Context()
   
   // Initialize the trigger manager
   m_triggerManager = new TriggerManager(this);
+  
+  // Initialize the GUI manager
+  m_guiManager = new GUI::Manager(this);
+  
+  // Initialize the game state manager
+  m_gameStateManager = new GameStateManager();
   
   // Register basic item types into the storage subsystem
   registerBasicStorageTypes();
@@ -92,10 +105,14 @@ Context::Context()
 
 Context::~Context()
 {
+  delete m_gameStateManager;
+  delete m_guiManager;
   delete m_triggerManager;
   delete m_soundContext;
   delete m_driver;
   delete m_eventDispatcher;
+  delete m_scene;
+  delete m_storage;
   delete m_logger;
   
   // Delete physics stuff
@@ -143,7 +160,8 @@ void Context::moveAndDisplay()
     usleep((useconds_t) (8333 - dt));
   
   // Step the world
-  m_dynamicsWorld->stepSimulation(dt * 0.000001f, 7);
+  dt *= 0.000001;
+  m_dynamicsWorld->stepSimulation(dt, 7);
   
   // Handle collision triggers
   int manifolds = m_dynamicsWorld->getDispatcher()->getNumManifolds();
@@ -164,6 +182,12 @@ void Context::moveAndDisplay()
   }
   
   m_triggerManager->update();
+  
+  // Update GUI (needed for animations)
+  m_guiManager->update(dt);
+  
+  // Update game state
+  m_gameStateManager->update(dt);
   
   // Render the scene
   display();
@@ -191,6 +215,9 @@ void Context::display()
     // Render the scene
     m_scene->render();
   }
+  
+  // Render the GUI
+  m_guiManager->render();
   
   m_driver->swap();
 }
@@ -270,6 +297,11 @@ void Context::init()
   // Load storage items from the manifest file
   m_storage->load();
   m_logger->info("IID initialized and ready.");
+}
+
+Vector2i Context::getViewportDimensions() const
+{
+  return m_viewportDimensions;
 }
 
 }

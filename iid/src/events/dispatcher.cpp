@@ -27,8 +27,20 @@ void EventDispatcher::keyboardEvent(bool special, int key, bool up)
 
 void EventDispatcher::mousePressEvent(int x, int y, int button)
 {
-  MousePressEvent event(x, y, button);
+  MouseEvent event(x, y, button, ButtonPressed);
   signalMousePress(&event);
+}
+
+void EventDispatcher::mouseReleaseEvent(int x, int y, int button)
+{
+  MouseEvent event(x, y, button, ButtonReleased);
+  signalMouseRelease(&event);
+}
+
+void EventDispatcher::mouseMoveEvent(int x, int y)
+{
+  MouseEvent event(x, y);
+  signalMouseMove(&event);
 }
 
 }

@@ -243,6 +243,7 @@ public:
      */
     enum DrawPrimitive {
       Triangles,
+      TriangleStrip,
       Lines
     };
     
@@ -295,6 +296,66 @@ public:
      * world.
      */
     virtual btIDebugDraw *getDebugBulletDynamicsDrawer() = 0;
+    
+    /**
+     * Enters the 2D mode suitable for drawing GUI elements.
+     */
+    virtual void enter2DMode() const = 0;
+    
+    /**
+     * Leaves the 2D mode by restoring previous configuration.
+     */
+    virtual void leave2DMode() const = 0;
+    
+    /**
+     * Sets the state of scissor testing.
+     *
+     * @param enable True to enable scissor test
+     */
+    virtual void setScissorTest(bool enable) const = 0;
+    
+    /**
+     * Sets up the scissor region.
+     *
+     * @param region A vector representing the region
+     */
+    virtual void setScissorRegion(const Vector4i &region) const = 0;
+    
+    /**
+     * Draws a line between two points.
+     *
+     * @param c1 Color at start point
+     * @param p1 Start point
+     * @param c2 Color at end point
+     * @param p2 End point
+     */
+    virtual void drawLine(const Vector4f &c1, const Vector3f &p1, const Vector4f &c2, const Vector3f &p2) const = 0;
+    
+    /**
+     * Draws a rectangle.
+     *
+     * @param pos Upper left corner position
+     * @param dim Dimensions
+     * @param c1 Upper left corner color
+     * @param c2 Upper right corner color
+     * @param c3 Lower right corner color
+     * @param c4 Lower left corner color
+     */
+    virtual void drawRect(const Vector3f &pos, const Vector3f &dim, const Vector4f &c1, const Vector4f &c2,
+                          const Vector4f &c3, const Vector4f &c4) const = 0;
+    
+    /**
+     * Draws a filled rectangle.
+     *
+     * @param pos Upper left corner position
+     * @param dim Dimensions
+     * @param c1 Upper left corner color
+     * @param c2 Upper right corner color
+     * @param c3 Lower right corner color
+     * @param c4 Lower left corner color
+     */
+    virtual void fillRect(const Vector3f &pos, const Vector3f &dim, const Vector4f &c1, const Vector4f &c2,
+                          const Vector4f &c3, const Vector4f &c4) const = 0;
     
     /**
      * Draws elements from the currently bound index buffer.

@@ -233,6 +233,66 @@ public:
     btIDebugDraw *getDebugBulletDynamicsDrawer();
     
     /**
+     * Enters the 2D mode suitable for drawing GUI elements.
+     */
+    void enter2DMode() const;
+    
+    /**
+     * Leaves the 2D mode by restoring previous configuration.
+     */
+    void leave2DMode() const;
+    
+    /**
+     * Sets the state of scissor testing.
+     *
+     * @param enable True to enable scissor test
+     */
+    void setScissorTest(bool enable) const;
+    
+    /**
+     * Sets up the scissor region.
+     *
+     * @param region A vector representing the region
+     */
+    void setScissorRegion(const Vector4i &region) const;
+    
+    /**
+     * Draws a line between two points.
+     *
+     * @param c1 Color at start point
+     * @param p1 Start point
+     * @param c2 Color at end point
+     * @param p2 End point
+     */
+    void drawLine(const Vector4f &c1, const Vector3f &p1, const Vector4f &c2, const Vector3f &p2) const;
+    
+    /**
+     * Draws a rectangle.
+     *
+     * @param pos Upper left corner position
+     * @param dim Dimensions
+     * @param c1 Upper left corner color
+     * @param c2 Upper right corner color
+     * @param c3 Lower right corner color
+     * @param c4 Lower left corner color
+     */
+    void drawRect(const Vector3f &pos, const Vector3f &dim, const Vector4f &c1, const Vector4f &c2,
+                  const Vector4f &c3, const Vector4f &c4) const;
+    
+    /**
+     * Draws a filled rectangle.
+     *
+     * @param pos Upper left corner position
+     * @param dim Dimensions
+     * @param c1 Upper left corner color
+     * @param c2 Upper right corner color
+     * @param c3 Lower right corner color
+     * @param c4 Lower left corner color
+     */
+    void fillRect(const Vector3f &pos, const Vector3f &dim, const Vector4f &c1, const Vector4f &c2,
+                  const Vector4f &c3, const Vector4f &c4) const;
+    
+    /**
      * Draws elements from the currently bound index buffer.
      *
      * @param count Number of elements to draw

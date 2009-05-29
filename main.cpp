@@ -35,6 +35,15 @@
 // Audio support
 #include "drivers/openal.h"
 
+// GUI
+#include "gui/manager.h"
+#include "gui/windows.h"
+#include "gui/window.h"
+#include "gui/button.h"
+
+// Gamestate
+#include "gamestate.h"
+
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
 #include <bullet/BulletCollision/CollisionShapes/btTriangleShape.h>
@@ -141,46 +150,55 @@ bool bulletContactAddedCallback(btManifoldPoint &cp,
 // External declaration for contact added callback
 extern ContactAddedCallback gContactAddedCallback;
 
-class Game {
+/**
+ * This game state handles in-game menu display.
+ */
+class MenuState : public GameState {
 public:
     /**
      * Class constructor.
+     *
+     * @param context Engine context
      */
-    Game()
+    MenuState(Context *context)
+      : GameState("menu", context),
+        m_context(context)
     {
-      // Initialize stuff
-      m_context = new Context();
-      m_context->init();
-      
-      // Save pointers for easier reference
-      m_scene = m_context->scene();
-      m_storage = m_context->storage();
-      m_eventDispatcher = m_context->getEventDispatcher();
-      
-      // Subscribe to events
-      m_eventDispatcher->signalKeyboard.connect(boost::bind(&Game::keyboardEvent, this, _1));
-      m_eventDispatcher->signalMousePress.connect(boost::bind(&Game::mousePressEvent, this, _1));
-      
-      // Setup on contact added callback
-      gContactAddedCallback = bulletContactAddedCallback;
-      
-      // Create a player object
-      m_soundPlayer = new OpenALPlayer();
-    }
-    
-    ~Game()
-    {
-      delete m_staticGeometryMeta;
-      delete m_staticGeometry;
-      delete m_robot;
     }
     
     /**
-     * Mouse event handler.
+     * This method is called when this game state is entered.
+     *
+     * @param fromState State from which we have entered
      */
-    void mousePressEvent(MousePressEvent *ev)
+    void enter(const std::string &fromState)
     {
-      m_context->getTriggerManager()->dispatchPickEvent(ev->x(), ev->y());
+      m_inGame = (fromState == "play");
+      
+      // Create game menu
+      GUI::WindowManager *wm = m_context->getGuiManager()->getWindowManager();
+      wm->setBackgroundColor(GUI::Color(0, 0, 0, 100));
+      
+      int centerX = wm->getWidth() / 2;
+      int centerY = wm->getHeight() / 2;
+      m_menuWindow = new GUI::Window(wm);
+      m_menuWindow->setPosition(centerX - 100, centerY - 55);
+      m_menuWindow->setSize(200, 110);
+      
+      GUI::Button *startGame = new GUI::Button(m_menuWindow);
+      startGame->setPosition(10, 10);
+      startGame->setSize(180, 40);
+      startGame->signalClicked.connect(boost::bind(&MenuState::startGameClicked, this));
+      
+      GUI::Button *quitGame = new GUI::Button(m_menuWindow);
+      quitGame->setPosition(10, 60);
+      quitGame->setSize(180, 40);
+      quitGame->signalClicked.connect(boost::bind(&MenuState::quitClicked, this));
+      
+      // Handle escape key
+      EventDispatcher *eventDispatcher = m_context->getEventDispatcher();
+      m_keyboardEvents = eventDispatcher->signalKeyboard.connect(boost::bind(&MenuState::keyboardEvent, this, _1));
+      m_ignoreKeyboardEvent = true;
     }
     
     /**
@@ -188,96 +206,97 @@ public:
      */
     void keyboardEvent(KeyboardEvent *ev)
     {
-      if (ev->isSpecial()) {
-        if (!ev->isReleased()) {
-          // Handle camera movements
-          switch (ev->key()) {
-            case EventDispatcher::Up: m_camera->walk(0.2); break;
-            case EventDispatcher::Down: m_camera->walk(-0.2); break;
-            case EventDispatcher::Left: m_camera->rotate(0.0, 2.0, 0.0); break;
-            case EventDispatcher::Right: m_camera->rotate(0.0, -2.0, 0.0); break;
-          }
-        }
-      } else {
-        switch (ev->key()) {
-          case 'w': m_robot->forward(!ev->isReleased()); break;
-          case 's': m_robot->backward(!ev->isReleased()); break;
-          case 'a': m_robot->left(!ev->isReleased()); break;
-          case 'd': m_robot->right(!ev->isReleased()); break;
-          case 'h': {
-            if (!ev->isReleased())
-              m_robot->hover();
-            break;
-          }
-          // Toggle debug mode with 'p'
-          case 'p': {
-            if (!ev->isReleased())
-              m_context->setDebug(!m_context->isDebug());
-            break;
-          }
-          case 't': {
-            // Taunt the enemy by squeaking
-            m_robot->taunt();
-            break;
-          }
-          case 'q': {
-            // Raise weapon
-            if (!ev->isReleased())
-              m_robot->weaponUp();
-            break;
-          }
-          case 'e': {
-            // Lower weapon
-            if (!ev->isReleased())
-              m_robot->weaponDown();
-            break;
-          }
-          
-          case 9: {
-            // Switch current weapon
-            if (!ev->isReleased())
-              m_robot->switchWeapon();
-            break;
-          }
-          
-          case ' ': {
-            // Fire current weapon
-            if (!ev->isReleased())
-              m_robot->weaponFire();
-            break;
-          }
-          
-          case 'm': {
-            // Toggle background music on/off
-            if (!ev->isReleased()) {
-              if (m_soundPlayer->isPlaying())
-                m_soundPlayer->stop();
-              else
-                m_soundPlayer->play();
-            }
-            break;
-          }
-          
-          // Exit when escape is pressed
-          case 27: {
-              delete m_context;
-              delete m_scene;
-              delete m_storage;
-              exit(0);
-          }
+      if (m_ignoreKeyboardEvent && m_inGame) {
+        m_ignoreKeyboardEvent = false;
+        return;
+      }
+      
+      if (!ev->isReleased() && !ev->isSpecial() && ev->key() == 27) {
+        if (m_inGame) {
+          getGsm()->transitionDown();
+        } else {
+          delete m_context;
+          exit(0);
         }
       }
     }
     
     /**
-     * Prepares the scene.
+     * Called when start game/resume game button has been clicked.
      */
-    void prepare()
+    void startGameClicked()
     {
-      // Prepare the scene
-      m_scene->setPerspective(45., 1024., 768., 0.1, 100.0);
+      getGsm()->transitionTo("play");
+    }
+    
+    /**
+     * Called when the quit button has been clicked.
+     */
+    void quitClicked()
+    {
+      delete m_context;
+      exit(0);
+    }
+    
+    /**
+     * This method is called when this game state is left behind.
+     *
+     * @param toState State to which we are going
+     */
+    void leave(const std::string &toState)
+    {
+      // Remove keyboard handler
+      m_keyboardEvents.disconnect();
       
-      // Create a test scene
+      // Reset transparent background
+      GUI::WindowManager *wm = m_context->getGuiManager()->getWindowManager();
+      wm->setBackgroundColor(GUI::Color(0, 0, 0, 0));
+      
+      // Remove menu window
+      m_menuWindow->reparent(0);
+      delete m_menuWindow;
+    }
+private:
+    Context *m_context;
+    GUI::Window *m_menuWindow;
+    boost::signals::connection m_keyboardEvents;
+    bool m_inGame;
+    bool m_ignoreKeyboardEvent;
+};
+
+/**
+ * This game state handles the actual gameplay.
+ */
+class PlayState : public GameState {
+public:
+    /**
+     * Class constructor.
+     *
+     * @param context Engine context
+     */
+    PlayState(Context *context)
+      : GameState("play", context),
+        m_context(context),
+        m_scene(context->scene()),
+        m_storage(context->storage()),
+        m_camera(0),
+        m_soundPlayer(0),
+        m_robot(0),
+        m_staticGeometry(0),
+        m_staticGeometryMeta(0),
+        m_staticShape(0),
+        m_ai(0)
+    {
+    }
+    
+    /**
+     * This method is called when this game state is entered.
+     *
+     * @param fromState State from which we have entered
+     */
+    void enter(const std::string &fromState)
+    {
+      // Create our game scene
       m_camera = new Camera(m_scene);
       m_camera->setLag(20);
       m_camera->setZoom(Vector3f(-3.6, 2., 3.6));
@@ -349,6 +368,7 @@ public:
       new Toad(Vector3f(34.0, 0.55, -6.5), m_context, m_robot, m_ai);
       
       // Init some background music
+      m_soundPlayer = new OpenALPlayer();
       m_soundPlayer->setMode(Player::Looped);
       m_soundPlayer->queue(m_storage->get<Sound>("/Sounds/zair"));
       m_soundPlayer->play();
@@ -363,21 +383,133 @@ public:
       // FIXME we need proper shaders before we can use lighting, uncomment this when ready
       //m_scene->attachNode(light);
       m_scene->setAmbientLight(0.2, 0.2, 0.2);
+      
+      // Subscribe to events
+      EventDispatcher *eventDispatcher = m_context->getEventDispatcher();
+      m_keyboardEvents = eventDispatcher->signalKeyboard.connect(boost::bind(&PlayState::keyboardEvent, this, _1));
     }
     
     /**
-     * Enter the render loop.
+     * Keyboard event handler.
      */
-    void start()
+    void keyboardEvent(KeyboardEvent *ev)
     {
-      m_context->start();
+      if (!ev->isSpecial()) {
+        switch (ev->key()) {
+          case 'w': m_robot->forward(!ev->isReleased()); break;
+          case 's': m_robot->backward(!ev->isReleased()); break;
+          case 'a': m_robot->left(!ev->isReleased()); break;
+          case 'd': m_robot->right(!ev->isReleased()); break;
+          case 'h': {
+            if (!ev->isReleased())
+              m_robot->hover();
+            break;
+          }
+          // Toggle debug mode with 'p'
+          case 'p': {
+            if (!ev->isReleased())
+              m_context->setDebug(!m_context->isDebug());
+            break;
+          }
+          case 't': {
+            // Taunt the enemy by squeaking
+            m_robot->taunt();
+            break;
+          }
+          case 'q': {
+            // Raise weapon
+            if (!ev->isReleased())
+              m_robot->weaponUp();
+            break;
+          }
+          case 'e': {
+            // Lower weapon
+            if (!ev->isReleased())
+              m_robot->weaponDown();
+            break;
+          }
+          
+          case 9: {
+            // Switch current weapon
+            if (!ev->isReleased())
+              m_robot->switchWeapon();
+            break;
+          }
+          
+          case ' ': {
+            // Fire current weapon
+            if (!ev->isReleased())
+              m_robot->weaponFire();
+            break;
+          }
+          
+          case 'm': {
+            // Toggle background music on/off
+            if (!ev->isReleased()) {
+              if (m_soundPlayer->isPlaying())
+                m_soundPlayer->stop();
+              else
+                m_soundPlayer->play();
+            }
+            break;
+          }
+          
+          // Display game menu when escape is pressed
+          case 27: {
+            if (!ev->isReleased())
+              getGsm()->transitionTo("menu", true);
+            break;
+          }
+        }
+      }
+    }
+    
+    /**
+     * This method is called when this game state has been put on
+     * the stack. The state is still active and will receive updates.
+     *
+     * @param state State that has now become active
+     */
+    void stack(const std::string &state)
+    {
+      m_keyboardEvents.block();
+    }
+    
+    /**
+     * This method is called when this game state has been popped
+     * out of the stack and is now the current state.
+     *
+     * @param state State that has been active before
+     */
+    void unstack(const std::string &state)
+    {
+      m_keyboardEvents.unblock();
+    }
+    
+    /**
+     * This method is called when this game state is left behind.
+     *
+     * @param toState State to which we are going
+     */
+    void leave(const std::string &toState)
+    {
+      delete m_staticGeometryMeta;
+      delete m_staticGeometry;
+      delete m_robot;
+      delete m_soundPlayer;
+      delete m_ai;
+      
+      m_staticGeometryMeta = 0;
+      m_staticGeometry = 0;
+      m_robot = 0;
+      m_soundPlayer = 0;
+      m_ai = 0;
     }
 private:
     Context *m_context;
     Scene *m_scene;
     Storage *m_storage;
     Camera *m_camera;
-    EventDispatcher *m_eventDispatcher;
     
     // Ambiental player
     Player *m_soundPlayer;
@@ -392,6 +524,82 @@ private:
     
     // AI
     AIController *m_ai;
+    
+    // Events
+    boost::signals::connection m_keyboardEvents;
+};
+
+class Game {
+public:
+    /**
+     * Class constructor.
+     */
+    Game()
+    {
+      // Initialize stuff
+      m_context = new Context();
+      m_context->init();
+      
+      // Subscribe to events
+      EventDispatcher *eventDispatcher = m_context->getEventDispatcher();
+      eventDispatcher->signalMousePress.connect(boost::bind(&Game::mousePressEvent, this, _1));
+      eventDispatcher->signalMouseRelease.connect(boost::bind(&Game::mouseReleaseEvent, this, _1));
+      eventDispatcher->signalMouseMove.connect(boost::bind(&Game::mouseMoveEvent, this, _1));
+      
+      // Setup on contact added callback
+      gContactAddedCallback = bulletContactAddedCallback;
+    }
+    
+    /**
+     * Mouse button press event handler.
+     */
+    void mousePressEvent(MouseEvent *ev)
+    {
+      // First check if the GUI will handle mouse press, if not use it for picking objects
+      if (!m_context->getGuiManager()->handleMousePress(ev))
+        m_context->getTriggerManager()->dispatchPickEvent(ev->x(), ev->y());
+    }
+    
+    /**
+     * Mouse button release event handler.
+     */
+    void mouseReleaseEvent(MouseEvent *ev)
+    {
+      m_context->getGuiManager()->handleMouseRelease(ev);
+    }
+    
+    /**
+     * Mouse move event handler.
+     */
+    void mouseMoveEvent(MouseEvent *ev)
+    {
+      m_context->getGuiManager()->handleMouseMove(ev);
+    }
+    
+    /**
+     * Prepares the scene.
+     */
+    void prepare()
+    {
+      // Configure scene perspective
+      m_context->scene()->setPerspective(45., 1024., 768., 0.1, 100.0);
+      
+      // Configure game states
+      GameStateManager *gsm = m_context->getGameStateManager();
+      gsm->addState(new MenuState(m_context));
+      gsm->addState(new PlayState(m_context));
+      gsm->transitionTo("menu");
+    }
+    
+    /**
+     * Enter the main engine loop.
+     */
+    void start()
+    {
+      m_context->start();
+    }
+private:
+    Context *m_context;
 };
 
 int main()

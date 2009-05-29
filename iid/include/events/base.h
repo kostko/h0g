@@ -38,6 +38,14 @@ public:
     };
     
     /**
+     * Valid mouse button states.
+     */
+    enum MouseButtonState {
+      ButtonPressed = 0,
+      ButtonReleased
+    };
+    
+    /**
      * Keyboard event handler.
      *
      * @param special Set to true if a special key has been pressed/released
@@ -54,6 +62,23 @@ public:
      * @param button Pressed button
      */
     virtual void mousePressEvent(int x, int y, int button) = 0;
+    
+    /**
+     * Mouse button release event handler.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param button Released button
+     */
+    virtual void mouseReleaseEvent(int x, int y, int button) = 0;
+    
+    /**
+     * Mouse move event handler.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     */
+    virtual void mouseMoveEvent(int x, int y) = 0;
 };
 
 }

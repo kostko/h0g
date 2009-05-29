@@ -7,6 +7,8 @@
 #ifndef IID_CONTEXT_H
 #define IID_CONTEXT_H
 
+#include "globals.h"
+
 #include <string>
 
 #include <bullet/LinearMath/btQuickprof.h>
@@ -26,6 +28,11 @@ class Scene;
 class EventDispatcher;
 class SoundContext;
 class TriggerManager;
+class GameStateManager;
+
+namespace GUI {
+  class Manager;
+}
 
 /**
  * The Infinite Improbability Drive context object links all aspects of
@@ -91,6 +98,16 @@ public:
     TriggerManager *getTriggerManager() const { return m_triggerManager; }
     
     /**
+     * Returns the GUI manager instance.
+     */
+    GUI::Manager *getGuiManager() const { return m_guiManager; }
+    
+    /**
+     * Returns the game state manager instance.
+     */
+    GameStateManager *getGameStateManager() const { return m_gameStateManager; }
+    
+    /**
      * Sets debugging flag.
      *
      * @param value True to enable debug mode, false otherwise
@@ -101,6 +118,11 @@ public:
      * Returns true if debug mode is currently set.
      */
     bool isDebug() const { return m_debug; }
+    
+    /**
+     * Returns the viewport dimensions.
+     */
+    Vector2i getViewportDimensions() const;
 protected:
     /**
      * Registers basic storage types.
@@ -165,8 +187,17 @@ private:
     // Trigger manager
     TriggerManager *m_triggerManager;
     
+    // GUI manager
+    GUI::Manager *m_guiManager;
+    
+    // Game state manager
+    GameStateManager *m_gameStateManager;
+    
     // Debugging mode
     bool m_debug;
+    
+    // Viewport dimensions
+    Vector2i m_viewportDimensions;
 };
 
 }

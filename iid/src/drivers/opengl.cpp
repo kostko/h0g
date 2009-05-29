@@ -493,6 +493,13 @@ static void __glutMouseCallback(int button, int state, int x, int y)
   
   if (state == GLUT_DOWN)
     gOpenGLDriver->m_dispatcher->mousePressEvent(x, y, rbutton);
+  else
+    gOpenGLDriver->m_dispatcher->mouseReleaseEvent(x, y, rbutton);
+}
+
+static void __glutMouseMoveCallback(int x, int y)
+{
+  gOpenGLDriver->m_dispatcher->mouseMoveEvent(x, y);
 }
 
 void OpenGLDriver::processEvents() const
@@ -504,6 +511,7 @@ void OpenGLDriver::processEvents() const
     glutSpecialFunc(__glutSpecialCallback);
     glutSpecialUpFunc(__glutSpecialUpCallback);
     glutMouseFunc(__glutMouseCallback);
+    glutMotionFunc(__glutMouseMoveCallback);
   }
   
   // Enter the main loop
@@ -530,10 +538,108 @@ btIDebugDraw *OpenGLDriver::getDebugBulletDynamicsDrawer()
   return m_debugDrawer;
 }
 
+void OpenGLDriver::enter2DMode() const
+{
+  // Setup alpha blending
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  // Disable depth testing and backface culling
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_CULL_FACE);
+  
+  // Setup 2D projection matrix
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  gluOrtho2D(0, 1024, 0, 768);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  
+}
+
+void OpenGLDriver::leave2DMode() const
+{
+  // Restore previous projection matrix
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  
+  // Disable alpha blending and reenable depth testing/backface culling
+  glDisable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+}
+
+void OpenGLDriver::setScissorTest(bool enable) const
+{
+  if (enable)
+    glEnable(GL_SCISSOR_TEST);
+  else
+    glDisable(GL_SCISSOR_TEST);
+}
+
+void OpenGLDriver::setScissorRegion(const Vector4i &region) const
+{
+  GLint viewport[4];
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  
+  // Fix coordinates and setup the region
+  glScissor(region[0], viewport[3] - region[1] - region[3], region[2], region[3]);
+}
+
+void OpenGLDriver::drawLine(const Vector4f &c1, const Vector3f &p1, const Vector4f &c2, const Vector3f &p2) const
+{
+  glBegin(GL_LINES);
+    glColor4fv(c1.data());
+    glVertex3fv(p1.data());
+    
+    glColor4fv(c2.data());
+    glVertex3fv(p2.data());
+  glEnd();
+}
+
+void OpenGLDriver::drawRect(const Vector3f &pos, const Vector3f &dim, const Vector4f &c1, const Vector4f &c2,
+                            const Vector4f &c3, const Vector4f &c4) const
+{
+  glBegin(GL_LINE_LOOP);
+    glColor4fv(c1.data());
+    glVertex3f(pos[0], pos[1], pos[2]);
+    
+    glColor4fv(c2.data());
+    glVertex3f(pos[0] + dim[0], pos[1], pos[2]);
+    
+    glColor4fv(c3.data());
+    glVertex3f(pos[0] + dim[0], pos[1] - dim[1], pos[2]);
+    
+    glColor4fv(c4.data());
+    glVertex3f(pos[0], pos[1] - dim[1], pos[2]);
+  glEnd();
+}
+
+void OpenGLDriver::fillRect(const Vector3f &pos, const Vector3f &dim, const Vector4f &c1, const Vector4f &c2,
+                            const Vector4f &c3, const Vector4f &c4) const
+{
+  glBegin(GL_QUADS);
+    glColor4fv(c1.data());
+    glVertex3f(pos[0], pos[1], pos[2]);
+    
+    glColor4fv(c2.data());
+    glVertex3f(pos[0] + dim[0], pos[1], pos[2]);
+    
+    glColor4fv(c3.data());
+    glVertex3f(pos[0] + dim[0], pos[1] - dim[1], pos[2]);
+    
+    glColor4fv(c4.data());
+    glVertex3f(pos[0], pos[1] - dim[1], pos[2]);
+  glEnd();
+}
+
 void OpenGLDriver::drawElements(int count, unsigned int offset, DrawPrimitive primitive) const
 {
   switch (primitive) {
     case Triangles: glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, (GLvoid*) offset); break;
+    case TriangleStrip: glDrawElements(GL_TRIANGLE_STRIP, count, GL_UNSIGNED_INT, (GLvoid*) offset); break;
     case Lines: glDrawElements(GL_LINES, count, GL_UNSIGNED_INT, (GLvoid*) offset); break;
   }
 }

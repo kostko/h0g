@@ -21,9 +21,7 @@ public:
      */
     enum Type {
       KeyboardEvent,
-      MouseMoveEvent,
-      MousePressEvent,
-      MouseReleaseEvent
+      MouseEvent
     };
     
     /**
@@ -41,7 +39,7 @@ public:
     /**
      * Returns this event's type.
      */
-    Type type() const { return m_type; }
+    Type getType() const { return m_type; }
 private:
     Type m_type;
 };
