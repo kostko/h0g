@@ -21,7 +21,9 @@ Widget::Widget(Widget *parent)
   : m_parent(0),
     m_position(0, 0),
     m_size(0, 0),
-    m_lastMouseIn(0)
+    m_lastMouseIn(0),
+    m_visible(true),
+    m_enabled(true)
 {
   reparent(parent);
 }
@@ -117,13 +119,23 @@ bool Widget::isEnabled() const
   return m_enabled;
 }
 
+void Widget::setVisible(bool visible)
+{
+  m_visible = visible;
+}
+
+bool Widget::isVisible() const
+{
+  return m_visible;
+}
+
 Widget *Widget::childAt(int x, int y) const
 {
   Vector2i p(x, y);
   
   // Search through all the children to find the right one
   BOOST_FOREACH(Widget *w, m_children) {
-    if ((p.cwise() >= w->getGlobalPosition()).all() && (p.cwise() <= w->getGlobalPosition() + w->getSize()).all())
+    if ((p.cwise() >= w->getGlobalPosition()).all() && (p.cwise() <= w->getGlobalPosition() + w->getSize()).all() && w->isVisible())
       return w;
   }
   
@@ -137,11 +149,13 @@ void Widget::paintEvent(Painter *painter)
   
   // Now propagate to children
   BOOST_FOREACH(Widget *w, m_children) {
-    painter->save();
-    painter->translate(w->getPosition());
-    painter->setClipRegion(Vector2i(0, -1), w->getSize() + Vector2i(1, 1));
-    w->paintEvent(painter);
-    painter->restore();
+    if (w->isVisible()) {
+      painter->save();
+      painter->translate(w->getPosition());
+      painter->setClipRegion(Vector2i(0, -1), w->getSize() + Vector2i(1, 1));
+      w->paintEvent(painter);
+      painter->restore();
+    }
   }
 }
 

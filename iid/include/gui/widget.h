@@ -107,6 +107,18 @@ public:
     bool isEnabled() const;
     
     /**
+     * Sets widget visibility.
+     *
+     * @param visible True for visible, false for invisible
+     */
+    void setVisible(bool visible);
+    
+    /**
+     * Returns true if the widget is visible.
+     */
+    bool isVisible() const;
+    
+    /**
      * Returns the child widget at specified coordinates.
      *
      * @param x X coordinate
@@ -222,6 +234,7 @@ private:
     Vector2i m_globalPosition;
     Vector2i m_size;
     bool m_enabled;
+    bool m_visible;
     
     // Mouse movement
     Widget *m_lastMouseIn;
