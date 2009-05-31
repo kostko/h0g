@@ -171,4 +171,12 @@
       <load_file path="verdana.ttf" loader="iid.TrueTypeImporter"/>
     </item>
   </container>
+  
+  <container id="GUI">
+    <container id="Images" path="data/textures">
+      <item name="logo" type="Texture">
+        <load_file path="iid_logo.png" loader="iid.ImageImporter" />
+      </item>
+    </container>
+  </container>
 </manifest>

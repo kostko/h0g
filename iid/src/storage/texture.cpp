@@ -74,6 +74,11 @@ void Texture::unbind() const
   m_texture->unbind(m_lastTextureUnit);
 }
 
+DTexture *Texture::getTexture() const
+{
+  return m_texture;
+}
+
 Item *TextureFactory::create(Storage *storage, const std::string &itemId, Item *parent)
 {
   return new Texture(storage, itemId, parent);

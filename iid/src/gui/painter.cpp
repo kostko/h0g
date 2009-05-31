@@ -5,6 +5,7 @@
  * Copyright (C) 2009 by Anze Vavpetic <anze.vavpetic@gmail.com>
  */
 #include "gui/painter.h"
+#include "storage/texture.h"
 #include "drivers/base.h"
 
 namespace IID {
@@ -93,6 +94,17 @@ void Painter::drawString(int x, int y, const std::string &str)
   
   // Render the string
   m_state.font.render(x, y, 0, str);
+}
+
+void Painter::drawImage(int x, int y, int width, int height, IID::Texture *texture)
+{
+  // Adjust for current origin
+  x += m_state.origin[0];
+  y += m_state.origin[1];
+  y = m_height - y;
+  
+  // Render the image
+  m_driver->drawImage(Vector3f(x, y, 0), Vector3f(width, height, 0), texture->getTexture());
 }
 
 void Painter::translate(const Vector2i &dv)

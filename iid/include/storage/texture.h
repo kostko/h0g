@@ -62,6 +62,11 @@ public:
      * Unbinds this texture from the bound texture unit.
      */
     void unbind() const;
+    
+    /**
+     * Returns the underlying texture instance.
+     */
+    DTexture *getTexture() const;
 private:
     // Image data
     Format m_format;

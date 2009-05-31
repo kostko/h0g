@@ -330,6 +330,15 @@ public:
                   const Vector4f &c3, const Vector4f &c4) const;
     
     /**
+     * Draws an image.
+     *
+     * @param pos Upper left corner position
+     * @param dim Dimensions
+     * @param texture Texture to draw
+     */
+    void drawImage(const Vector3f &pos, const Vector3f &dim, DTexture *texture) const;
+    
+    /**
      * Draws elements from the currently bound index buffer.
      *
      * @param count Number of elements to draw

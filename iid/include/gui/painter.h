@@ -16,6 +16,7 @@
 namespace IID {
 
 class Driver;
+class Texture;
 
 namespace GUI {
 
@@ -88,6 +89,17 @@ public:
      * @param str String to draw
      */
     void drawString(int x, int y, const std::string &str);
+    
+    /**
+     * Draws an image.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param width Width
+     * @param height Height
+     * @param texture Texture to draw
+     */
+    void drawImage(int x, int y, int width, int height, IID::Texture *texture);
     
     /**
      * Translates current origin by specified amount.

@@ -42,6 +42,7 @@
 #include "gui/window.h"
 #include "gui/button.h"
 #include "gui/font.h"
+#include "gui/image.h"
 
 // Gamestate
 #include "gamestate.h"
@@ -178,6 +179,7 @@ public:
       m_inGame = (fromState == "play");
       
       Font *font = m_context->storage()->get<Font>("/Fonts/verdana");
+      Texture *logoImage = m_context->storage()->get<Texture>("/GUI/Images/logo");
       
       // Create game menu
       GUI::WindowManager *wm = m_context->getGuiManager()->getWindowManager();
@@ -185,6 +187,12 @@ public:
       
       int centerX = wm->getWidth() / 2;
       int centerY = wm->getHeight() / 2;
+      
+      m_logo = new GUI::Image(wm);
+      m_logo->setPosition(centerX - 144, 100);
+      m_logo->setSize(329, 214);
+      m_logo->setTexture(logoImage);
+      
       m_menuWindow = new GUI::Window(wm);
       m_menuWindow->setPosition(centerX - 100, centerY - 55);
       m_menuWindow->setSize(200, 110);
@@ -263,10 +271,15 @@ public:
       // Remove menu window
       m_menuWindow->reparent(0);
       delete m_menuWindow;
+      
+      // Remove logo
+      m_logo->reparent(0);
+      delete m_logo;
     }
 private:
     Context *m_context;
     GUI::Window *m_menuWindow;
+    GUI::Image *m_logo;
     boost::signals::connection m_keyboardEvents;
     bool m_inGame;
     bool m_ignoreKeyboardEvent;

@@ -661,6 +661,31 @@ void OpenGLDriver::fillRect(const Vector3f &pos, const Vector3f &dim, const Vect
   glEnd();
 }
 
+void OpenGLDriver::drawImage(const Vector3f &pos, const Vector3f &dim, DTexture *texture) const
+{
+  glEnable(GL_TEXTURE_2D);
+  texture->bind(0);
+  
+  glColor4f(1.0, 1.0, 1.0, 1.0);
+  
+  glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(pos[0], pos[1], pos[2]);
+    
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(pos[0] + dim[0], pos[1], pos[2]);
+    
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(pos[0] + dim[0], pos[1] - dim[1], pos[2]);
+    
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(pos[0], pos[1] - dim[1], pos[2]);
+  glEnd();
+  
+  texture->unbind(0);
+  glDisable(GL_TEXTURE_2D);
+}
+
 void OpenGLDriver::drawElements(int count, unsigned int offset, DrawPrimitive primitive) const
 {
   switch (primitive) {

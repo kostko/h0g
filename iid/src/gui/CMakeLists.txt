@@ -8,6 +8,7 @@ windows.cpp
 button.cpp
 window.cpp
 font.cpp
+image.cpp
 )
 
 add_library(gui STATIC ${gui_src})
