@@ -94,7 +94,7 @@ void SlidingDoor::close()
 void SlidingDoor::trigger(Entity *entity, TriggerType type)
 {
   if (type == PickTrigger) {
-    std::cout << "clicked the door" << std::endl;
+    // Someone clicked on us, start opening
     open();
   }
 }
