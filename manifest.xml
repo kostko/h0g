@@ -26,6 +26,9 @@
     <item name="crate" type="Texture">
       <load_file path="crate.jpg" loader="iid.ImageImporter" />
     </item>
+    <item name="door" type="Texture">
+      <load_file path="door.jpg" loader="iid.ImageImporter" />
+    </item>
     
     <!-- Bricks -->
     <container id="Brick" path="brick">
@@ -91,6 +94,12 @@
       <attribute name="Mesh.ScaleFactor" x="0.015" y="0.015" z="0.015" />
       <attribute name="Mesh.Materials" container="/Materials" />
       <load_file path="crate.dae" loader="iid.ColladaMeshImporter" />
+    </item>
+    
+    <item name="door" type="CompositeMesh">
+      <attribute name="Mesh.Materials" container="/Materials" />
+      <attribute name="Mesh.Rotation" x="1.5" y="0.0" z="1.5" />
+      <load_file path="door.dae" loader="iid.ColladaMeshImporter" />
     </item>
     
     <!-- Note: don't make this too small or it will cause problems with dynamics

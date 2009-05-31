@@ -61,6 +61,7 @@
 #include "crate.h"
 #include "toad.h"
 #include "ai.h"
+#include "door.h"
 
 using namespace IID;
 
@@ -367,6 +368,9 @@ public:
       m_context->getDynamicsWorld()->addRigidBody(body);
       body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
       body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+      
+      // Create the sliding door
+      new SlidingDoor(m_context);
       
       // Create some crates
       new Crate(Vector3f(26.0, 1.475, 0.0), m_context->getDynamicsWorld(), m_scene, m_storage);

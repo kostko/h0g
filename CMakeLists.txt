@@ -59,6 +59,7 @@ crate.cpp
 enemy.cpp
 toad.cpp
 ai.cpp
+door.cpp
 )
 
 add_executable(hog ${hog_src})
