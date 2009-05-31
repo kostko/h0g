@@ -219,14 +219,14 @@ protected:
      *
      * @param event Event instance
      */
-    virtual void keyPressEvent(KeyboardEvent *event);
+    virtual bool keyPressEvent(KeyboardEvent *event);
     
     /**
      * Process local key release event.
      *
      * @param event Event instance
      */
-    virtual void keyReleaseEvent(KeyboardEvent *event);
+    virtual bool keyReleaseEvent(KeyboardEvent *event);
     
     /**
      * Redirects all mouse events to this widget directly.
@@ -237,6 +237,16 @@ protected:
      * Releases the mouse grab.
      */
     void ungrabMouse();
+    
+    /**
+     * Redirects all keyboard events to this widget directly.
+     */
+    void grabKeyboard();
+    
+    /**
+     * Releases the keyboard grab.
+     */
+    void ungrabKeyboard();
 private:
     // Hierarchical structure information
     Widget *m_parent;

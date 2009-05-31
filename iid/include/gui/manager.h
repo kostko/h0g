@@ -81,20 +81,12 @@ public:
     bool handleMouseRelease(MouseEvent *event);
     
     /**
-     * Handles the key press event.
+     * Handles a keyboard event.
      *
      * @param event Event to handle
      * @return True if the event has been handled, false otherwise
      */
-    bool handleKeyPress(KeyboardEvent *event);
-    
-    /**
-     * Handles the key release event.
-     *
-     * @param event Event to handle
-     * @return True if the event has been handled, false otherwise
-     */
-    bool handleKeyRelease(KeyboardEvent *event);
+    bool handleKeyboard(KeyboardEvent *event);
     
     /**
      * Redirects all mouse events directly to the specified widget.
@@ -109,6 +101,20 @@ public:
      * @param widget Widget that wants to release the mouse
      */
     void ungrabMouse(Widget *widget);
+    
+    /**
+     * Redirects all keyboard events directly to the specified widget.
+     *
+     * @param widget Widget that wants to grab the keyboard
+     */
+    void grabKeyboard(Widget *widget);
+    
+    /**
+     * Releases the held mouse grab.
+     *
+     * @param widget Widget that wants to release the keyboard
+     */
+    void ungrabKeyboard(Widget *widget);
     
     /**
      * Returns the window manager widget.
@@ -127,6 +133,7 @@ private:
     // Root widget
     WindowManager *m_root;
     Widget *m_mouseGrabWidget;
+    Widget *m_keyboardGrabWidget;
 };
 
 }

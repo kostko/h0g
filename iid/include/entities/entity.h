@@ -110,8 +110,9 @@ protected:
      * trigger processing, use this method to avoid crashes.
      */
     void deferredDelete();
-private:
+protected:
     Context *m_context;
+private:
     std::string m_type;
     bool m_environmentCollisions;
     bool m_enabled;

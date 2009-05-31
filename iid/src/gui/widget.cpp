@@ -207,7 +207,12 @@ bool Widget::event(Event *event)
       break;
     }
     case Event::KeyboardEvent: {
-      // TODO
+      // TODO keyboard focus and event propagation
+      KeyboardEvent *ev = static_cast<KeyboardEvent*>(event);
+      if (ev->isReleased())
+        return keyReleaseEvent(ev);
+      else
+        return keyPressEvent(ev);
       break;
     }
   }
@@ -238,12 +243,14 @@ void Widget::leaveEvent(Event *event)
 {
 }
 
-void Widget::keyPressEvent(KeyboardEvent *event)
+bool Widget::keyPressEvent(KeyboardEvent *event)
 {
+  return false;
 }
 
-void Widget::keyReleaseEvent(KeyboardEvent *event)
+bool Widget::keyReleaseEvent(KeyboardEvent *event)
 {
+  return false;
 }
 
 void Widget::grabMouse()
@@ -254,6 +261,16 @@ void Widget::grabMouse()
 void Widget::ungrabMouse()
 {
   Manager::getInstance()->ungrabMouse(this);
+}
+
+void Widget::grabKeyboard()
+{
+  Manager::getInstance()->grabKeyboard(this);
+}
+
+void Widget::ungrabKeyboard()
+{
+  Manager::getInstance()->ungrabKeyboard(this);
 }
 
 }

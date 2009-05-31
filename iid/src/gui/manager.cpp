@@ -24,22 +24,13 @@ Manager *Manager::m_instance = 0;
 Manager::Manager(Context *context)
   : m_context(context),
     m_root(new WindowManager()),
-    m_mouseGrabWidget(m_root)
+    m_mouseGrabWidget(m_root),
+    m_keyboardGrabWidget(m_root)
 {
   Vector2i dim = context->getViewportDimensions();
   m_instance = this;
   m_painter = new Painter(context->driver(), dim[0], dim[1]);
   m_root->setSize(dim[0] - 1, dim[1] - 1);
-  
-  // XXX FIXME for testing
-  /*m_root->setBackgroundColor(Color(0, 0, 0, 100));
-  Window *foo = new Window(m_root);
-  foo->setPosition(100, 100);
-  foo->setSize(300, 300);
-  
-  Button *bar = new Button(foo);
-  bar->setPosition(10, 10);
-  bar->setSize(100, 30);*/
 }
 
 Manager::~Manager()
@@ -82,14 +73,9 @@ bool Manager::handleMouseRelease(MouseEvent *event)
   return m_mouseGrabWidget->event(event);
 }
 
-bool Manager::handleKeyPress(KeyboardEvent *event)
+bool Manager::handleKeyboard(KeyboardEvent *event)
 {
-  return m_mouseGrabWidget->event(event);
-}
-
-bool Manager::handleKeyRelease(KeyboardEvent *event)
-{
-  return m_mouseGrabWidget->event(event);
+  return m_keyboardGrabWidget->event(event);
 }
 
 void Manager::grabMouse(Widget *widget)
@@ -100,6 +86,16 @@ void Manager::grabMouse(Widget *widget)
 void Manager::ungrabMouse(Widget *widget)
 {
   m_mouseGrabWidget = m_root;
+}
+
+void Manager::grabKeyboard(Widget *widget)
+{
+  m_keyboardGrabWidget = widget;
+}
+
+void Manager::ungrabKeyboard(Widget *widget)
+{
+  m_keyboardGrabWidget = m_root;
 }
 
 WindowManager *Manager::getWindowManager() const
