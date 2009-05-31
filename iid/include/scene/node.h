@@ -96,6 +96,11 @@ public:
     virtual void setPosition(Vector3f pos);
     
     /**
+     * Returns parent-relative position.
+     */
+    Vector3f getPosition() const { return m_localPosition; }
+    
+    /**
      * Sets node's orientation.
      *
      * @param w W coefficient
