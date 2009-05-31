@@ -325,8 +325,8 @@ public:
       m_scene->setCamera(m_camera);
 
       m_camera->lookAt(
-        Vector3f(-14., 0., 14.),
-        Vector3f(-11., 0., 11.),
+        Vector3f(0.09511, 2.944, 0.0),
+        Vector3f(3.0, 2.0, 0.0),
         Vector3f(0., 1., 0.)
       );
       
