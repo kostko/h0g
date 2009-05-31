@@ -17,6 +17,8 @@ find_package(Eigen2 REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
+find_package(Freetype REQUIRED)
+find_package(FTGL REQUIRED)
 
 # Uncomment these lines for optimization
 #SET(CMAKE_BUILD_TYPE distribution)
@@ -38,6 +40,8 @@ include_directories(
 	${BULLET_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
 	${ALUT_INCLUDE_DIR}
+	${FREETYPE_INCLUDE_DIRS}
+	${FTGL_INCLUDE_DIR}
 	
 	# Internal includes
 	${CMAKE_CURRENT_SOURCE_DIR}/iid/include
@@ -70,5 +74,7 @@ target_link_libraries(hog
 	${BULLET_LIBRARIES}
 	${OPENAL_LIBRARY}
 	${ALUT_LIBRARY}
+	${FREETYPE_LIBRARIES}
+	${FTGL_LIBRARY}
 )
 

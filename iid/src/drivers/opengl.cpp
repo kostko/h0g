@@ -412,6 +412,32 @@ void OpenGLShader::setUniform(const char *name, int size, float *values)
   }
 }
 
+OpenGLFont::OpenGLFont(FTTextureFont *font)
+  : m_font(font)
+{
+}
+
+OpenGLFont::~OpenGLFont()
+{
+  delete m_font;
+}
+
+void OpenGLFont::render(int x, int y, int z, const std::string &text)
+{
+  glPushMatrix();
+    glTranslatef(x, y, z);
+    m_font->Render(text.c_str());
+  glPopMatrix();
+}
+
+FontMetrics OpenGLFont::getBoundingBox(const std::string &text) const
+{
+  FTBBox box = m_font->BBox(text.c_str());
+  Vector3f upper(box.Upper().Xf(), box.Upper().Yf(), 0.0);
+  Vector3f lower(box.Lower().Xf(), box.Lower().Yf(), 0.0);
+  return std::make_pair(upper, lower);
+}
+
 OpenGLDriver::OpenGLDriver()
   : Driver("OpenGL"),
     m_debugDrawer(0)
@@ -764,6 +790,17 @@ DVertexBuffer *OpenGLDriver::createVertexBuffer(size_t size, unsigned char *data
                                                 DVertexBuffer::Target target)
 {
   return new OpenGLVertexBuffer(size, data, usage, target);
+}
+
+DFont *OpenGLDriver::createFont(const std::string &path, unsigned short size)
+{
+  FTTextureFont *font = new FTTextureFont(path.c_str());
+  
+  if (font->Error())
+    return 0;
+  
+  font->FaceSize(size);
+  return new OpenGLFont(font);
 }
 
 void OpenGLDriver::drawParticles(int size, float *vertices, float *colors)

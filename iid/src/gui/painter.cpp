@@ -27,6 +27,11 @@ void Painter::setPenColor(const Color &color)
   m_state.penColor = color;
 }
 
+void Painter::setFont(const Font &font)
+{
+  m_state.font = font;
+}
+
 void Painter::drawLine(int x1, int y1, int x2, int y2)
 {
   // Adjust for current origin
@@ -81,6 +86,13 @@ void Painter::fillRect(int x, int y, int width, int height)
 
 void Painter::drawString(int x, int y, const std::string &str)
 {
+  // Adjust for current origin
+  x += m_state.origin[0];
+  y += m_state.origin[1];
+  y = m_height - y;
+  
+  // Render the string
+  m_state.font.render(x, y, 0, str);
 }
 
 void Painter::translate(const Vector2i &dv)

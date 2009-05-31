@@ -165,4 +165,10 @@
         <!-- http://www.youtube.com/user/bartillier -->
     </item> 
   </container>
+  
+  <container id="Fonts" path="data/fonts">
+    <item name="verdana" type="Font">
+      <load_file path="verdana.ttf" loader="iid.TrueTypeImporter"/>
+    </item>
+  </container>
 </manifest>

@@ -14,6 +14,7 @@
 #include "storage/texture.h"
 #include "storage/shader.h"
 #include "storage/sound.h"
+#include "storage/font.h"
 
 // Scene
 #include "scene/scene.h"
@@ -40,6 +41,7 @@
 #include "gui/windows.h"
 #include "gui/window.h"
 #include "gui/button.h"
+#include "gui/font.h"
 
 // Gamestate
 #include "gamestate.h"
@@ -175,6 +177,8 @@ public:
     {
       m_inGame = (fromState == "play");
       
+      Font *font = m_context->storage()->get<Font>("/Fonts/verdana");
+      
       // Create game menu
       GUI::WindowManager *wm = m_context->getGuiManager()->getWindowManager();
       wm->setBackgroundColor(GUI::Color(0, 0, 0, 100));
@@ -188,11 +192,15 @@ public:
       GUI::Button *startGame = new GUI::Button(m_menuWindow);
       startGame->setPosition(10, 10);
       startGame->setSize(180, 40);
+      startGame->setFont(GUI::Font(font));
+      startGame->setText(m_inGame ? "Resume game" : "Start game");
       startGame->signalClicked.connect(boost::bind(&MenuState::startGameClicked, this));
       
       GUI::Button *quitGame = new GUI::Button(m_menuWindow);
       quitGame->setPosition(10, 60);
       quitGame->setSize(180, 40);
+      quitGame->setFont(GUI::Font(font));
+      quitGame->setText("Quit");
       quitGame->signalClicked.connect(boost::bind(&MenuState::quitClicked, this));
       
       // Handle escape key

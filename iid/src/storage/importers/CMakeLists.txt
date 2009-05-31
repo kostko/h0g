@@ -7,6 +7,7 @@ image.cpp
 glsl.cpp
 collada.cpp
 audio.cpp
+truetype.cpp
 )
 
 add_library(importers STATIC ${importers_src})

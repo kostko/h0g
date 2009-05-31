@@ -129,6 +129,16 @@ bool Widget::isVisible() const
   return m_visible;
 }
 
+void Widget::setFont(const Font &font)
+{
+  m_font = font;
+}
+
+Font Widget::getFont() const
+{
+  return m_font;
+}
+
 Widget *Widget::childAt(int x, int y) const
 {
   Vector2i p(x, y);

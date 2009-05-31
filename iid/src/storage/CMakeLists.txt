@@ -17,6 +17,7 @@ texture.cpp
 shader.cpp
 material.cpp
 sound.cpp
+font.cpp
 )
 
 add_library(storage STATIC ${storage_src})

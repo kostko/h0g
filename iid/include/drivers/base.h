@@ -233,6 +233,37 @@ public:
     virtual void setUniform(const char *name, int size, float *values) = 0;
 };
 
+// Used for returning font bounding box
+typedef std::pair<Vector3f, Vector3f> FontMetrics;
+
+/**
+ * An abstract font object.
+ */
+class DFont {
+public:
+    /**
+     * Class destructor.
+     */
+    virtual ~DFont() {}
+    
+    /**
+     * Renders some text on the specified location.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param z Z coordinate
+     * @param text Text to render
+     */
+    virtual void render(int x, int y, int z, const std::string &text) = 0;
+    
+    /**
+     * Returns the font's bounding box for the specified text.
+     *
+     * @param text Text to use
+     */
+    virtual FontMetrics getBoundingBox(const std::string &text) const = 0;
+};
+
 /**
  * An abstract interface for drivers to implement.
  */
@@ -442,6 +473,14 @@ public:
     virtual DVertexBuffer *createVertexBuffer(size_t size, unsigned char *data, 
                                               DVertexBuffer::UsageHint usage,
                                               DVertexBuffer::Target target) = 0;
+    
+    /**
+     * Creates a new font object.
+     *
+     * @param path Path to the TrueType font file
+     * @param size Font size
+     */
+    virtual DFont *createFont(const std::string &path, unsigned short size) = 0;
     
     /**
      * Draws the state of the given particle emitter.

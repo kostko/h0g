@@ -8,6 +8,7 @@
 #define IID_GUI_WIDGET_H
 
 #include "globals.h"
+#include "gui/font.h"
 
 #include <list>
 
@@ -117,6 +118,18 @@ public:
      * Returns true if the widget is visible.
      */
     bool isVisible() const;
+    
+    /**
+     * Sets widget's font.
+     *
+     * @param font A valid font
+     */
+    void setFont(const Font &font);
+    
+    /**
+     * Returns widget's font.
+     */
+    Font getFont() const;
     
     /**
      * Returns the child widget at specified coordinates.
@@ -235,6 +248,9 @@ private:
     Vector2i m_size;
     bool m_enabled;
     bool m_visible;
+    
+    // Style information
+    Font m_font;
     
     // Mouse movement
     Widget *m_lastMouseIn;

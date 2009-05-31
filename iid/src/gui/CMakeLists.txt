@@ -7,6 +7,7 @@ widget.cpp
 windows.cpp
 button.cpp
 window.cpp
+font.cpp
 )
 
 add_library(gui STATIC ${gui_src})

@@ -18,6 +18,16 @@ Button::Button(Widget *parent)
 {
 }
 
+void Button::setText(const std::string &text)
+{
+  m_text = text;
+}
+    
+std::string Button::text() const
+{
+  return m_text;
+}
+
 bool Button::mousePressEvent(MouseEvent *event)
 {
   // Take over the mouse so noone else can have it
@@ -58,6 +68,11 @@ void Button::paint(Painter *painter)
   painter->fillRect(0, 0, getWidth(), getHeight());
   painter->setPenColor(Color(255, 255, 255, 255));
   painter->drawRect(0, 0, getWidth(), getHeight());
+  
+  // Draw some text
+  FontMetrics fm = getFont().getFontMetrics(m_text);
+  painter->setFont(getFont());
+  painter->drawString((getWidth() / 2) - (fm.getWidth() / 2), (getHeight() / 2) + (fm.getHeight() / 2), m_text);
   
   painter->restore();
 }

@@ -11,6 +11,7 @@
 #include "globals.h"
 
 #include <GL/gl.h>
+#include <FTGL/ftgl.h>
 
 class btIDebugDraw;
 
@@ -189,6 +190,42 @@ protected:
     GLuint compileShader(const char *source, GLenum type) const;
 private:
     GLuint m_handle;
+};
+
+/**
+ * An OpenGL/FTGL font object.
+ */
+class OpenGLFont : public DFont {
+public:
+    /**
+     * Class constructor.
+     *
+     * @param font FTGL font object
+     */
+    OpenGLFont(FTTextureFont *font);
+    
+    /**
+     * Class destructor.
+     */
+    ~OpenGLFont();
+    
+    /**
+     * Renders some text on the specified location.
+     *
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param z Z coordinate
+     */
+    void render(int x, int y, int z, const std::string &text);
+    
+    /**
+     * Returns the font's bounding box for the specified text.
+     *
+     * @param text Text to use
+     */
+    FontMetrics getBoundingBox(const std::string &text) const;
+private:
+    FTTextureFont *m_font;
 };
 
 /**
@@ -377,6 +414,14 @@ public:
     DVertexBuffer *createVertexBuffer(size_t size, unsigned char *data, 
                                       DVertexBuffer::UsageHint usage,
                                       DVertexBuffer::Target target);
+    
+    /**
+     * Creates a new font object.
+     *
+     * @param path Path to the TrueType font file
+     * @param size Font size
+     */
+    DFont *createFont(const std::string &path, unsigned short size);
     
     /**
      * Draws the state of the given particle emitter.

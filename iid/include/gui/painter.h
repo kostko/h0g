@@ -9,6 +9,7 @@
 
 #include "globals.h"
 #include "gui/color.h"
+#include "gui/font.h"
 
 #include <list>
 
@@ -41,6 +42,13 @@ public:
      * @param color Pen color
      */
     void setPenColor(const Color &color);
+    
+    /**
+     * Sets the font.
+     *
+     * @param font Font
+     */
+    void setFont(const Font &font);
     
     /**
      * Draws a line between two points.
@@ -157,6 +165,9 @@ private:
         
         // Pen color
         Color penColor;
+        
+        // Current font
+        Font font;
         
         // Clipping enabled flag and clip region
         bool clipping;

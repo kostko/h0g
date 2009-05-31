@@ -37,6 +37,18 @@ public:
     Button(Widget *parent);
     
     /**
+     * Sets button text.
+     *
+     * @param text Text to display
+     */
+    void setText(const std::string &text);
+    
+    /**
+     * Returns the button text.
+     */
+    std::string text() const;
+    
+    /**
      * Returns the current button state.
      */
     State getButtonState() const;
@@ -66,6 +78,7 @@ protected:
     void paint(Painter *painter);
 private:
     State m_state;
+    std::string m_text;
 };
 
 }

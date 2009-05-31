@@ -16,6 +16,7 @@
 #include "storage/shader.h"
 #include "storage/material.h"
 #include "storage/sound.h"
+#include "storage/font.h"
 
 // Importers
 #include "storage/importers/image.h"
@@ -23,6 +24,7 @@
 #include "storage/importers/collada.h"
 #include "storage/importers/glsl.h"
 #include "storage/importers/audio.h"
+#include "storage/importers/truetype.h"
 
 // Scene
 #include "scene/scene.h"
@@ -263,6 +265,7 @@ void Context::registerBasicStorageTypes()
   m_storage->registerType("Shader", new ShaderFactory());
   m_storage->registerType("Material", new MaterialFactory());
   m_storage->registerType("Sound", new SoundFactory());
+  m_storage->registerType("Font", new FontFactory());
   
   m_logger->info("Type registration completed.");
 }
@@ -288,6 +291,7 @@ void Context::registerBasicImporters()
   m_storage->registerImporter("iid.ColladaMeshImporter", new ColladaMeshImporter(this));
   m_storage->registerImporter("iid.GLSLImporter", new GLSLImporter(this));
   m_storage->registerImporter("iid.SoundImporter", new SoundImporter(this));
+  m_storage->registerImporter("iid.TrueTypeImporter", new TrueTypeImporter(this));
   
   m_logger->info("Importer registration completed.");
 }
