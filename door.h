@@ -16,6 +16,7 @@
 #include <btBulletDynamicsCommon.h>
 
 class EntityMotionState;
+class Keypad;
 
 /**
  * A sliding door.
@@ -70,6 +71,11 @@ protected:
      * @param type Trigger type
      */
     void trigger(Entity *entity, TriggerType type);
+    
+    /**
+     * This method gets called when a correct code has been entered.
+     */
+    void codeAccepted();
 private:
     IID::SceneNode *m_sceneNode;
     btCollisionShape *m_shape;
@@ -81,6 +87,9 @@ private:
     State m_state;
     float m_slideStart;
     float m_slideLimit;
+    
+    // Keypad
+    Keypad *m_keypad;
 };
 
 #endif

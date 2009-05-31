@@ -127,7 +127,6 @@ void Robot::trigger(Entity *entity, TriggerType type)
 {
   if (entity->getType() == "toad" && type == CollisionTrigger) {
     // TODO collision with a toad
-    std::cout << "hello toady!" << std::endl;
   }
   
   // Check if user clicked on us and produce taunting sound

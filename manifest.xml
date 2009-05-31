@@ -166,6 +166,21 @@
       <load_file path="explosion.wav" loader="iid.SoundImporter"/>
     </item>
     
+    <item name="key_press" type="Sound">
+      <attribute name="Sound.Type" value="Effect"/>
+      <load_file path="key_press.wav" loader="iid.SoundImporter"/>
+    </item>
+    
+    <item name="wrong_code" type="Sound">
+      <attribute name="Sound.Type" value="Effect"/>
+      <load_file path="wrong_code.wav" loader="iid.SoundImporter"/>
+    </item>
+    
+    <item name="door_opening" type="Sound">
+      <attribute name="Sound.Type" value="Effect"/>
+      <load_file path="door_opening.wav" loader="iid.SoundImporter"/>
+    </item>
+    
     <!-- Example of background music -->
     <item name="zair" type="Sound">
         <attribute name="Sound.Type" value="Ambiental"/>

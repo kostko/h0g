@@ -228,6 +228,10 @@ public:
         return;
       }
       
+      // First check if GUI will handle keyboard events
+      if (m_context->getGuiManager()->handleKeyboard(ev))
+        return;
+      
       if (!ev->isReleased() && !ev->isSpecial() && ev->key() == 27) {
         if (m_inGame) {
           getGsm()->transitionDown();
@@ -419,6 +423,10 @@ public:
      */
     void keyboardEvent(KeyboardEvent *ev)
     {
+      // First check if GUI will handle keyboard events
+      if (m_context->getGuiManager()->handleKeyboard(ev))
+        return;
+      
       if (!ev->isSpecial()) {
         switch (ev->key()) {
           case 'w': m_robot->forward(!ev->isReleased()); break;

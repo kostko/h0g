@@ -12,10 +12,139 @@
 #include "storage/compositemesh.h"
 #include "storage/texture.h"
 #include "storage/shader.h"
+#include "storage/font.h"
+#include "storage/sound.h"
 #include "scene/scene.h"
 #include "context.h"
 
+#include "gui/manager.h"
+#include "gui/windows.h"
+#include "gui/window.h"
+#include "gui/button.h"
+#include "gui/font.h"
+#include "events/keyboard.h"
+
+#include "drivers/openal.h"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/signal.hpp>
+#include <boost/bind.hpp>
+
 using namespace IID;
+
+/**
+ * A simple keypad where a code has to be entered before proceeding.
+ */
+class Keypad : public GUI::Window {
+public:
+    /**
+     * Class constructor.
+     */
+    Keypad(Context *context, const std::string &code)
+      : GUI::Window(context->getGuiManager()->getWindowManager()),
+        m_code(code)
+    {
+      // Set position and size
+      int centerX = getParent()->getWidth() / 2;
+      int centerY = getParent()->getHeight() / 2;
+      
+      setPosition(centerX - 100, centerY - 100);
+      setSize(200, 200);
+      
+      // Prepare font
+      Font *font = context->storage()->get<Font>("/Fonts/verdana");
+      
+      // Create our buttons
+      int x = 10;
+      int y = 10;
+      for (int i = 0; i < 9; i++) {
+        GUI::Button *b = new GUI::Button(this);
+        b->setPosition(x, y);
+        b->setSize(50, 50);
+        b->setFont(GUI::Font(font));
+        b->setText(boost::lexical_cast<std::string>(i + 1));
+        b->signalClicked.connect(boost::bind(&Keypad::keypadPressed, this, i + 1));
+        x += 65;
+        if (x >= 200) {
+          x = 10;
+          y += 65;
+        }
+        
+        m_buttons[i] = b;
+      }
+      
+      // Setup sound effects
+      m_soundAccessDenied = new OpenALPlayer();
+      m_soundAccessDenied->setMode(Player::Once);
+      m_soundAccessDenied->queue(context->storage()->get<Sound>("/Sounds/wrong_code"));
+      
+      m_soundKeyPress = new OpenALPlayer();
+      m_soundKeyPress->setMode(Player::Once);
+      m_soundKeyPress->queue(context->storage()->get<Sound>("/Sounds/key_press"));
+      
+      m_soundDoorOpening = new OpenALPlayer();
+      m_soundDoorOpening->setMode(Player::Once);
+      m_soundDoorOpening->queue(context->storage()->get<Sound>("/Sounds/door_opening"));
+    }
+    
+    /**
+     * Shows the keypad entry window.
+     */
+    void show()
+    {
+      m_entered = "";
+      setVisible(true);
+      grabKeyboard();
+    }
+    
+    /**
+     * Handle keypad button press.
+     */
+    void keypadPressed(int key)
+    {
+      m_soundKeyPress->play();
+      
+      m_entered += boost::lexical_cast<std::string>(key);
+      if (m_entered == m_code) {
+        // A correct code has been entered
+        m_soundDoorOpening->play();
+        signalCodeAccepted();
+        setVisible(false);
+        ungrabKeyboard();
+      } else if (m_entered.size() >= m_code.size()) {
+        m_entered = "";
+        m_soundAccessDenied->play();
+      }
+    }
+public:
+    // Signals
+    boost::signal<void ()> signalCodeAccepted;
+protected:
+    /**
+     * Process local key press event.
+     *
+     * @param event Event instance
+     */
+    bool keyPressEvent(KeyboardEvent *event)
+    {
+      if (event->key() == 27) {
+        // Escape has been pressed, close this window and release grab
+        setVisible(false);
+        ungrabKeyboard();
+      }
+      
+      return true;
+    }
+private:
+    GUI::Button *m_buttons[9];
+    std::string m_code;
+    std::string m_entered;
+    
+    // Sounds effects
+    Player *m_soundAccessDenied;
+    Player *m_soundKeyPress;
+    Player *m_soundDoorOpening;
+};
 
 SlidingDoor::SlidingDoor(IID::Context *context)
   : Entity(context, "door"),
@@ -49,6 +178,11 @@ SlidingDoor::SlidingDoor(IID::Context *context)
   world->addRigidBody(m_body);
   world->addAction(this);
   m_world = world;
+  
+  // Create the door keypad
+  m_keypad = new Keypad(context, "42");
+  m_keypad->setVisible(false);
+  m_keypad->signalCodeAccepted.connect(boost::bind(&SlidingDoor::codeAccepted, this));
   
   // Entity setup
   setCollisionObject(m_body);
@@ -91,10 +225,17 @@ void SlidingDoor::close()
   m_body->setActivationState(DISABLE_DEACTIVATION);
 }
 
+void SlidingDoor::codeAccepted()
+{
+  // A correct code has been entered, open the door
+  open();
+}
+
 void SlidingDoor::trigger(Entity *entity, TriggerType type)
 {
   if (type == PickTrigger) {
-    // Someone clicked on us, start opening
-    open();
+    // Someone clicked on us, display keypad entry form if not yet open
+    if (m_state == Closed)
+      m_keypad->show();
   }
 }
