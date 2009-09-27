@@ -21,7 +21,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 
-#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 
 using namespace IID;
 

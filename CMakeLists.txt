@@ -77,5 +77,6 @@ target_link_libraries(hog
 	${ALUT_LIBRARY}
 	${FREETYPE_LIBRARIES}
 	${FTGL_LIBRARY}
+	rt
 )
 

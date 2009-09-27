@@ -9,8 +9,8 @@
 
 #include "globals.h"
 
-#include <bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.h>
-#include <bullet/BulletCollision/CollisionShapes/btMaterial.h>
+#include <BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.h>
+#include <BulletCollision/CollisionShapes/btMaterial.h>
 
 #include <list>
 #include <vector>

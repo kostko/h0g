@@ -8,8 +8,8 @@
 #include "drivers/base.h"
 #include "context.h"
 
-#include <bullet/BulletCollision/CollisionShapes/btConvexHullShape.h>
-#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 
 #include <iostream>
 #define RECORD_SIZE 32

@@ -11,6 +11,7 @@ set(iid_src
 logger.cpp
 context.cpp
 gamestate.cpp
+timing.cpp
 )
 
 add_library(iid STATIC ${iid_src})

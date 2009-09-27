@@ -49,9 +49,9 @@
 
 // Bullet dynamics
 #include <btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/CollisionShapes/btTriangleShape.h>
-#include <bullet/BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.h>
-#include <bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.h>
+#include <BulletCollision/CollisionShapes/btTriangleShape.h>
+#include <BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.h>
+#include <BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.h>
 
 #include <boost/bind.hpp>
 
@@ -580,7 +580,8 @@ public:
       eventDispatcher->signalMouseMove.connect(boost::bind(&Game::mouseMoveEvent, this, _1));
       
       // Setup on contact added callback
-      gContactAddedCallback = bulletContactAddedCallback;
+      // FIXME something has changed in bullet 2.75 and the thing is now broken (= causes a segfault)
+      //gContactAddedCallback = bulletContactAddedCallback;
     }
     
     /**

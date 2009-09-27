@@ -16,7 +16,7 @@
 #include <GL/glut.h>
 
 // Bullet dynamics
-#include <bullet/LinearMath/btIDebugDraw.h>
+#include <LinearMath/btIDebugDraw.h>
 
 #include <iostream>
 
@@ -138,7 +138,7 @@ public:
      */
     void drawTriangle(const btVector3 &a, const btVector3 &b, const btVector3 &c, const btVector3 &color, btScalar alpha)
     {
-      const btVector3 n = cross(b-a, c-a).normalized();
+      const btVector3 n = (b-a).cross(c-a).normalized();
       
       glBegin(GL_TRIANGLES);
       glColor4f(color.getX(), color.getY(), color.getZ(), alpha);

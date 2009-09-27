@@ -8,10 +8,9 @@
 #define IID_CONTEXT_H
 
 #include "globals.h"
+#include "timing.h"
 
 #include <string>
-
-#include <bullet/LinearMath/btQuickprof.h>
 
 class btBroadphaseInterface;
 class btCollisionDispatcher;
@@ -170,8 +169,8 @@ private:
     SoundContext *m_soundContext;
     
     // Clock
-    btClock m_clock;
-    btClock m_frameClock;
+    Clock m_clock;
+    Clock m_frameClock;
     int m_frameCounter;
     
     // Bullet dynamics stuff

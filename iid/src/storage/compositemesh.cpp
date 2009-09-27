@@ -7,8 +7,8 @@
 #include "storage/compositemesh.h"
 #include "storage/mesh.h"
 
-#include <bullet/BulletCollision/CollisionShapes/btConvexHullShape.h>
-#include <bullet/BulletCollision/CollisionShapes/btShapeHull.h>
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 
 #include <boost/foreach.hpp>
 
